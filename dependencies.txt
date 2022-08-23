@@ -113,7 +113,6 @@ termcolor==1.1.0
 terminado==0.9.1
 testpath==0.4.4
 tf-slim @ git+https://github.com/google-research/tf-slim.git@8f0215e924996d7287392241bc8d8b1133d0c5ca
-tf-unet==0.1.2
 tfco-nightly @ git+https://github.com/google-research/tensorflow_constrained_optimization@ce083f2cf3d06e70d91c7a01ec47b66a5765d789
 threadpoolctl==2.1.0
 tifffile==2020.9.3
