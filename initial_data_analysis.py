@@ -140,6 +140,80 @@ def tf_make_tb_mesh(data_loc = './data/Andrew_Richie_pelvis_shape'):
     else:
         print('no stl files found in '+ data_loc)
 
+def tf_make_tb_mesh_with_landmarks(data_loc = './data/Segmentation_and_landmarks_raw/UCLH - Controls/68567126'):
+    """
+    reads all stl files in a folder and concatantes them into a point cloud that is then saved as a tensorboard object
+
+    :param data_loc: location of the .stl files
+    :type data_loc:  string
+    :return:
+    :rtype:
+    """
+
+    # pelvis_mesh = mesh.Mesh.from_file(os.path.join(data_loc,'pelvis.stl'))
+    # rf_mesh     = mesh.Mesh.from_file(os.path.join(data_loc,'RightFemur.stl'))
+    # lf_mesh     = mesh.Mesh.from_file(os.path.join(data_loc,'LeftFemur.stl'))
+    files = []
+    for subfolder in ['Left','Right']:
+        loc = os.path.join(data_loc,subfolder)
+
+        files += [os.path.join(loc,f) for f in os.listdir(loc) if f.split('.')[-1]=='stl']
+
+    if len(files)!=0:
+
+        k = 0
+        for f in files:
+            if k ==0:
+                point_cloud = mesh.Mesh.from_file(f).v0
+            else:
+                point_cloud = np.concatenate((point_cloud,mesh.Mesh.from_file(f).v0),axis=0)
+            k+=1
+    # point_cloud = np.concatenate((pelvis_mesh.v0,rf_mesh.v0,lf_mesh.v0),axis=0)
+
+        N = point_cloud.shape[0]
+        D = point_cloud.shape[1]
+        point_cloud=point_cloud.reshape((1,N,D))
+
+    # point_colors = tf.constant([[[128, 104, 227], ...]], shape=[1, 1064, 3])
+
+    # summary = mesh_summary.op('point_cloud', vertices=point_cloud, colors=point_colors)
+
+
+    # # Add batch dimension, so our data will be of shape BxNxC.
+    # vertices = np.expand_dims(vertices, 0)
+    # colors = np.expand_dims(colors, 0)
+    # faces = np.expand_dims(faces, 0)
+
+
+        tf_point_cloud = tf.placeholder(tf.float32, point_cloud.shape)
+        # vertices_tensor = tf.placeholder(tf.float32, vertices.shape)
+        # faces_tensor = tf.placeholder(tf.int32, faces.shape)
+        #colors_tensor = tf.placeholder(tf.int32, colors.shape)
+
+        meshes_summary = mesh_summary.op(
+            'mesh_color_tensor', vertices=tf_point_cloud)#,faces=tf_faces)
+
+        # Create summary writer and session.
+        sub_name   = os.path.basename(data_loc)
+
+        study_name = data_loc.split('/')[-2]
+        log_dir = os.path.join('./view',study_name)
+        log_dir = os.path.join(log_dir,sub_name)
+        print(log_dir)
+        if not os.path.isdir(log_dir):  os.makedirs(log_dir)
+        writer = tf.summary.FileWriter(log_dir)
+
+
+        with tf.Session() as sess:
+            summaries = sess.run([meshes_summary], feed_dict={
+            tf_point_cloud: point_cloud
+            })
+        # Save summaries.
+            for summary in summaries:
+                writer.add_summary(summary)
+    else:
+        print('no stl files found in '+ data_loc)
+
 
 def tf_make_tb_mesh_left_right(data_loc = './data/Andrew_Richie_pelvis_shape',show_faces=True):
     """
@@ -267,5 +341,5 @@ if __name__=='__main__':
     #
     # myobj = trimesh.load_mesh(file, enable_post_processing=True, solid=True) # Import Objects
     #myobj.show()
-    tf_make_tb_mesh()
+    tf_make_tb_mesh_with_landmarks()
     #print(myobj.faces)
