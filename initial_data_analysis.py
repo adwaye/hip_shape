@@ -10,6 +10,7 @@ import trimesh
 
 from medpy.io import load
 import matplotlib.pyplot as plt
+from read_landmarks import *
 
 
 
@@ -161,22 +162,47 @@ def tf_make_tb_mesh_with_landmarks(data_loc = './data/Segmentation_and_landmarks
 
     if len(files)!=0:
 
+        color_pal = [[255,184,108],[189,147,249],[40, 42, 54]]
+
         k = 0
         for f in files:
             if k ==0:
                 point_cloud = mesh.Mesh.from_file(f).v0
+                color = np.repeat([color_pal[k]],repeats=point_cloud.shape[0],axis=0)
             else:
                 point_cloud = np.concatenate((point_cloud,mesh.Mesh.from_file(f).v0),axis=0)
+                color = np.concatenate((color,np.repeat([color_pal[k]],repeats=point_cloud.shape[0],axis=0)),axis=0)
+
             k+=1
     # point_cloud = np.concatenate((pelvis_mesh.v0,rf_mesh.v0,lf_mesh.v0),axis=0)
 
+
+
+        xlsx_file = [f for f in os.listdir(data_loc) if f.split('.')[-1] == "xlsx"][0]
+
+        xlsx_path = os.path.join(data_loc,xlsx_file)
+
+        workbook = openpyxl.load_workbook(xlsx_path,data_only=True)
+
+        # Define variable to read the active sheet:
+        worksheet = workbook.active
+
+        my_dict = find_structure_coordinate_socket(worksheet)
+        k = 0
+        for key in ['Right Ant Lat','Right Post Lat','Left Ant Lat','Left Post Lat']:
+            _coords = find_coordinates_from_worksheet(worksheet=worksheet,my_dict=my_dict,key=key)
+            if k ==0:
+                coords = _coords.copy()
+            else:
+                coords = np.concatenate((coords,_coords),axis=0)
+            print(_coords)
+
+        color = np.concatenate((color,np.repeat([color_pal[-1]],repeats=coords.shape[0],axis=0)),axis=0)
+        point_cloud = np.concatenate((point_cloud,coords),axis=0)
+
         N = point_cloud.shape[0]
         D = point_cloud.shape[1]
-        point_cloud=point_cloud.reshape((1,N,D))
-
-    # point_colors = tf.constant([[[128, 104, 227], ...]], shape=[1, 1064, 3])
-
-    # summary = mesh_summary.op('point_cloud', vertices=point_cloud, colors=point_colors)
+        point_cloud = point_cloud.reshape((1,N,D))
 
 
     # # Add batch dimension, so our data will be of shape BxNxC.
@@ -188,7 +214,7 @@ def tf_make_tb_mesh_with_landmarks(data_loc = './data/Segmentation_and_landmarks
         tf_point_cloud = tf.placeholder(tf.float32, point_cloud.shape)
         # vertices_tensor = tf.placeholder(tf.float32, vertices.shape)
         # faces_tensor = tf.placeholder(tf.int32, faces.shape)
-        #colors_tensor = tf.placeholder(tf.int32, colors.shape)
+        colors_tensor = tf.placeholder(tf.int32, color.shape)
 
         meshes_summary = mesh_summary.op(
             'mesh_color_tensor', vertices=tf_point_cloud)#,faces=tf_faces)
@@ -206,7 +232,8 @@ def tf_make_tb_mesh_with_landmarks(data_loc = './data/Segmentation_and_landmarks
 
         with tf.Session() as sess:
             summaries = sess.run([meshes_summary], feed_dict={
-            tf_point_cloud: point_cloud
+            tf_point_cloud: point_cloud,
+            colors_tensor : color
             })
         # Save summaries.
             for summary in summaries:
@@ -263,7 +290,7 @@ def tf_make_tb_mesh_left_right(data_loc = './data/Andrew_Richie_pelvis_shape',sh
                     myobj = trimesh.load_mesh(f,enable_post_processing=True,solid=True)
                     vertices = np.concatenate((vertices,myobj.vertices),axis=0)
                     faces = np.concatenate((faces,myobj.faces),axis=0)
-                    color = np.concatenate((color,np.repeat([color_pal[loc_index]],repeats=myobj.vertices   .shape[0],axis=0)),
+                    color = np.concatenate((color,np.repeat([color_pal[loc_index]],repeats=myobj.vertices.shape[0],axis=0)),
                                            axis=0)
                 k+=1
             loc_index += 1
