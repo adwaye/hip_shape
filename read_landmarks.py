@@ -104,6 +104,7 @@ def find_coordinates_from_worksheet(worksheet,my_dict,key="Right Ant Lat"):
     col_val = my_dict[key+' Col']
     ix=1
     jx=1
+    coordinates = None
 
     while worksheet[row_val+ix][col_val].value is not None:
         coord_list = []
@@ -149,17 +150,24 @@ def find_imOriginSpacing_from_worksheet(worksheet):
 
 
 
-def plot_landmark_uclh_controls(k = 10):
+
+def plot_landmark_uclh_controls(path = './data/Segmentation_and_landmarks_raw/UCLH - Controls', k = 10):
     """
     plots the landmark on top of the stl file representing the pelvis surface for the folder UCLH - Controls
     :param k:
     :return:
     """
-    path = './data/Segmentation_and_landmarks_raw/UCLH - Controls'
+    #path = './data/Segmentation_and_landmarks_raw/UCLH - Controls' #transformation works
+    #path = './data/Segmentation_and_landmarks_raw/TOH - DDH' #transformation works
+    #path = './data/Segmentation_and_landmarks_raw/TOH - FAI'#tranformation works
+    #path = './data/Segmentation_and_landmarks_raw/TOH - Controls'#transformation works
+    #path = './data/Segmentation_and_landmarks_raw/UCLH - Dysplastics' #transformation does not work
+
 
     studies = [f for f in sorted(os.listdir(path)) if os.path.isdir(os.path.join(path,f))]
 
     study = studies[k]
+
 
 
 
@@ -181,47 +189,143 @@ def plot_landmark_uclh_controls(k = 10):
     fig = plt.figure(figsize=(4,4))
 
     ax = fig.add_subplot(111, projection='3d')
+
     ax.set_box_aspect(aspect=(1,1,1))
+
+
+    folders = [f for f in os.listdir(study_path) if os.path.isdir(os.path.join(study_path,f)) and 'left' in f.lower()]
+    if len(folders)>0:
+        study_subpath = os.path.join(study_path,folders[0])
+        stl_file = [f for f in os.listdir(study_subpath) if f.split('.')[-1] == 'stl'][0]
+        stl_path = os.path.join(study_subpath,stl_file)
+        point_cloud = mesh.Mesh.from_file(stl_path).v0/spacing
+        ax.scatter(point_cloud[::10,0],point_cloud[::10,1],point_cloud[::10,2],alpha=0.3,s=1,color='lightgreen')
+    folders = [f for f in os.listdir(study_path) if os.path.isdir(os.path.join(study_path,f)) and 'right' in f.lower()]
+    if len(folders)>0:
+        study_subpath = os.path.join(study_path,folders[0])
+        stl_file = [f for f in os.listdir(study_subpath) if f.split('.')[-1] == 'stl'][0]
+        stl_path = os.path.join(study_subpath,stl_file)
+        point_cloud = mesh.Mesh.from_file(stl_path).v0/spacing
+        ax.scatter(point_cloud[::10,0],point_cloud[::10,1],point_cloud[::10,2],alpha=0.3,s=1,color='lightgreen')
 
     print(study)
     for key in ['Right Ant Lat','Right Post Lat','Left Ant Lat','Left Post Lat']:
         coords  = find_coordinates_from_worksheet(worksheet=worksheet,my_dict=my_dict,key=key)
         print(key)
         print(coords)
-        mean_coords = np.mean(coords)
-        #scaling = np.array([[0.8379,0.8379,1.5]])
-        #origin  = np.array([[-209.1,-375.1,-760.5]])
-        #coords = ((coords-mean_coords)*spacing)+mean_coords
-        coords = coords+(origin)/spacing
-        #
-        #coords = scaling*coords
-        ax.plot(coords[:,0],coords[:,1],coords[:,2],color='blue')
-        ax.scatter(coords[:,0],coords[:,1],coords[:,2],color='black',s=2)  # plot the point (2,3,4) on the figure
+        if coords is not None:
+            mean_coords = np.mean(coords)
+            #scaling = np.array([[0.8379,0.8379,1.5]])
+            #origin  = np.array([[-209.1,-375.1,-760.5]])
+            #coords = ((coords-mean_coords)*spacing)+mean_coords
+            coords = coords+(origin)/spacing
+            #
+            #coords = scaling*coords
+            ax.plot(coords[:,0],coords[:,1],coords[:,2],color='blue')
+            ax.scatter(coords[:,0],coords[:,1],coords[:,2],color='black',s=2)  # plot the point (2,3,4) on the figure
 
-    folders = [f for f in os.listdir(study_path) if os.path.isdir(os.path.join(study_path,f)) and 'left' in f.lower()]
-    study_subpath = os.path.join(study_path,folders[0])
-    stl_file = [f for f in os.listdir(study_subpath) if f.split('.')[-1] == 'stl'][0]
-    stl_path = os.path.join(study_subpath,stl_file)
-    point_cloud = mesh.Mesh.from_file(stl_path).v0/spacing
-    ax.scatter(point_cloud[::10,0],point_cloud[::10,1],point_cloud[::10,2],alpha=0.3,s=1,color='lightgreen')
-    folders = [f for f in os.listdir(study_path) if os.path.isdir(os.path.join(study_path,f)) and 'right' in f.lower()]
-    study_subpath = os.path.join(study_path,folders[0])
-    stl_file = [f for f in os.listdir(study_subpath) if f.split('.')[-1] == 'stl'][0]
-    stl_path = os.path.join(study_subpath,stl_file)
-    point_cloud = mesh.Mesh.from_file(stl_path).v0/spacing
-    ax.scatter(point_cloud[::10,0],point_cloud[::10,1],point_cloud[::10,2],alpha=0.3,s=1,color='lightgreen')
-    axisEqual3D(ax)
+    # folders = [f for f in os.listdir(study_path) if os.path.isdir(os.path.join(study_path,f)) and 'left' in f.lower()]
+    # study_subpath = os.path.join(study_path,folders[0])
+    # stl_file = [f for f in os.listdir(study_subpath) if f.split('.')[-1] == 'stl'][0]
+    # stl_path = os.path.join(study_subpath,stl_file)
+    # point_cloud = mesh.Mesh.from_file(stl_path).v0/spacing
+    # ax.scatter(point_cloud[::10,0],point_cloud[::10,1],point_cloud[::10,2],alpha=0.3,s=1,color='lightgreen')
+    # folders = [f for f in os.listdir(study_path) if os.path.isdir(os.path.join(study_path,f)) and 'right' in f.lower()]
+    # study_subpath = os.path.join(study_path,folders[0])
+    # stl_file = [f for f in os.listdir(study_subpath) if f.split('.')[-1] == 'stl'][0]
+    # stl_path = os.path.join(study_subpath,stl_file)
+    # point_cloud = mesh.Mesh.from_file(stl_path).v0/spacing
+    # ax.scatter(point_cloud[::10,0],point_cloud[::10,1],point_cloud[::10,2],alpha=0.3,s=1,color='lightgreen')
+    #axisEqual3D(ax)
+    fig.suptitle("Folder ="+study_path+" k = {:}".format(k))
+    return fig, ax
 
 
 
 
 if __name__=='__main__':
-    plot_landmark_uclh_controls(k=20)
-    # path = './data/Segmentation_and_landmarks_raw/UCLH - Controls'
+    path = './data/Segmentation_and_landmarks_raw/UCLH - Controls' #transformation works
+    studies = [f for f in sorted(os.listdir(path)) if os.path.isdir(os.path.join(path,f))]
+    k= 10
+    fig,ax = plot_landmark_uclh_controls(path=path,k=k)
+    study = studies[k]
+    study_path = os.path.join(path,study)
+
+    xlsx_file = [f for f in os.listdir(study_path) if f.split('.')[-1] == "xlsx"][0]
+
+    xlsx_path = os.path.join(study_path,xlsx_file)
+
+    # Define variable to load the wookbook
+    workbook = openpyxl.load_workbook(xlsx_path,data_only=True)
+
+    # Define variable to read the active sheet:
+    worksheet = workbook.active
+
+
+    my_dict = {}
+    for i in range(0, worksheet.max_row):
+        for col in worksheet.iter_cols(1, worksheet.max_column):
+            if type(col[i].value) is str:
+                if "acetabulum" in col[i].value.lower():
+                    print("found column at "+col[i].column_letter+str(col[i].row))
+
+                    ant_col = col[i].column-1
+                    ant_row = i
+                    for k in range(1,6):
+                        if type(worksheet[ant_row+k][ant_col].value) is str:
+
+                            if "rasis" in worksheet[ant_row+k ][ant_col].value.lower():
+                                my_dict['RASIS Col'] = ant_col
+                                my_dict['RASIS Row'] = ant_row+k
+                            elif "lasis" in worksheet[ant_row+k ][ant_col ].value.lower():
+                                my_dict['LASIS Col'] = ant_col
+                                my_dict['LASIS Row'] = ant_row+k
+                            elif "ltub" in worksheet[ant_row+k ][ant_col ].value.lower():
+                                my_dict['LTUB Col'] = ant_col
+                                my_dict['LTUB Row'] = ant_row+k
+                            elif "rtub" in worksheet[ant_row+k][ant_col ].value.lower():
+                                my_dict['RTUB Col'] = ant_col
+                                my_dict['RTUB Row'] = ant_row+k
+
+
+    it = 0
+    for key in ['RASIS','LASIS','RTUB','LTUB']:
+        row_val = my_dict[key + ' Row']
+        col_val = my_dict[key + ' Col']
+        coord_temp = []
+        for k in range(1,4):
+            if worksheet[row_val][col_val+k].value is not None:
+                coord_temp +=[worksheet[row_val][col_val+k].value]
+        if it==0:
+            coords = np.array([coord_temp])
+        else:
+            coords_ = np.array([coord_temp])
+            coords  = np.concatenate((coords,coords_),axis=0)
+
+        it+=1
+
+
+    # coords = np.array([[79.86,-51.64,1141],
+    #                    [    -105.1, - 61.88,1141],
+    #                    [-0.140000000000015, - 50.36,1050],
+    #                    [-22.54, - 51.64,    1048],
+    #                    ])
+    origin,spacing = find_imOriginSpacing_from_worksheet(worksheet)
+
+    coords = coords/spacing
+    ax.scatter(coords[:,0],coords[:,1],coords[:,2],color='red')
+    axisEqual3D(ax)
+
+
+    #plot_landmark_uclh_controls(k=7)
+    #=========================================================================
+    #Attempting to get the right transformation for UCLH - Dysplastics
+    #=========================================================================
+    # path = './data/Segmentation_and_landmarks_raw/UCLH - Dysplastics'
     #
     # studies = [f for f in sorted(os.listdir(path)) if os.path.isdir(os.path.join(path,f))]
-    #
-    # study = studies[10]
+    # k =10
+    # study = studies[k]
     #
     #
     #
@@ -245,33 +349,51 @@ if __name__=='__main__':
     # ax = fig.add_subplot(111, projection='3d')
     # ax.set_box_aspect(aspect=(1,1,1))
     #
+    #
+    # folders = [f for f in os.listdir(study_path) if os.path.isdir(os.path.join(study_path,f)) and 'left' in f.lower()]
+    # if len(folders)>0:
+    #     study_subpath = os.path.join(study_path,folders[0])
+    #     stl_file = [f for f in os.listdir(study_subpath) if f.split('.')[-1] == 'stl'][0]
+    #     stl_path = os.path.join(study_subpath,stl_file)
+    #     point_cloud = mesh.Mesh.from_file(stl_path).v0/spacing
+    #     ax.scatter(point_cloud[::10,0],point_cloud[::10,1],point_cloud[::10,2],alpha=0.3,s=1,color='lightgreen')
+    # folders = [f for f in os.listdir(study_path) if os.path.isdir(os.path.join(study_path,f)) and 'right' in f.lower()]
+    # if len(folders)>0:
+    #     study_subpath = os.path.join(study_path,folders[0])
+    #     stl_file = [f for f in os.listdir(study_subpath) if f.split('.')[-1] == 'stl'][0]
+    #     stl_path = os.path.join(study_subpath,stl_file)
+    #     point_cloud = mesh.Mesh.from_file(stl_path).v0/spacing
+    #     ax.scatter(point_cloud[::10,0],point_cloud[::10,1],point_cloud[::10,2],alpha=0.3,s=1,color='lightgreen')
+    #
+    #
     # print(study)
     # for key in ['Right Ant Lat','Right Post Lat','Left Ant Lat','Left Post Lat']:
     #     coords  = find_coordinates_from_worksheet(worksheet=worksheet,my_dict=my_dict,key=key)
     #     print(key)
-    #     print(coords)
-    #     mean_coords = np.mean(coords)
-    #     #scaling = np.array([[0.8379,0.8379,1.5]])
-    #     #origin  = np.array([[-209.1,-375.1,-760.5]])
-    #     #coords = ((coords-mean_coords)*spacing)+mean_coords
-    #     coords = coords+(origin)/spacing
-    #     #
-    #     #coords = scaling*coords
-    #     ax.plot(coords[:,0],coords[:,1],coords[:,2],color='blue')
-    #     ax.scatter(coords[:,0],coords[:,1],coords[:,2],color='black',s=2)  # plot the point (2,3,4) on the figure
+    #     if coords is not None:
+    #         print(coords)
     #
-    # folders = [f for f in os.listdir(study_path) if os.path.isdir(os.path.join(study_path,f)) and 'left' in f.lower()]
-    # study_subpath = os.path.join(study_path,folders[0])
-    # stl_file = [f for f in os.listdir(study_subpath) if f.split('.')[-1] == 'stl'][0]
-    # stl_path = os.path.join(study_subpath,stl_file)
-    # point_cloud = mesh.Mesh.from_file(stl_path).v0/spacing
-    # ax.scatter(point_cloud[::10,0],point_cloud[::10,1],point_cloud[::10,2],alpha=0.3,s=1,color='lightgreen')
-    # folders = [f for f in os.listdir(study_path) if os.path.isdir(os.path.join(study_path,f)) and 'right' in f.lower()]
-    # study_subpath = os.path.join(study_path,folders[0])
-    # stl_file = [f for f in os.listdir(study_subpath) if f.split('.')[-1] == 'stl'][0]
-    # stl_path = os.path.join(study_subpath,stl_file)
-    # point_cloud = mesh.Mesh.from_file(stl_path).v0/spacing
-    # ax.scatter(point_cloud[::10,0],point_cloud[::10,1],point_cloud[::10,2],alpha=0.3,s=1,color='lightgreen')
+    #
+    #         mean_coords = np.mean(coords,axis=0,keepdims=True)
+    #         #scaling = np.array([[0.8379,0.8379,1.5]])
+    #         #origin  = np.array([[-209.1,-375.1,-760.5]])
+    #         #coords = ((coords-mean_coords)*spacing)+mean_coords
+    #         coords = coords + (origin) / spacing
+    #         # mean_coords = np.mean(coords,axis=0,keepdims=True)
+    #         # centre_points_ = np.mean(np.concatenate((mean_coords,np.mean(point_cloud,axis=0,keepdims=True))),axis=0)
+    #         # centre_points = np.array([[0,0,centre_points_[2]]])
+    #         coords = coords-centre_points
+    #         coords = coords-2*np.array([[0,0,1]])*coords#reflection in z axis
+    #         coords = coords+centre_points
+    #
+    #         # centre_points = np.array([[0,centre_points_[2],0]])
+    #         # coords = coords-centre_points
+    #         # coords = coords-2*np.array([[0,1,0]])*coords#reflection in y axis
+    #         # coords = coords+centre_points
+    #         # #
+    #         #coords = scaling*coords
+    #         ax.plot(coords[:,0],coords[:,1],coords[:,2],color='blue')
+    #         ax.scatter(coords[:,0],coords[:,1],coords[:,2],color='black',s=2)  # plot the point (2,3,4) on the figure
+    #
     # axisEqual3D(ax)
-    #
-    #
+    # fig.suptitle("Folder =" + study_path + " k = {:}".format(k))
