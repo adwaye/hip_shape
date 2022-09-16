@@ -1,3 +1,4 @@
+#from mayavi import mlab
 from stl import mesh
 import os
 import matplotlib.pyplot as plt
