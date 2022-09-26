@@ -82,6 +82,46 @@ def find_structure_coordinate_socket(worksheet):
     return my_dict
 
 
+def find_app_coordinates(worksheet):
+    my_dict = {}
+    for i in range(0,worksheet.max_row):
+        for col in worksheet.iter_cols(1,worksheet.max_column):
+            if type(col[i].value) is str:
+                if "acetabulum" in col[i].value.lower():
+                    print("found column at " + col[i].column_letter + str(col[i].row))
+
+                    ant_col = col[i].column - 1
+                    ant_row = i
+                    for k in range(1,6):
+                        if type(worksheet[ant_row + k][ant_col].value) is str:
+
+                            if "rasis" in worksheet[ant_row + k][ant_col].value.lower():
+                                my_dict['RASIS Col'] = ant_col
+                                my_dict['RASIS Row'] = ant_row + k
+                            elif "lasis" in worksheet[ant_row + k][ant_col].value.lower():
+                                my_dict['LASIS Col'] = ant_col
+                                my_dict['LASIS Row'] = ant_row + k
+                            elif "ltub" in worksheet[ant_row + k][ant_col].value.lower():
+                                my_dict['LTUB Col'] = ant_col
+                                my_dict['LTUB Row'] = ant_row + k
+                            elif "rtub" in worksheet[ant_row + k][ant_col].value.lower():
+                                my_dict['RTUB Col'] = ant_col
+                                my_dict['RTUB Row'] = ant_row + k
+
+    it = 0
+    out_dict = {}
+    for key in ['RASIS','LASIS','RTUB','LTUB']:
+        row_val = my_dict[key + ' Row']
+        col_val = my_dict[key + ' Col']
+        coord_temp = []
+        for k in range(1,4):
+            if worksheet[row_val][col_val + k].value is not None:
+                coord_temp += [worksheet[row_val][col_val + k].value]
+
+        out_dict[key] = coord_temp
+        it += 1
+    return out_dict
+
 
 def axisEqual3D(ax):
     extents = np.array([getattr(ax, 'get_{}lim'.format(dim))() for dim in 'xyz'])
@@ -119,6 +159,9 @@ def find_coordinates_from_worksheet(worksheet,my_dict,key="Right Ant Lat"):
             coordinates = np.concatenate((coordinates,np.expand_dims(np.array(coord_list),0)),axis=0)
         ix+=1
     return coordinates
+
+
+
 
 def find_imOriginSpacing_from_worksheet(worksheet):
     """
@@ -186,7 +229,10 @@ def plot_landmark_uclh_controls(path = './data/Segmentation_and_landmarks_raw/UC
 
     # Define variable to read the active sheet:
     worksheet = workbook.active
+
+
     origin,spacing = find_imOriginSpacing_from_worksheet(worksheet)
+
 
     my_dict = find_structure_coordinate_socket(worksheet)
     fig = plt.figure(figsize=(4,4))
@@ -281,6 +327,10 @@ def plot_landmark(path = './data/Segmentation_and_landmarks_raw/UCLH - Controls'
     # Define variable to read the active sheet:
     worksheet = workbook.active
     origin,spacing = find_imOriginSpacing_from_worksheet(worksheet)
+    print(spacing)
+    if path.split('/')[-1] == 'UCLH - Dysplastics':
+        spacing[:,[2,1]] = spacing[:,[1,2]]
+        spacing = spacing * np.array([[1,1,-1]])
 
     my_dict = find_structure_coordinate_socket(worksheet)
     fig = plt.figure(figsize=(4,4))
@@ -400,6 +450,10 @@ def plot_landmark(path = './data/Segmentation_and_landmarks_raw/UCLH - Controls'
 
 
 
+
+
+
+
 if __name__=='__main__':
     path = './data/Segmentation_and_landmarks_raw/UCLH - Controls' #transformation works
     studies = [f for f in sorted(os.listdir(path)) if os.path.isdir(os.path.join(path,f))]
@@ -471,8 +525,15 @@ if __name__=='__main__':
         #                    [-22.54, - 51.64,    1048],
         #                    ])
         origin,spacing = find_imOriginSpacing_from_worksheet(worksheet)
+        print(spacing)
+        if path.split('/')[-1]=='UCLH - Dysplastics':
+            spacing[:,[2, 1]] = spacing[:,[1, 2]]
+            spacing = spacing*np.array([[1,1,-1]])
+            #coords[:,[2, 1]] = coords[:,[1, 2]]
+            #coords  = coords*np.array([[1,1,-1]])
 
         #coords = coords
+        #coords = coords * spacing + (origin)
         ax.scatter(coords[:,0],coords[:,1],coords[:,2],color='red',label='APP points')
         axisEqual3D(ax)
         plt.legend()
