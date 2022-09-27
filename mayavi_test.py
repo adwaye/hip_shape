@@ -11,8 +11,8 @@ my_mesh = mesh.Mesh.from_file(file_name)
 # z = my_mesh.z
 # mlab.points3d(x, y, z)
 # mlab.show()
-
-mlab.pipeline.surface(mlab.pipeline.open(file_name))
+m_data = mlab.pipeline.open(file_name)
+mlab.pipeline.surface(m_data)
 mlab.show()
 
 

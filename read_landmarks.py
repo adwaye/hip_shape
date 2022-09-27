@@ -52,7 +52,7 @@ def find_structure_coordinate_socket(worksheet):
         for col in worksheet.iter_cols(1, worksheet.max_column):
             if type(col[i].value) is str:
                 if "ant lat" in col[i].value.lower():
-                    print("found ant column at "+col[i].column_letter+str(col[i].row))
+                    #print("found ant column at "+col[i].column_letter+str(col[i].row))
 
                     ant_col = col[i].column-1
                     ant_row = i+1
@@ -65,13 +65,13 @@ def find_structure_coordinate_socket(worksheet):
                             my_dict['Left Ant Lat Col'] = ant_col
                             my_dict['Left Ant Lat Row'] = ant_row
                 elif "post lat" in col[i].value.lower():
-                    print("found post column at "+col[i].column_letter+str(col[i].row))
+                    #print("found post column at "+col[i].column_letter+str(col[i].row))
 
                     ant_col = col[i].column-1
                     ant_row = i+1
                     if type(worksheet[ant_row-1][ant_col-3].value) is str:
                         if "right" in worksheet[ant_row-1][ant_col-3].value.lower():
-                            print('saving right post lat coords')
+                            #print('saving right post lat coords')
                             my_dict['Right Post Lat Col'] = ant_col
                             my_dict['Right Post Lat Row'] = ant_row
                     if type(worksheet[ant_row-1][ant_col-3].value) is str:
@@ -88,7 +88,7 @@ def find_app_coordinates(worksheet):
         for col in worksheet.iter_cols(1,worksheet.max_column):
             if type(col[i].value) is str:
                 if "acetabulum" in col[i].value.lower():
-                    print("found column at " + col[i].column_letter + str(col[i].row))
+                    #print("found column at " + col[i].column_letter + str(col[i].row))
 
                     ant_col = col[i].column - 1
                     ant_row = i
@@ -111,14 +111,17 @@ def find_app_coordinates(worksheet):
     it = 0
     out_dict = {}
     for key in ['RASIS','LASIS','RTUB','LTUB']:
-        row_val = my_dict[key + ' Row']
-        col_val = my_dict[key + ' Col']
-        coord_temp = []
-        for k in range(1,4):
-            if worksheet[row_val][col_val + k].value is not None:
-                coord_temp += [worksheet[row_val][col_val + k].value]
+        try:
+            row_val = my_dict[key + ' Row']
+            col_val = my_dict[key + ' Col']
+            coord_temp = []
+            for k in range(1,4):
+                if worksheet[row_val][col_val + k].value is not None:
+                    coord_temp += [worksheet[row_val][col_val + k].value]
 
-        out_dict[key] = coord_temp
+            out_dict[key] = coord_temp
+        except KeyError:
+            print('cannot find '+key)
         it += 1
     return out_dict
 
@@ -143,22 +146,27 @@ def find_coordinates_from_worksheet(worksheet,my_dict,key="Right Ant Lat"):
                 these are keys of the dictionary output by find_structure_coordinate_socket
     :return:
     """
-    row_val = my_dict[key+' Row']
-    col_val = my_dict[key+' Col']
-    ix=1
-    jx=1
-    coordinates = None
+    try:
+        row_val = my_dict[key+' Row']
+        col_val = my_dict[key+' Col']
+        ix = 1
+        jx = 1
+        coordinates = None
 
-    while worksheet[row_val+ix][col_val].value is not None:
-        coord_list = []
-        for k in range(0,3):
-            coord_list+=[worksheet[row_val+ix][col_val+k].value]
-        if ix==1:
-            coordinates = np.expand_dims(np.array(coord_list),0)
-        else:
-            coordinates = np.concatenate((coordinates,np.expand_dims(np.array(coord_list),0)),axis=0)
-        ix+=1
-    return coordinates
+        while worksheet[row_val + ix][col_val].value is not None:
+            coord_list = []
+            for k in range(0,3):
+                coord_list += [worksheet[row_val + ix][col_val + k].value]
+            if ix == 1:
+                coordinates = np.expand_dims(np.array(coord_list),0)
+            else:
+                coordinates = np.concatenate((coordinates,np.expand_dims(np.array(coord_list),0)),axis=0)
+            ix += 1
+        out = coordinates
+    except KeyError:
+        out =  None
+    return out
+
 
 
 
@@ -187,10 +195,17 @@ def find_imOriginSpacing_from_worksheet(worksheet):
                         # print("row val={:}".format(i+1))
                 # else:
                 #     print("error no image origin information in file")
-    origin = np.array(origin)
-    origin = np.expand_dims(origin,axis=0)
-    spacing = np.array(spacing)
-    spacing = np.expand_dims(spacing,axis=0)
+    if np.any(np.array(origin)==None):
+        origin = None
+    else:
+        origin = np.array(origin)
+        origin = np.expand_dims(origin,axis=0)
+    if np.any(np.array(spacing)==None):
+        origin = None
+    else:
+        spacing = np.array(spacing)
+        spacing = np.expand_dims(spacing,axis=0)
+
     return origin,spacing
 
 
