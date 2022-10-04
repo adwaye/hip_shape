@@ -1,90 +1,109 @@
-from PyQt5 import QtWidgets
+from PyQt5 import QtCore, QtWidgets, QtWebEngineWidgets
 from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QFont
+
+from pyface.qt import QtGui,QtCore
 
 import os
 import numpy as np
-from numpy import cos
-from mayavi import mlab
-from visualiser_utils import xray_selection_menu
+# from numpy import cos
+
+from visualiser_utils import xray_selection_menu, stl2mesh3d
 
 
 os.environ['ETS_TOOLKIT'] = 'qt4'
-from pyface.qt import QtGui,QtCore
-from traits.api import HasTraits,Instance,on_trait_change
-from traitsui.api import View,Item
-from mayavi.core.ui.api import MayaviScene,MlabSceneModel,SceneEditor
 import pickle
 
-
 ## create Mayavi Widget and show
+from pyqtgraph.Qt import QtCore,QtGui
+import pyqtgraph as pg
+import pyqtgraph.opengl as gl
 
-class Visualization(HasTraits):
-    # file_name = "/home/adwaye/PycharmProjects/hip_shape/data/Segmentation_and_landmarks_raw/TOH - " \
-    #             "Controls/C4/Left/C4_LPEL.stl"
-    file_name = "/home/adwaye/PycharmProjects/hip_shape/data/Segmentation_and_landmarks_processed/TOH - DDH/D11.p"
-
-    scene = Instance(MlabSceneModel,())
-
-    @on_trait_change('scene.activated')
-    def update_plot(self):
-        mlab.clf()
-        ## PLot to Show
-        with open(self.file_name,'rb') as fp:
-            data = pickle.load(fp)
-        for key in ['RPel','LPel']:
-            f_name = data['surface'][key]['mesh_loc']
-            m_data = mlab.pipeline.open(f_name)
-            obj = mlab.pipeline.surface(m_data)
-
-        # x = my_mesh.x
-        # y = my_mesh.y
-        # z = my_mesh.z
-        # mlab.points3d(x, y, z)
-        # mlab.show()
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from stl import mesh
 
 
-        color = [(139 / 255,233 / 255,253 / 255),(80 / 255,250 / 255,123 / 255),(139 / 255,233 / 255,253 / 255),
-                 (80 / 255,250 / 255,123 / 255)]
-        i = 0
-        for key in ['Right Ant Lat','Right Post Lat','Left Ant Lat','Left Post Lat']:
-            try:
-                coords = data['landmarks'][key]
-                mlab.plot3d(coords[:,0],coords[:,1],coords[:,2],line_width=10,color=color[i])
-                mlab.points3d(coords[:,0],coords[:,1],coords[:,2],scale_factor=1,color=color[i])
-            except KeyError:
-                print("could not find "+key)
-            i += 1
 
-
-    view = View(Item('scene',editor=SceneEditor(scene_class=MayaviScene),
-                     height=250,width=300,show_label=False),
-                resizable=True)
-
-
-class MayaviQWidget(QtGui.QWidget):
-    def __init__(self,parent=None):
-        QtGui.QWidget.__init__(self,parent)
-        layout = QtGui.QVBoxLayout(self)
-        layout.setContentsMargins(0,0,0,0)
-        layout.setSpacing(0)
-        self.visualization = Visualization()
-
-        self.ui = self.visualization.edit_traits(parent=self,
-                                                 kind='subpanel').control
-        layout.addWidget(self.ui)
-        self.ui.setParent(self)
+from pathlib import Path
 
 
 
 
-
-
+# class Widget(QtWidgets.QWidget):
+#     def __init__(self, parent=None):
+#         super().__init__(parent)
+#         self.button = QtWidgets.QPushButton('Plot', self)
+#         self.browser = QtWebEngineWidgets.QWebEngineView(self)
+#
+#         vlayout = QtWidgets.QVBoxLayout(self)
+#         vlayout.addWidget(self.button, alignment=QtCore.Qt.AlignHCenter)
+#         vlayout.addWidget(self.browser)
+#
+#         self.button.clicked.connect(self.show_graph)
+#         self.resize(1000,800)
+#
+#     # def show_graph(self):
+#     #     my_mesh = mesh.Mesh.from_file('data/Segmentation_and_landmarks_raw/TOH - FAI/F1/Left/F1_LPEL.stl')
+#     #     vertices,I,J,K = stl2mesh3d(my_mesh)
+#     #     x,y,z = vertices.T
+#     #     colorscale = [[0,'#e5dee5'],[1,'#e5dee5']]
+#     #     mesh3D = go.Mesh3d(
+#     #         x=x,
+#     #         y=y,
+#     #         z=z,
+#     #         i=I,
+#     #         j=J,
+#     #         k=K,
+#     #         flatshading=True,
+#     #         colorscale=colorscale,
+#     #         intensity=z,
+#     #         name='AT&T',
+#     #         showscale=False)
+#     #     title = "Mesh3d from a STL file<br>AT&T building"
+#     #     layout = go.Layout(paper_bgcolor='rgb(1,1,1)',
+#     #                        title_text=title,title_x=0.5,
+#     #                        font_color='white',
+#     #                        width=300,
+#     #                        height=300,
+#     #                        scene_camera=dict(eye=dict(x=1.25,y=-1.25,z=1)),
+#     #                        scene_xaxis_visible=False,
+#     #                        scene_yaxis_visible=False,
+#     #                        scene_zaxis_visible=False)
+#     #
+#     #     fig = go.Figure(data=[mesh3D],layout=layout)
+#     #
+#     #     fig.data[0].update(
+#     #         lighting=dict(ambient=0.4,diffuse=0.5,roughness=0.9,specular=0.6,fresnel=0.2,facenormalsepsilon=0))
+#     #     fig.data[0].update(lightposition=dict(x=300,
+#     #                                           y=300,
+#     #                                           z=1000))
+#     #
+#     #
+#     #     #fig.update_traces(quartilemethod="exclusive") # or "inclusive", or "linear" by default
+#     #
+#     #     self.browser.setHtml(fig.to_html(include_plotlyjs='cdn'))
+#     #     self.browser.show()
+#     def showSTL(self,filename):
+#         #If another 3D model is already displayed, remove that 3D model.
+#         if self.currentSTL:
+#             self.viewer.removeItem(self.currentSTL)
+#
+#         #Extract vertex points and face faces from the STL file.
+#         points,faces = self.loadSTL(filename)
+#
+#         #A widget that creates a mesh and displays a 3D model(self.viewer)Add to.
+#         meshdata = gl.MeshData(vertexes=points,faces=faces)
+#         mesh = gl.GLMeshItem(meshdata=meshdata,smooth=True,drawFaces=False,drawEdges=True,edgeColor=(0,1,0,1))
+#         self.viewer.addItem(mesh)
+#
+#         self.currentSTL = mesh
 
 #### PyQt5 GUI ####
 class Ui_MainWindow(object):
     def __init__(self):
         self.output_loc = './'
+        self.currentSTL = None
 
 
     def setupUi(self,MainWindow):
@@ -116,12 +135,12 @@ class Ui_MainWindow(object):
         self.gridLayout.addWidget(scrollbar2,1,1,1,1)
         ## Mayavi Widget 1
         container1 = QtGui.QWidget()
-        self.mayavi_widget1 = MayaviQWidget(container1)
-        self.gridLayout.addWidget(self.mayavi_widget1,1,0,1,1)
+        self.viewer1 =  gl.GLViewWidget()
+        self.gridLayout.addWidget(self.viewer1,1,0,1,1)
         ## Mayavi Widget 2
-        container2 = QtGui.QWidget()
-        self.mayavi_widget2 = MayaviQWidget(container2)
-        self.gridLayout.addWidget(self.mayavi_widget2,0,1,1,1)
+        # container2 = Widget.QWidget()
+        # self.mayavi_widget2 = MayaviQWidget(container2)
+        # self.gridLayout.addWidget(self.mayavi_widget2,0,1,1,1)
 
         ## SET TEXT
 #        self.retranslateUi(MainWindow)
@@ -173,7 +192,7 @@ class Ui_MainWindow(object):
         self.display_studies2()
         self.menu1.wd_info.textChanged.connect(self.change_wd1)
         self.menu2.wd_info.textChanged.connect(self.change_wd2)
-        self.menu1.combobox_studyid.currentIndexChanged.connect(self.display_CT1)
+        self.menu1.combobox_studyid.currentIndexChanged.connect(self.showSTL1)
         self.menu2.combobox_studyid.currentIndexChanged.connect(self.display_CT2)
         # self.menu1.current_study_info.textChanged.connect(self.open_study_creator)
         # self.menu1.current_file_info.textChanged.connect(self.open_xray_adder)
@@ -204,6 +223,48 @@ class Ui_MainWindow(object):
         filename = os.path.join(self.menu2.wd_info.text(),self.menu2.combobox_studyid.currentText())
         self.mayavi_widget2.visualization.file_name = filename
         self.mayavi_widget2.visualization.update_plot()
+
+
+    def showSTL1(self):
+        if self.currentSTL:
+            self.viewer1.removeItem(self.currentSTL)
+        file_name = os.path.join(self.menu1.wd_info.text(),self.menu1.combobox_studyid.currentText())
+        with open(file_name,'rb') as fp:
+            data = pickle.load(fp)
+        for key in ['RPel']:
+            f_name = data['surface'][key]['mesh_loc']
+            points,faces = self.loadSTL(f_name)
+
+        # color = [(139 / 255,233 / 255,253 / 255),(80 / 255,250 / 255,123 / 255),(139 / 255,233 / 255,253 / 255),
+        #          (80 / 255,250 / 255,123 / 255)]
+        # i = 0
+        # for key in ['Right Ant Lat','Right Post Lat','Left Ant Lat','Left Post Lat']:
+        #     try:
+        #         coords = data['landmarks'][key]
+        #         mlab.plot3d(coords[:,0],coords[:,1],coords[:,2],line_width=10,color=color[i])
+        #         mlab.points3d(coords[:,0],coords[:,1],coords[:,2],scale_factor=1,color=color[i])
+        #     except KeyError:
+        #         print("could not find "+key)
+        #     i += 1
+
+
+        meshdata = gl.MeshData(vertexes=points,faces=faces)
+        mesh = gl.GLMeshItem(meshdata=meshdata,smooth=True,drawFaces=True,drawEdges=False,edgeColor=(0,1,0,1),
+                             shader='shaded')
+        self.viewer1.addItem(mesh)
+        mean_pos = np.mean(points,axis=0)
+        self.viewer1.pan(mean_pos[0],mean_pos[1],mean_pos[2],relative='global')
+        self.viewer1.update()
+
+        self.currentSTL = mesh
+
+    def loadSTL(self,filename):
+        m = mesh.Mesh.from_file(filename)
+        shape = m.points.shape
+        points = m.points.reshape(-1,3)
+        print(points.shape)
+        faces = np.arange(points.shape[0]).reshape(-1,3)
+        return points,faces
 
 
 
