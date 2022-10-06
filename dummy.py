@@ -7,7 +7,7 @@ import os
 import numpy as np
 # from numpy import cos
 
-from visualiser_utils import xray_selection_menu, stl2mesh3d
+from visualiser_utils import xray_selection_menu_old, stl2mesh3d
 
 
 os.environ['ETS_TOOLKIT'] = 'qt4'
@@ -19,6 +19,7 @@ import pyqtgraph as pg
 import pyqtgraph.opengl as gl
 
 from PyQt5.QtWidgets import *
+from PyQt5 import QtWidgets
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from stl import mesh
@@ -27,14 +28,11 @@ from stl import mesh
 
 
 
-#### PyQt5 GUI ####
+
 class Ui_MainWindow(object):
     def __init__(self):
         self.output_loc = './'
-        self.currentSTL1 = None
-        self.currentSTL2 = None
-        self.sizeObject = QDesktopWidget().screenGeometry(-1)
-        print(" Screen size : " + str(self.sizeObject.height()) + "x" + str(self.sizeObject.width()))
+        self.currentSTL = None
 
 
     def setupUi(self,MainWindow):
@@ -43,48 +41,35 @@ class Ui_MainWindow(object):
         MainWindow.setGeometry(200,200,1100,700)
 
         ## CENTRAL WIDGET
-        self.centralwidget = QWidget(MainWindow)
+        self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         MainWindow.setCentralWidget(self.centralwidget)
 
-        ##top-bottom layout:
-        main_layout  = QHBoxLayout()
+        ## GRID LAYOUT
+        self.gridLayout = QtWidgets.QGridLayout(self.centralwidget)
+        self.gridLayout.setObjectName("gridLayout")
 
-        ## left side
-        self.menu1 = xray_selection_menu()
+        ## BUTTONS
+        self.menu1 = xray_selection_menu_old()
         scrollbar1 = QScrollArea(widgetResizable=True)
-        scrollbar1.setMinimumHeight(200)
-        scrollbar1.setMaximumHeight(200)
+        scrollbar1.setMaximumHeight(300)
         scrollbar1.setWidget(self.menu1)
-        splitter1 = QSplitter(orientation=Qt.Vertical)
-        splitter1.addWidget(scrollbar1)
+        self.gridLayout.addWidget(scrollbar1,0,0,1,1)
+        #self.gridLayout.addWidget(self.qline_edit1,0,0,2,1)
 
-        self.viewer1 = gl.GLViewWidget()
-        self.viewer1.setMinimumWidth(800)
-        self.viewer1.setMinimumHeight(800)
-        splitter1.addWidget(self.viewer1)
-
-        #right side
-        self.menu2 = xray_selection_menu()
+        self.menu2 = xray_selection_menu_old()
         scrollbar2 = QScrollArea(widgetResizable=True)
-        scrollbar2.setMinimumHeight(200)
-        scrollbar2.setMaximumHeight(200)
+        scrollbar2.setMaximumHeight(300)
         scrollbar2.setWidget(self.menu2)
-        splitter2 = QSplitter(orientation=Qt.Vertical)
-        splitter2.addWidget(scrollbar2)
-
-        self.viewer2 = gl.GLViewWidget()
-        self.viewer2.setMinimumWidth(800)
-        self.viewer2.setMinimumHeight(800)
-        splitter2.addWidget(self.viewer2)
-
-        main_splitter = QSplitter(orientation=Qt.Horizontal)
-        main_splitter.addWidget(splitter1)
-        main_splitter.addWidget(splitter2)
-        main_layout.addWidget(main_splitter)
-        self.centralwidget.setLayout(main_layout)
-
-
+        self.gridLayout.addWidget(scrollbar2,1,1,1,1)
+        ## Mayavi Widget 1
+        container1 = QtGui.QWidget()
+        self.viewer1 =  gl.GLViewWidget()
+        self.gridLayout.addWidget(self.viewer1,1,0,1,1)
+        ## Mayavi Widget 2
+        # container2 = Widget.QWidget()
+        # self.mayavi_widget2 = MayaviQWidget(container2)
+        # self.gridLayout.addWidget(self.mayavi_widget2,0,1,1,1)
 
         ## SET TEXT
 #        self.retranslateUi(MainWindow)
@@ -103,7 +88,7 @@ class Ui_MainWindow(object):
         if not os.path.isdir(self.output_loc):
             os.makedirs(self.output_loc)
         # self.xray_selection_menu.wd_info.setText(self.output_loc)
-        # self.menu1.combobox_xrayid.clear()
+        self.menu1.combobox_xrayid.clear()
         self.menu1.combobox_studyid.clear()
         self.display_studies1()
 
@@ -113,7 +98,7 @@ class Ui_MainWindow(object):
         if not os.path.isdir(self.output_loc):
             os.makedirs(self.output_loc)
         # self.xray_selection_menu.wd_info.setText(self.output_loc)
-        # self.menu2.combobox_xrayid.clear()
+        self.menu2.combobox_xrayid.clear()
         self.menu2.combobox_studyid.clear()
         self.display_studies2()
 
@@ -137,7 +122,7 @@ class Ui_MainWindow(object):
         self.menu1.wd_info.textChanged.connect(self.change_wd1)
         self.menu2.wd_info.textChanged.connect(self.change_wd2)
         self.menu1.combobox_studyid.currentIndexChanged.connect(self.showSTL1)
-        self.menu2.combobox_studyid.currentIndexChanged.connect(self.showSTL2)
+        self.menu2.combobox_studyid.currentIndexChanged.connect(self.display_CT2)
         # self.menu1.current_study_info.textChanged.connect(self.open_study_creator)
         # self.menu1.current_file_info.textChanged.connect(self.open_xray_adder)
 
@@ -170,77 +155,37 @@ class Ui_MainWindow(object):
 
 
     def showSTL1(self):
-        #todo: load from pickle directly
-        if self.currentSTL1 is not None:
-            self.viewer1.removeItem(self.currentSTL1)
-            self.viewer1.clear()
+        if self.currentSTL:
+            self.viewer1.removeItem(self.currentSTL)
         file_name = os.path.join(self.menu1.wd_info.text(),self.menu1.combobox_studyid.currentText())
         with open(file_name,'rb') as fp:
             data = pickle.load(fp)
-        k= 0
-        for key in ['RPel','LPel']:
+        for key in ['RPel']:
             f_name = data['surface'][key]['mesh_loc']
-            if k ==0:
-                points = data['surface'][key]['points']
-                faces  = data['surface'][key]['faces']
-            else:
-                points_ = data['surface'][key]['points']
-                faces_  = np.arange(points_.shape[0]).reshape(-1,3)+points.shape[0]
-                print(faces_)
-                points = np.concatenate((points,points_),axis=0)
-                faces  = np.concatenate((faces ,faces_),axis=0)
-            k+=1
+            points,faces = self.loadSTL(f_name)
 
+        # color = [(139 / 255,233 / 255,253 / 255),(80 / 255,250 / 255,123 / 255),(139 / 255,233 / 255,253 / 255),
+        #          (80 / 255,250 / 255,123 / 255)]
+        # i = 0
+        # for key in ['Right Ant Lat','Right Post Lat','Left Ant Lat','Left Post Lat']:
+        #     try:
+        #         coords = data['landmarks'][key]
+        #         mlab.plot3d(coords[:,0],coords[:,1],coords[:,2],line_width=10,color=color[i])
+        #         mlab.points3d(coords[:,0],coords[:,1],coords[:,2],scale_factor=1,color=color[i])
+        #     except KeyError:
+        #         print("could not find "+key)
+        #     i += 1
 
-            #points,faces = self.loadSTL(f_name)
-
-
-        mean_pos = np.mean(points,axis=0)
-        points = points-mean_pos
-        #self.viewer1.pan(mean_pos[0],mean_pos[1],mean_pos[2],relative='global')
-        self.viewer1.updateGL()
-        print('mean osition of object is')
-        print(mean_pos)
-        print('camera position is')
-        print(self.viewer1.cameraPosition())
 
         meshdata = gl.MeshData(vertexes=points,faces=faces)
         mesh = gl.GLMeshItem(meshdata=meshdata,smooth=True,drawFaces=True,drawEdges=False,edgeColor=(0,1,0,1),
                              shader='shaded')
         self.viewer1.addItem(mesh)
+        mean_pos = np.mean(points,axis=0)
+        self.viewer1.pan(mean_pos[0],mean_pos[1],mean_pos[2],relative='global')
         self.viewer1.update()
-        self.currentSTL1 = mesh
 
-    def showSTL2(self):
-        #todo: load from pickle directly
-        if self.currentSTL2 is not None:
-            self.viewer2.removeItem(self.currentSTL2)
-            self.viewer2.clear()
-        file_name = os.path.join(self.menu2.wd_info.text(),self.menu2.combobox_studyid.currentText())
-        with open(file_name,'rb') as fp:
-            data = pickle.load(fp)
-        for key in ['RPel']:
-            f_name = data['surface'][key]['mesh_loc']
-            # points = data['surface'][key]['points']
-            # faces  = data['surface'][key]['points']
-            points,faces = self.loadSTL(f_name)
-
-
-            mean_pos = np.mean(points,axis=0)
-            #points = points-mean_pos
-            self.viewer2.pan(mean_pos[0],mean_pos[1],mean_pos[2],relative='global')
-            self.viewer2.updateGL()
-            print('mean osition of object is')
-            print(mean_pos)
-            print('camera position is')
-            print(self.viewer2.cameraPosition())
-
-            meshdata = gl.MeshData(vertexes=points,faces=faces)
-            mesh = gl.GLMeshItem(meshdata=meshdata,smooth=True,drawFaces=True,drawEdges=False,edgeColor=(0,1,0,1),
-                             shader='shaded')
-        self.viewer2.addItem(mesh)
-        self.viewer2.update()
-        self.currentSTL2 = mesh
+        self.currentSTL = mesh
 
     def loadSTL(self,filename):
         m = mesh.Mesh.from_file(filename)
@@ -249,7 +194,6 @@ class Ui_MainWindow(object):
         print(points.shape)
         faces = np.arange(points.shape[0]).reshape(-1,3)
         return points,faces
-
 
 
 
