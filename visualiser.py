@@ -1,5 +1,5 @@
-from PyQt5 import QtCore, QtWidgets, QtWebEngineWidgets
-from PyQt5.QtWidgets import *
+#from PyQt5 import QtCore, QtWidgets, QtWebEngineWidgets
+#from PyQt5.QtWidgets import *
 
 from pyface.qt import QtGui,QtCore
 
@@ -25,85 +25,15 @@ from stl import mesh
 
 
 
-from pathlib import Path
 
-
-
-
-# class Widget(QtWidgets.QWidget):
-#     def __init__(self, parent=None):
-#         super().__init__(parent)
-#         self.button = QtWidgets.QPushButton('Plot', self)
-#         self.browser = QtWebEngineWidgets.QWebEngineView(self)
-#
-#         vlayout = QtWidgets.QVBoxLayout(self)
-#         vlayout.addWidget(self.button, alignment=QtCore.Qt.AlignHCenter)
-#         vlayout.addWidget(self.browser)
-#
-#         self.button.clicked.connect(self.show_graph)
-#         self.resize(1000,800)
-#
-#     # def show_graph(self):
-#     #     my_mesh = mesh.Mesh.from_file('data/Segmentation_and_landmarks_raw/TOH - FAI/F1/Left/F1_LPEL.stl')
-#     #     vertices,I,J,K = stl2mesh3d(my_mesh)
-#     #     x,y,z = vertices.T
-#     #     colorscale = [[0,'#e5dee5'],[1,'#e5dee5']]
-#     #     mesh3D = go.Mesh3d(
-#     #         x=x,
-#     #         y=y,
-#     #         z=z,
-#     #         i=I,
-#     #         j=J,
-#     #         k=K,
-#     #         flatshading=True,
-#     #         colorscale=colorscale,
-#     #         intensity=z,
-#     #         name='AT&T',
-#     #         showscale=False)
-#     #     title = "Mesh3d from a STL file<br>AT&T building"
-#     #     layout = go.Layout(paper_bgcolor='rgb(1,1,1)',
-#     #                        title_text=title,title_x=0.5,
-#     #                        font_color='white',
-#     #                        width=300,
-#     #                        height=300,
-#     #                        scene_camera=dict(eye=dict(x=1.25,y=-1.25,z=1)),
-#     #                        scene_xaxis_visible=False,
-#     #                        scene_yaxis_visible=False,
-#     #                        scene_zaxis_visible=False)
-#     #
-#     #     fig = go.Figure(data=[mesh3D],layout=layout)
-#     #
-#     #     fig.data[0].update(
-#     #         lighting=dict(ambient=0.4,diffuse=0.5,roughness=0.9,specular=0.6,fresnel=0.2,facenormalsepsilon=0))
-#     #     fig.data[0].update(lightposition=dict(x=300,
-#     #                                           y=300,
-#     #                                           z=1000))
-#     #
-#     #
-#     #     #fig.update_traces(quartilemethod="exclusive") # or "inclusive", or "linear" by default
-#     #
-#     #     self.browser.setHtml(fig.to_html(include_plotlyjs='cdn'))
-#     #     self.browser.show()
-#     def showSTL(self,filename):
-#         #If another 3D model is already displayed, remove that 3D model.
-#         if self.currentSTL:
-#             self.viewer.removeItem(self.currentSTL)
-#
-#         #Extract vertex points and face faces from the STL file.
-#         points,faces = self.loadSTL(filename)
-#
-#         #A widget that creates a mesh and displays a 3D model(self.viewer)Add to.
-#         meshdata = gl.MeshData(vertexes=points,faces=faces)
-#         mesh = gl.GLMeshItem(meshdata=meshdata,smooth=True,drawFaces=False,drawEdges=True,edgeColor=(0,1,0,1))
-#         self.viewer.addItem(mesh)
-#
-#         self.currentSTL = mesh
 
 #### PyQt5 GUI ####
 class Ui_MainWindow(object):
     def __init__(self):
         self.output_loc = './'
         self.currentSTL = None
+        self.sizeObject = QDesktopWidget().screenGeometry(-1)
+        print(" Screen size : " + str(self.sizeObject.height()) + "x" + str(self.sizeObject.width()))
 
 
     def setupUi(self,MainWindow):
@@ -112,35 +42,48 @@ class Ui_MainWindow(object):
         MainWindow.setGeometry(200,200,1100,700)
 
         ## CENTRAL WIDGET
-        self.centralwidget = QtWidgets.QWidget(MainWindow)
+        self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         MainWindow.setCentralWidget(self.centralwidget)
 
-        ## GRID LAYOUT
-        self.gridLayout = QtWidgets.QGridLayout(self.centralwidget)
-        self.gridLayout.setObjectName("gridLayout")
+        ##top-bottom layout:
+        main_layout  = QHBoxLayout()
 
-        ## BUTTONS
+        ## left side
         self.menu1 = xray_selection_menu()
         scrollbar1 = QScrollArea(widgetResizable=True)
-        scrollbar1.setMaximumHeight(300)
+        scrollbar1.setMinimumHeight(200)
+        scrollbar1.setMaximumHeight(200)
         scrollbar1.setWidget(self.menu1)
-        self.gridLayout.addWidget(scrollbar1,0,0,1,1)
-        #self.gridLayout.addWidget(self.qline_edit1,0,0,2,1)
+        splitter1 = QSplitter(orientation=Qt.Vertical)
+        splitter1.addWidget(scrollbar1)
 
+        self.viewer1 = gl.GLViewWidget()
+        self.viewer1.setMinimumWidth(800)
+        self.viewer1.setMinimumHeight(800)
+        splitter1.addWidget(self.viewer1)
+
+        #right side
         self.menu2 = xray_selection_menu()
         scrollbar2 = QScrollArea(widgetResizable=True)
-        scrollbar2.setMaximumHeight(300)
+        scrollbar2.setMinimumHeight(200)
+        scrollbar2.setMaximumHeight(200)
         scrollbar2.setWidget(self.menu2)
-        self.gridLayout.addWidget(scrollbar2,1,1,1,1)
-        ## Mayavi Widget 1
-        container1 = QtGui.QWidget()
-        self.viewer1 =  gl.GLViewWidget()
-        self.gridLayout.addWidget(self.viewer1,1,0,1,1)
-        ## Mayavi Widget 2
-        # container2 = Widget.QWidget()
-        # self.mayavi_widget2 = MayaviQWidget(container2)
-        # self.gridLayout.addWidget(self.mayavi_widget2,0,1,1,1)
+        splitter2 = QSplitter(orientation=Qt.Vertical)
+        splitter2.addWidget(scrollbar2)
+
+        self.viewer2 = gl.GLViewWidget()
+        self.viewer2.setMinimumWidth(800)
+        self.viewer2.setMinimumHeight(800)
+        splitter2.addWidget(self.viewer2)
+
+        main_splitter = QSplitter(orientation=Qt.Horizontal)
+        main_splitter.addWidget(splitter1)
+        main_splitter.addWidget(splitter2)
+        main_layout.addWidget(main_splitter)
+        self.centralwidget.setLayout(main_layout)
+
+
 
         ## SET TEXT
 #        self.retranslateUi(MainWindow)
@@ -159,7 +102,7 @@ class Ui_MainWindow(object):
         if not os.path.isdir(self.output_loc):
             os.makedirs(self.output_loc)
         # self.xray_selection_menu.wd_info.setText(self.output_loc)
-        self.menu1.combobox_xrayid.clear()
+        # self.menu1.combobox_xrayid.clear()
         self.menu1.combobox_studyid.clear()
         self.display_studies1()
 
@@ -169,7 +112,7 @@ class Ui_MainWindow(object):
         if not os.path.isdir(self.output_loc):
             os.makedirs(self.output_loc)
         # self.xray_selection_menu.wd_info.setText(self.output_loc)
-        self.menu2.combobox_xrayid.clear()
+        # self.menu2.combobox_xrayid.clear()
         self.menu2.combobox_studyid.clear()
         self.display_studies2()
 
@@ -193,7 +136,7 @@ class Ui_MainWindow(object):
         self.menu1.wd_info.textChanged.connect(self.change_wd1)
         self.menu2.wd_info.textChanged.connect(self.change_wd2)
         self.menu1.combobox_studyid.currentIndexChanged.connect(self.showSTL1)
-        self.menu2.combobox_studyid.currentIndexChanged.connect(self.display_CT2)
+        self.menu2.combobox_studyid.currentIndexChanged.connect(self.showSTL2)
         # self.menu1.current_study_info.textChanged.connect(self.open_study_creator)
         # self.menu1.current_file_info.textChanged.connect(self.open_xray_adder)
 
@@ -226,44 +169,74 @@ class Ui_MainWindow(object):
 
 
     def showSTL1(self):
-        if self.currentSTL:
+        #todo: load from pickle directly
+        if self.currentSTL is not None:
             self.viewer1.removeItem(self.currentSTL)
+            self.viewer1.clear()
         file_name = os.path.join(self.menu1.wd_info.text(),self.menu1.combobox_studyid.currentText())
         with open(file_name,'rb') as fp:
             data = pickle.load(fp)
         for key in ['RPel']:
             f_name = data['surface'][key]['mesh_loc']
-            points,faces = self.loadSTL(f_name)
+            points = data['surface'][key]['points']
+            faces  = data['surface'][key]['points']
+            #points,faces = self.loadSTL(f_name)
 
-        # color = [(139 / 255,233 / 255,253 / 255),(80 / 255,250 / 255,123 / 255),(139 / 255,233 / 255,253 / 255),
-        #          (80 / 255,250 / 255,123 / 255)]
-        # i = 0
-        # for key in ['Right Ant Lat','Right Post Lat','Left Ant Lat','Left Post Lat']:
-        #     try:
-        #         coords = data['landmarks'][key]
-        #         mlab.plot3d(coords[:,0],coords[:,1],coords[:,2],line_width=10,color=color[i])
-        #         mlab.points3d(coords[:,0],coords[:,1],coords[:,2],scale_factor=1,color=color[i])
-        #     except KeyError:
-        #         print("could not find "+key)
-        #     i += 1
 
+            mean_pos = np.mean(points,axis=0)
+            #points = points-mean_pos
+            self.viewer1.pan(mean_pos[0],mean_pos[1],mean_pos[2],relative='global')
+            #self.viewer1.updateGL()
+            print('mean osition of object is')
+            print(mean_pos)
+            print('camera position is')
+            print(self.viewer1.cameraPosition())
 
         meshdata = gl.MeshData(vertexes=points,faces=faces)
         mesh = gl.GLMeshItem(meshdata=meshdata,smooth=True,drawFaces=True,drawEdges=False,edgeColor=(0,1,0,1),
                              shader='shaded')
         self.viewer1.addItem(mesh)
-        mean_pos = np.mean(points,axis=0)
-        self.viewer1.pan(mean_pos[0],mean_pos[1],mean_pos[2],relative='global')
         self.viewer1.update()
+        self.currentSTL = mesh
 
+
+    def showSTL2(self):
+        #todo: load from pickle directly
+        if self.currentSTL is not None:
+            self.viewer2.removeItem(self.currentSTL)
+            self.viewer2.clear()
+        file_name = os.path.join(self.menu2.wd_info.text(),self.menu2.combobox_studyid.currentText())
+        with open(file_name,'rb') as fp:
+            data = pickle.load(fp)
+        for key in ['RPel']:
+            f_name = data['surface'][key]['mesh_loc']
+            # points = data['surface'][key]['points']
+            # faces  = data['surface'][key]['points']
+            points,faces = self.loadSTL(f_name)
+
+
+            mean_pos = np.mean(points,axis=0)
+            #points = points-mean_pos
+            self.viewer2.pan(mean_pos[0],mean_pos[1],mean_pos[2],relative='global')
+            self.viewer2.updateGL()
+            print('mean osition of object is')
+            print(mean_pos)
+            print('camera position is')
+            print(self.viewer2.cameraPosition())
+
+            meshdata = gl.MeshData(vertexes=points,faces=faces)
+            mesh = gl.GLMeshItem(meshdata=meshdata,smooth=True,drawFaces=True,drawEdges=False,edgeColor=(0,1,0,1),
+                             shader='shaded')
+        self.viewer2.addItem(mesh)
+        self.viewer2.update()
         self.currentSTL = mesh
 
     def loadSTL(self,filename):
         m = mesh.Mesh.from_file(filename)
         shape = m.points.shape
-        points = m.points.reshape(-1,3)
+        points = m.points.reshape(-1,3).astype(int)
         print(points.shape)
-        faces = np.arange(points.shape[0]).reshape(-1,3)
+        faces = np.arange(points.shape[0]).reshape(-1,3).astype(int)
         return points,faces
 
 
@@ -272,9 +245,9 @@ class Ui_MainWindow(object):
 if __name__ == "__main__":
     import sys
 
-    app = QtWidgets.QApplication(sys.argv)
+    app = QApplication(sys.argv)
     app.setStyle('Fusion')
-    MainWindow = QtWidgets.QMainWindow()
+    MainWindow = QMainWindow()
 
     ui = Ui_MainWindow()
     ui.setupUi(MainWindow)

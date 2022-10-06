@@ -129,18 +129,13 @@ def _to_pickle():
                                 f.write(source_study_path+' \n')
 
 
-                        # point_cloud             = mesh.Mesh.from_file(stl_path)
+
                         if stl_path is not None:
+                            m = mesh.Mesh.from_file(stl_path)
+                            points,faces = loadSTL(stl_path)
                             surface_dict[key]       = {}
-                            #todo: should I store the individual v0-v2?
-                            #todo: find a way to use this data to plot a triangulated mesh instead of using the file
-                            # name directly
-                            # surface_dict[key]['v0'] = point_cloud.v0
-                            # surface_dict[key]['v1'] = point_cloud.v1
-                            # surface_dict[key]['v2'] = point_cloud.v2
-                            # surface_dict[key]['x'] = point_cloud.x
-                            # surface_dict[key]['y'] = point_cloud.y
-                            # surface_dict[key]['z'] = point_cloud.z
+                            surface_dict[key]['points'] = points
+                            surface_dict[key]['faces']  = faces
                             surface_dict[key]['mesh_loc'] = stl_path
                     else:
                         continue
@@ -154,6 +149,14 @@ def _to_pickle():
                         pickle.dump(out_dict,fp,protocol=pickle.HIGHEST_PROTOCOL)
 
 
+
+def loadSTL(filename):
+    m = mesh.Mesh.from_file(filename)
+    shape = m.points.shape
+    points = m.points.reshape(-1,3)
+    print(points.shape)
+    faces = np.arange(points.shape[0]).reshape(-1,3)
+    return points,faces
 
 def plot_all():
     target_file = "/home/adwaye/PycharmProjects/hip_shape/data/Segmentation_and_landmarks_processed/UCLH - Controls/00796671.p"
