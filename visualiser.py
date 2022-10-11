@@ -207,6 +207,8 @@ class Ui_MainWindow(object):
         meshdata = gl.MeshData(vertexes=points,faces=faces)
         mesh = gl.GLMeshItem(meshdata=meshdata,smooth=True,drawFaces=True,drawEdges=False,edgeColor=(0,1,0,1),
                              shader='shaded')
+        #scatter = gl.GLScatterPlotItem(pos=)#todo: add socket coordinates: link this to some tick box
+        #scatter = gl.GLScatterPlotItem(pos=)#todo: add APP coordinates: link this to some tick box
         self.viewer1.addItem(mesh)
         self.viewer1.update()
         self.currentSTL1 = mesh
