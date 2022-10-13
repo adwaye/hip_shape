@@ -1,6 +1,8 @@
 
 import os.path
 
+import matplotlib.pyplot as plt
+
 from read_landmarks import *
 from datetime import datetime
 import pickle
@@ -11,6 +13,11 @@ from skspatial.objects import Plane, Points
 from skspatial.plotting import plot_3d
 from mpl_toolkits.mplot3d import Axes3D
 from utils import FourierFitter
+from scipy import ndimage as ndi
+import edt #got this from https://github.com/seung-lab/euclidean-distance-transform-3d
+import time
+
+
 
 
 dt_string = datetime.now().strftime("%d.%m.%Y_%H:%M:%S")
@@ -57,54 +64,142 @@ for side in ['Right']:#['Right','Left']:
         except KeyError:
             print('cannot find '+side+' '+key)
 
-plane = Plane.best_fit(Points(template_points))
-
-fig = plt.figure(figsize=(4,4))
-
-ax = fig.add_subplot(111,projection='3d')
-
-ax.set_box_aspect(aspect=(1,1,1))
-ax.plot(template_points[:,0],template_points[:,1],template_points[:,2],color='blue')
-lims = np.min(template_points,axis=0),np.max(template_points,axis=0)
+# plane = Plane.best_fit(Points(template_points))
+#
+# fig = plt.figure(figsize=(4,4))
+#
+# ax = fig.add_subplot(111,projection='3d')
+#
+# ax.set_box_aspect(aspect=(1,1,1))
+# ax.plot(template_points[:,0],template_points[:,1],template_points[:,2],color='blue')
+# lims = np.min(template_points,axis=0),np.max(template_points,axis=0)
 #plane.plot_3d(ax,lims_y=(-150,50),lims_x=(-75,50),alpha=0.2)
 
-k=0
-for pt in template_points:
-    pt_proj = plane.project_point(pt)
-    alpha   = -pt_proj[2]/plane.normal[2]
-    pt_xy   = pt_proj + alpha*plane.normal
-    ax.scatter(pt_xy[0],pt_xy[1],pt_xy[2],color='red')
-    if k ==0:
-        pts_xy = np.expand_dims(pt_xy,axis=0)
-    else:
-        pt_xy_ = np.expand_dims(pt_xy,axis=0)
-        pts_xy  = np.concatenate((pts_xy,pt_xy_),axis=0)
-    k+=1
+
+#need to embed the curves into an array:
+#calculating size of the array to allocate for the distance transform
+padding_plus  = 100
+padding_minus = 100
+
+template_points_cent = template_points-np.mean(template_points,axis=0,keepdims=True)
+target_points_cent   = target_points-np.mean(target_points,axis=0,keepdims=True)
+
+merged_pts = np.concatenate([template_points_cent,target_points_cent],axis=0)
+max_array  = np.max(merged_pts,axis=0,keepdims=True)+padding_plus #add some padding
+min_array  = np.min(merged_pts,axis=0,keepdims=True)-padding_minus
+size       = max_array-min_array
+size       = size.astype(np.int)
+
+template_points_proc = template_points_cent+size//2
+target_points_proc   = target_points_cent+size//2
 
 
-x = pts_xy[:,0]
-y = pts_xy[:,1]
+mask = np.zeros(size.ravel())
+"""
+for points in template_points_proc.astype(np.int):
+    print(points)
+    mask[points[0],points[1],points[2]] = 1
+"""
+mask[100,:,:] = 1#todo try on different slices to see if this is working and plot the slices to see how the distance
+# transform works
+mask      = mask.astype(np.bool)
 
-fig,ax=plt.subplots()
-ax.plot(x,y,'o')
-labels = ['{0}'.format(i) for i in range(len(x))]
-skips = 1
-for label,x_,y_ in zip(labels[::skips],x[::skips],y[::skips]):
-    ax.annotate(label,xy=(x_,y_),xytext=(-10,10),textcoords='offset points',ha='right',
-                va='bottom',
-                bbox=dict(boxstyle='round,pad=0.3',fc='yellow',alpha=0.1),
-                arrowprops=dict(arrowstyle='->',connectionstyle='arc3,rad=0'))
+ncpus=4
+dt = edt.edt(data=~mask,anisotropy=(1,1,1), black_border=False,order='C',parallel=ncpus)
 
-fourier_fit = FourierFitter(x,y)
-#fixme: this is not working with fourier as shape is not closed. instead use a curve fitter as it is one-one
-t = np.arange(0,10,1)/10
-t = t.reshape(t.shape[0],1,1)
-
-sampled_pts = fourier_fit.sample_pts(t)
-
-ax.plot(sampled_pts[:,0,0],sampled_pts[:,0,1])
+slice = 100
+plt.figure()
+plt.title(label='mask')
+plt.imshow(mask[slice,:,:
+           ])
+plt.colorbar()
+plt.figure()
+plt.title(label='distance transform')
+plt.imshow(dt[slice,:,:
+           ])
+plt.colorbar()
 
 
+
+
+def test_edt():
+    log_loc = './log'
+    log_file = os.path.join(log_loc,'edt_timing.txt')
+    print("distance transform github")
+    ncpus = 1
+    start = time.time()
+    dt = edt.edt(data=mask,anisotropy=(1,1,1), black_border=True,order='F',parallel=ncpus)
+    time_taken_edt = time.time()-start
+    my_string = "time for github dt {:} with {:} cpus".format(time_taken_edt,ncpus)
+    with open(log_file,'w') as f:
+        f.write( my_string+ ' \n')
+    print(my_string)
+
+
+    print("distance transform github")
+    start = time.time()
+    ncpus = 2
+    dt = edt.edt(data=mask,anisotropy=(1,1,1), black_border=True,order='F',parallel=ncpus)
+    time_taken_edt = time.time()-start
+    my_string = "time for github dt {:} with {:} cpus".format(time_taken_edt,ncpus)
+    with open(log_file,'a') as f:
+        f.write( my_string+ ' \n')
+    print(my_string)
+
+
+    print("distance transform github")
+    start = time.time()
+    ncpus = 4
+    dt = edt.edt(data=mask,anisotropy=(1,1,1), black_border=True,order='F',parallel=ncpus)
+    time_taken_edt = time.time()-start
+    my_string = "time for github dt {:} with {:} cpus".format(time_taken_edt,ncpus)
+    with open(log_file,'a') as f:
+        f.write( my_string+ ' \n')
+    print(my_string)
+
+
+
+# import plotly.graph_objects as go
+# X = np.arange(0,size[0][0],1)
+# Y = np.arange(0,size[0][1],1)
+# Z = np.arange(0,size[0][2],1)
+# fig = go.Figure(data=go.Volume(
+#     x=X.flatten(),
+#     y=Y.flatten(),
+#     z=Z.flatten(),
+#     value=dt.flatten(),
+#     isomin=-0.0,
+#     isomax=10,
+#     opacity=0.1, # needs to be small to see through all surfaces
+#     surface_count=21, # needs to be a large number for good volume rendering
+#     ))
+# fig.show()
+
+
+# print("distance transform scipy")
+# start = time.time()
+# distArray = ndi.distance_transform_edt(~mask)
+# time_taken_scipy = time.time()-start
+# print("time for github scipy {:}".format(time_taken_scipy))
+
+
+
+
+
+
+#
+#
+# Nmax = 2
+# template_curve[:,0:int(D / 2)] = template_curve[:,0:int(D / 2)] + nNx / 2
+# template_curve[:,int(D / 2):D] = template_curve[:,int(D / 2):D] + nNy / 2
+# pts = np.transpose(
+#     np.concatenate((template_curve[:,0:int(D / 2)],template_curve[:,int(D / 2):D]),axis=0).astype(np.int32))
+# mask = np.zeros((nNx,nNy))
+#
+# mask = mask.astype(np.bool)
+# distArray = ndi.distance_transform_edt(~mask)
+#
+# max_array = np.max(,axis=0)
 
 
 
