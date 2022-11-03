@@ -28,6 +28,16 @@ Socket_aligned_trans = './data/Segmentation_and_landmarks_socket_aligned/'
 paths     = ['UCLH - Controls','TOH - Controls','TOH - FAI','TOH - DDH']
 
 
+
+
+
+
+
+
+
+
+
+
 # Relevant links:
 #   - http://stackoverflow.com/a/32244818/263061 (solution with scale)
 #   - "Least-Squares Rigid Motion Using SVD" (no scale but easy proofs and explains how weights could be added)

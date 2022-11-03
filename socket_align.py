@@ -8,6 +8,7 @@ from datetime import datetime
 import pickle
 
 import numpy as np
+from stl import mesh  # pip install numpy-stl
 import numpy.linalg
 from skspatial.objects import Plane, Points
 from skspatial.plotting import plot_3d
@@ -24,8 +25,221 @@ source_loc = './data/Segmentation_and_landmarks_raw/'
 target_loc = './data/Segmentation_and_landmarks_processed/'
 APP_aligned_loc = './data/Segmentation_and_landmarks_APP_aligned/'
 Socket_aligned_trans = './data/Segmentation_and_landmarks_socket_aligned/'
+dtype = jnp.float64
+
+
+
+
+class HipData(object):
+    def __init__(self,pickle_path):
+        self.pickle_path = pickle_path
+        with open(pickle_path,'rb') as fp:
+            data = pickle.load(fp)
+        self.data   = data
+        try:
+            self.rot_mat    = self.data['rotmat']
+            self.trans_vect = self.data['translation']
+        except KeyError:
+            self.rot_mat = None
+            self.trans_vect = None
+
+
+    def rotate(self,points):
+        """
+
+        :param points: points to be rotated
+        :type points: array shape (3,N)
+        :return: rotated points
+        :rtype: array shape (3,N)
+        """
+        if points.shape[0]!=3:
+            points = np.transpose(points)
+        if self.rot_mat is None:
+            print('no rotation matrix found in data')
+        else:
+            center  = np.mean(points,axis=1,keepdims=True)
+            points_ = points - np.mean(points,axis=1,keepdims=True)
+            points  = np.matmul(self.rot_mat,points_)+center
+        return points.transpose()
+
+    def translate(self,points):
+        """
+
+        :param points: points to be rotated
+        :type points: array shape (3,N)
+        :return: translated points
+        :rtype: array shape (3,N)
+        """
+
+        if self.trans_vect is None:
+            print('no translation vector found in data')
+        else:
+            points = points + self.trans_vect
+        return points
+
+    @property
+    def APP_coords(self):
+        """returns the app plane coodinates
+
+        :return: array shape (4,3) containing the APP coordinates
+        :rtype:np.array
+        """
+        points = None
+        k = 0
+        for key in ['RASIS','LASIS','RTUB','LTUB']:
+            try:
+                if k == 0:
+                    points = self.data['landmarks'][key]
+                else:
+                    points_ = self.data['landmarks'][key]
+                    points = np.concatenate((points,points_),axis=0)
+                k+=1
+            except KeyError:
+                print(f'cannot find {key}')
+
+        if points is not None:
+            points = self.rotate(points)
+            points = self.translate(points)
+
+        return points
+
+
+    @property
+    def RPEL(self):
+        """returns the right pelvis point cloud. if self.rot_mat is not None, the points are rotated.
+        Similarly if self.trans_vect is not None, the points are translated
+
+        :return: points->reshaped vertices shape [n_vertice*3,3] faces corresponding to the mesh cloud attributes
+        :rtype: list
+        """
+        try:
+            points = self.data['surface']['RPel']['points']
+            faces  = self.data['surface']['RPel']['faces']
+        except KeyError:
+            points = None
+            faces  = None
+        if points is not None:
+            points = self.rotate(points)
+            points = self.translate(points)
+        return points,faces
+    @property
+    def LPEL(self):
+        """returns the left pelvis point cloud. if self.rot_mat is not None, the points are rotated.
+        Similarly if self.trans_vect is not None, the points are translated
+
+        :return:
+        :rtype:
+        """
+        try:
+            points = self.data['surface']['LPel']['points']
+            faces = self.data['surface']['LPel']['faces']
+        except KeyError:
+            points = None
+            faces  = None
+        if points is not None:
+            points = self.rotate(points)
+            points = self.translate(points)
+        return points,faces
+    @property
+    def right_socket(self):
+        """returns the right socket plane crest points. if self.rot_mat is not None, the points are rotated.
+        Similarly if self.trans_vect is not None, the points are translated
+
+        :return: points correponding to the socket opening plane
+        :rtype: np.array
+        """
+
+        for side in ['Right']:  #['Right','Left']:
+            k = 0
+            for key in ['Ant Lat','Post Lat']:
+                try:
+                    if k == 0:
+                        points = self.data['landmarks'][side + ' ' + key]
+                    else:
+                        points_ = self.data['landmarks'][side + ' ' + key]
+
+                        points = np.concatenate((points,points_),axis=0)
+                    k += 1
+                except KeyError:
+                    print('cannot find ' + side + ' ' + key)
+
+        points = self.rotate(points)
+        points = self.translate(points)
+        return points
+
+    @property
+    def left_socket(self):
+        """returns the left socket plane crest points. if self.rot_mat is not None, the points are rotated.
+        Similarly if self.trans_vect is not None, the points are translated
+
+        :return: points correponding to the socket opening plane
+        :rtype: np.array
+        """
+        for side in ['Right']:  #['Right','Left']:
+            k = 0
+            for key in ['Ant Lat','Post Lat']:
+                try:
+                    if k == 0:
+                        points = self.data['landmarks'][side + ' ' + key]
+                    else:
+                        points_ = self.data['landmarks'][side + ' ' + key]
+
+                        points = np.concatenate((points,points_),axis=0)
+                    k += 1
+                except KeyError:
+                    print('cannot find ' + side + ' ' + key)
+        points = self.rotate(points)
+        points = self.translate(points)
+        return points
+
+    @property
+    def rot_mat(self):
+        return self.rot_mat
+
+
+    @rot_mat.setter
+    def rot_mat(self,val):
+        self.data['rotmat'] = val
+        self.rot_mat = val
+
+    @property
+    def trans_vect(self):
+        return self.trans_vect
+
+    @trans_vect.setter
+    def trans_vect(self,val):
+        self.data['translation'] = val
+        self.rot_mat = val
+
+    def save_data(self,location):
+        """Saves self.data as a pickle file. The saved file name is the same as the original filename. The pickle
+        file is saved in location/self.pickle_path
+
+        :param location: path pointing to a folder where the pickle file should saved
+        :type location: str
+        :return:
+        :rtype:
+        """
+        file_path = os.path.join(location,self.pickle_path.split('/')[-1])
+        with open(file_path,'wb') as fp:
+            pickle.dump(out_dict,fp,protocol=pickle.HIGHEST_PROTOCOL)
+
+
+
+
+
+
+
+
+
+
 
 def _extract_data():
+    """scipt that extracts the right socket from two patient files
+
+    :return: template_points, target_points which represent the socket planes of 2 different patient
+    :rtype: tuple
+    """
     dt_string = datetime.now().strftime("%d.%m.%Y_%H:%M:%S")
 
 
@@ -33,8 +247,8 @@ def _extract_data():
     paths         = ['UCLH - Controls','TOH - Controls','TOH - FAI','TOH - DDH']
     location      = os.path.join(target_loc,paths[0])
     files         = [os.path.join(location,f) for f in os.listdir(location)]
-    template_file = files[5]
-    target_file   = files[10]
+    template_file = files[11]
+    target_file   = files[15]
 
     # location = os.path.join(target_loc,paths[0])
     # files = [os.path.join(location,f) for f in os.listdir(location)]
@@ -65,270 +279,144 @@ def _extract_data():
             except KeyError:
                 print('cannot find '+side+' '+key)
     return template_points,target_points
-# plane = Plane.best_fit(Points(template_points))
-#
-# fig = plt.figure(figsize=(4,4))
-#
-# ax = fig.add_subplot(111,projection='3d')
-#
-# ax.set_box_aspect(aspect=(1,1,1))
-# ax.plot(template_points[:,0],template_points[:,1],template_points[:,2],color='blue')
-# lims = np.min(template_points,axis=0),np.max(template_points,axis=0)
-#plane.plot_3d(ax,lims_y=(-150,50),lims_x=(-75,50),alpha=0.2)
 
 
+def _extract_data_cloud():
+    """scipt that extracts the right socket from two patient files
 
-
-
-
-
-
-def _make_distance_transform(points,size,ncpus=1):
+    :return: (template_points,template_data['surface']['RPel']), (target_points,target_data['surface']['RPel'])
+            template_points, target_points: poiints of the template, target socket plane,
+            template_data['surface']['RPel'], target_data['surface']['RPel'] template, Target,m dictionary with keys
+            'faces', 'points', 'mesh_loc'
+            containing the
+            Right
+            pelvis surface
+    :rtype: list of tuples
     """
-    Generates a distance array of shape size where len(size)=3 where the distance array is calculated from the points
-    takes in a set of points where np.max(points,axis=0) < size
-    :param points: [N,3] np array of points representing the set of points from which the distance transform is being calculated
-                   points need to lie within [0,size[0]]\times[0,size[1]]\times[0,size[2]]
-    :param size:   tuple, array of length 3
-    :return: array of sshape size whose values represent the minimum distance from the set of points
+    dt_string = datetime.now().strftime("%d.%m.%Y_%H:%M:%S")
+
+
+
+    paths         = ['UCLH - Controls','TOH - Controls','TOH - FAI','TOH - DDH']
+    location      = os.path.join(target_loc,paths[0])
+    files         = [os.path.join(location,f) for f in os.listdir(location)]
+    template_file = files[11]
+    target_file   = files[15]
+
+    # location = os.path.join(target_loc,paths[0])
+    # files = [os.path.join(location,f) for f in os.listdir(location)]
+
+
+    with open(template_file,'rb') as fp:
+        template_data = pickle.load(fp)
+
+    with open(target_file,'rb') as fp:
+        target_data = pickle.load(fp)
+
+
+    for side in ['Right']:#['Right','Left']:
+        k = 0
+        for key in ['Ant Lat','Post Lat']:
+            try:
+                if k == 0:
+                    template_points = template_data['landmarks'][side+' '+key]
+                    print(template_points.shape)
+                    target_points   = target_data['landmarks'][side+' '+key]
+                else:
+                    template_points_ = template_data['landmarks'][side+' '+key]
+                    print(template_points_.shape)
+                    template_points  = np.concatenate((template_points,template_points_),axis=0)
+                    target_points_   = target_data['landmarks'][side+' '+key]
+                    target_points    = np.concatenate((target_points,target_points_),axis=0)
+                k+=1
+            except KeyError:
+                print('cannot find '+side+' '+key)
+    return (template_points,template_data),(target_points,target_data)
+
+
+
+
+
+
+
+def rotation_between_vectors(normal1,normal2):
+    """Returns the rotation matrix that maps vector normal2 onto vector normal1
+
+    :param normal1: 3d vector shape (3,)
+    :type normal1: jnp.array
+    :param normal2: 3d vector shape (3,)
+    :type normal2: jnp.array
+    :return: rotation matrix mapping normal2 onto normal1 shape (3,3)
+    :rtype: jnp.array
+
+    >>> normal1 = jnp.array(np.random.randn(3))
+    >>> normal1 /= jnp.sqrt(jnp.dot(normal1,normal1))
+    >>> normal2 = jnp.array(np.random.randn(3))
+    >>> normal2 /= jnp.sqrt(jnp.dot(normal2,normal2))
+    >>> rot_mat = rotation_between_vectors(normal1,normal2)
+    >>> normal2_trans = jnp.matmul(rot_mat,normal2)
+    >>> print(jnp.sum(jnp.square(normal1-normal2_trans)))
+
     """
-    #making a mask to be used by edt.edt
-    mask = np.zeros(size.ravel())
-    #"""
-    for pt in points.astype(int):
-        #print(pt)
-        mask[pt[0],pt[1],pt[2]] = 1
+    normal1 /= jnp.sqrt(jnp.dot(normal1,normal1))
+    normal2 /= jnp.sqrt(jnp.dot(normal2,normal2))
 
-    mask      = mask.astype(bool)
+    cosine      = jnp.dot(normal1,normal2)/(jnp.sqrt(jnp.dot(normal1,normal1))*jnp.sqrt(jnp.dot(normal2,normal2)))
+    sine        = -jnp.sqrt(1-jnp.square(cosine))
+    u = np.cross(normal1,normal2)
+    u = u/jnp.sqrt(jnp.dot(u,u))
 
-    ncpus=4
-    dt = edt.edt(data=~mask,anisotropy=(1,1,1), black_border=False,order='C',parallel=ncpus)
-    return dt
+    rot_mat = jnp.array([
+                        [cosine+u[0]**2*(1-cosine), u[0]*u[1]*(1-cosine) - u[2]*sine, u[0]*u[2]*(1-cosine)+u[1]*sine],
+                        [u[1]*u[0]*(1-cosine)+u[2]*sine, cosine + u[1]**2*(1-cosine), u[1]*u[2]*(1-cosine)-u[0]*sine],
+                        [u[2]*u[0]*(1-cosine)-u[1]*sine, u[2]*u[1]*(1-cosine)+u[0]*sine,cosine + u[2]**2*(1-cosine)]
+                             ],dtype=dtype)
 
-
-def _embed_points_in_array(points1,points2,padding=(100,100)):
-    """
-    Translates points1 and points2 so that they live in a square domain [0,size[0]]\times[0,size[1]]\times[0,size[2]]
-
-    :param points1: np.array [N1,3]
-    :param points2: np.array [N2,3]
-    :param padding: padding to be applied so that size-np.max([points1,points2],axis=0)>padding[0] and np.max([points1,
-                    points2],axis=0)-0>padding[1]
-                    padding to be added on either side of embedding array
-    :return: points1_proc np.array [N1,3] points1 translated
-            ,points2_proc np.array [N1,3] points2 translated
-            ,size tuple shape of array that would contain the above 2 points
-    """
-    assert points1.shape[-1]==points2.shape[-1]
-    assert len(padding) == 2
-    padding_plus  = padding[0]
-    padding_minus = padding[1]
-    points1_cent  = points1-np.mean(points1,axis=0,keepdims=True)
-    points2_cent  = points2-np.mean(points2,axis=0,keepdims=True)
-
-    merged_pts = np.concatenate([points1_cent,points2_cent],axis=0)
-    max_array  = np.max(merged_pts,axis=0,keepdims=True)+padding_plus #add some padding
-    min_array  = np.min(merged_pts,axis=0,keepdims=True)-padding_minus
-    size       = max_array-min_array
-    size       = size.astype(int)
-
-    points1_proc = points1_cent+size//2
-    points2_proc   = points2_cent+size//2
-
-    return points1_proc,points2_proc,size
+    return rot_mat
 
 
-def eval_distance(points,dist):
-    """
-    finds the value of the scalar field dist with support [0,dist.shape[0]]\times[0,dist.shape[1]]\times[0,
-    dist.shape[1]]
-    :param points: np.array [N,3] list of points wwhere the scalar field given by dist needs to be evaluated
-    :param dist:   scalar array with support [0,dist.shape[0]]\times[0,dist.shape[1]]\times[0,
-                   dist.shape[1]] np.array size [Nx,Ny,Nz]
-    :return: array of values [N]
-    """
-    assert len(points.shape)==2
-    if points.shape[1]!=3:
-        points=points.transpose()
-    xn = points[:,1]#.astype(np.int)
-    yn = points[:,0]#.astype(np.int)
-    zn = points[:,2]#.astype(np.int)
-
-    dist_vals = ndi.interpolation.map_coordinates(dist, [yn, xn, zn], order=2)
-    return dist_vals
 
 
-def jax_eval_distance(points,dist):
-    """
-    finds the value of the scalar field dist with support [0,dist.shape[0]]\times[0,dist.shape[1]]\times[0,
-    dist.shape[1]]
-    :param points: np.array [N,3] list of points wwhere the scalar field given by dist needs to be evaluated
-    :param dist:   scalar array with support [0,dist.shape[0]]\times[0,dist.shape[1]]\times[0,
-                   dist.shape[1]] np.array size [Nx,Ny,Nz]
-    :return: array of values [N]
-    """
-    assert len(points.shape) == 2
-    if points.shape[1] != 3:
-        points = points.transpose()
-    xn = points[:,1]#.astype(np.int)
-    yn = points[:,0]#.astype(np.int)
-    zn = points[:,2]#.astype(np.int)
-    #print(f'z shape is {zn.shape}')
-    dist_vals = jndi.map_coordinates(dist, [yn, xn, zn], order=1)
-    return dist_vals
-
-
-def jax_yaw_matrix(angle=np.pi/2):
-    """
-    Returns the yaw matrix with angle (rotation around z-axis)
-    :param angle:
-    :return:
-    #https: // en.wikipedia.org / wiki / Rotation_matrix  #In_three_dimensions
-    """
-    out = jnp.array([[jnp.cos(angle) , -jnp.sin(angle), 0],
-                     [jnp.sin(angle) ,  jnp.cos(angle), 0],
-                     [0               , 0,               1]
-                     ])
-    return out
-
-
-def jax_pitch_matrix(angle):
-    """
-    Returns the pitch matrix with angle (rotation around y-axis)
-    :param angle:
-    :return:
-    #https: // en.wikipedia.org / wiki / Rotation_matrix  #In_three_dimensions
-    """
-    out = jnp.array([[jnp.cos(angle) , 0 , jnp.sin(angle)],
-                     [0              , 1 , 0             ],
-                     [-jnp.sin(angle), 0 , jnp.cos(angle)]
-                     ])
-    return out
-
-def jax_roll_matrix(angle):
-    """
-    Returns the roll matrix with angle (rotation around x-axis)
-
-    :param angle:
-    :return:
-    #https: // en.wikipedia.org / wiki / Rotation_matrix  #In_three_dimensions
-    """
-    out = jnp.array([[1,             0 ,               0],
-                     [0,jnp.cos(angle) , -jnp.sin(angle)],
-                     [0,jnp.sin(angle) ,  jnp.cos(angle)]
-                     ])
-    return out
-
-
-def jax_rotation_matrix3d(yaw_angle,pitch_angle,roll_angle):
-    """Build a 3d rotation matrix
-
-    :param yaw_angle: z-axis rotation angle:param yaw_angle:
-    :type yaw_angle: float scalar
-    :param pitch_angle: y-axis rotation angle
-    :type pitch_angle: float scalar
-    :param roll_angle: z-axis rotation angle
-    :type roll_angle: float scalar
-    :return: 3d rotation matrix
-    :rtype: jax array shape (3,3)
+def stl2mesh3d(stl_mesh):
     """
 
-    yaw_mat   = jax_yaw_matrix(yaw_angle)
-    pitch_mat = jax_pitch_matrix(pitch_angle)
-    roll_mat  = jax_roll_matrix(roll_angle)
-
-    out = jnp.matmul(pitch_mat,roll_mat)
-    out = jnp.matmul(yaw_mat,out)
-    return out
-
-
-
-def affine_cost(affine_params,points,dist):
-    """
-
-    :param affine_params: affine parameters
-                          yaw_angle   = affine_params[0]
-                          pitch_angle = affine_params[1]
-                          roll_angle  = affine_params[2]
-                          translation = affine_params[3:]
-    :type affine_params: array
-    :param points:
-    :type points:
-    :param dist:
-    :type dist:
+    :param stl_mesh:
+    :type stl_mesh:
     :return:
     :rtype:
     """
-    assert affine_params.shape == (6,)
-    yaw_angle   = affine_params[0]
-    pitch_angle = affine_params[1]
-    roll_angle  = affine_params[2]
-    translation = jnp.expand_dims(affine_params[3:],axis=1)
-    if points.shape[0]!=3:
-        points = points.transpose()
+    # stl_mesh is read by nympy-stl from a stl file; it is  an array of faces/triangles (i.e. three 3d points)
+    # this function extracts the unique vertices and the lists I, J, K to define a Plotly mesh3d
+    p, q, r = stl_mesh.vectors.shape #(p, 3, 3)
+    # the array stl_mesh.vectors.reshape(p*q, r) can contain multiple copies of the same vertex;
+    # extract unique vertices from all mesh triangles
+    vertices, ixr = np.unique(stl_mesh.vectors.reshape(p*q, r), return_inverse=True, axis=0)
+    I = np.take(ixr, [3*k for k in range(p)])
+    J = np.take(ixr, [3*k+1 for k in range(p)])
+    K = np.take(ixr, [3*k+2 for k in range(p)])
+    return vertices, I, J, K
 
+def points2mesh3d(points):
+    """Turns a point cloud surface into a format that is plottable by plotly, the input should be the points
+    attribute to a numpy.stl loaded mesh file. Alternatively, points need to be loaded from the pickle output of
+    DataCleaning._to_pickle
 
-    return _affine_cost(yaw_angle,pitch_angle,roll_angle,translation,points,dist)
-
-def _affine_cost(yaw_angle,pitch_angle,roll_angle,translation,points,dist):
+    :param points: array shape [npoints*3,3]. points attribute of a mesh object or
+    :type points: array
+    :return: vertices,I,J,K
+    :rtype: list
     """
-    returns the sum of the distance transform evaluated at the affine transformed points with rotation amtrix given by
-    yaw_angle,pitch_angle,roll_angle and translation given by translation
-    :param yaw_angle: scalar  float
-    :param pitch_angle: scalar float
-    :param roll_angle:  scalar float
-    :param translation:  array shape [3]
-    :param dist: distance transform on which to evaluate scalar
-    :return:
-    """
-    assert points.shape[0]==3
-    assert translation.shape == (3,1)
-    rot_matrix  = jax_rotation_matrix3d(yaw_angle,pitch_angle,roll_angle)
-
-    mean_points  =  jnp.mean(points,axis=1,keepdims=True)
-    trans_points =  jnp.add(jnp.matmul(rot_matrix,points-mean_points),translation)
-    #print(f'transformed points have shape {trans_points.shape}')
-    dist_vals    = jax_eval_distance(trans_points,dist)
-    return jnp.divide(jnp.sum(dist_vals),len(points))
-
-
-
-def align_Planes(plane1, plane2):
-    """rotates two planes so that they are parallel to each other. Uses bfgs to find optimal yaw,
-    pitch and roll angle that minimizes the distance between the normal of plane1 and the rotated normal of plane2
-
-
-    :param plane1: reference plane
-    :type plane1: skspatial.objects.plane.Plane
-    :param plane2: skspatial.objects.plane.Plane
-    :type plane2: plane to be rotated
-    :return: rotation matrix mapping plane2 onto plane1
-    :rtype: jnp.array
-    """
-    normal1 = jnp.array(plane1.normal)
-    normal2 = jnp.array(plane2.normal)
-
-    params = np.array([0.0,0.0,0.0])
-
-    def cost_function(params,normal1,normal2):
-        rot_matrix = jax_rotation_matrix3d(params[0],params[1],params[2])
-        cost = jnp.sum(jnp.square(normal1-jnp.matmul(rot_matrix,normal2)))
-        return cost
-
-
-    from functools import partial
-    # loss_fn = partial(cost_function,normal1=normal1,normal2=normal2)
-    loss_fn = lambda z: cost_function(z, normal1, normal2)
-
-
-    res = optimize.minimize(loss_fn,params,method='BFGS',options={'maxiter':100})
-
-    rot_matrix = jax_rotation_matrix3d(*res.x)
-
-    return rot_matrix
-
-
-
+    # stl_mesh is read by nympy-stl from a stl file; it is  an array of faces/triangles (i.e. three 3d points)
+    # this function extracts the unique vertices and the lists I, J, K to define a Plotly mesh3d
+    points = points.reshape(points.shape[0]//3,3,3)
+    p, q, r = points.shape #(p, 3, 3)
+    # the array stl_mesh.vectors.reshape(p*q, r) can contain multiple copies of the same vertex;
+    # extract unique vertices from all mesh triangles
+    vertices, ixr = np.unique(points.reshape(p*q, r), return_inverse=True, axis=0)
+    I = np.take(ixr, [3*k for k in range(p)])
+    J = np.take(ixr, [3*k+1 for k in range(p)])
+    K = np.take(ixr, [3*k+2 for k in range(p)])
+    return vertices, I, J, K
 
 
 
@@ -370,15 +458,15 @@ def _test_modules():
         print(my_string)
 
 
-    points = jnp.array([1,1,1])
+    points = jnp.array([1,1,1],dtype=dtype)
     angle  = jnp.pi/2
     Rx = jax_roll_matrix(angle)
     Ry = jax_pitch_matrix(angle)
     Rz = jax_yaw_matrix(angle)
     rot_matrix = jax_rotation_matrix3d(angle,angle,angle)
-    assert jnp.linalg.norm(jnp.matmul(Rx,points) - jnp.array([1,-1,1]))<10e-5
-    assert jnp.linalg.norm(jnp.matmul(Ry,points) - jnp.array([1,1,-1]))<10e-5
-    assert jnp.linalg.norm(jnp.matmul(Rz,points) - jnp.array([-1,1,1]))<10e-5
+    assert jnp.linalg.norm(jnp.matmul(Rx,points) - jnp.array([1,-1,1],dtype=dtype))<10e-5
+    assert jnp.linalg.norm(jnp.matmul(Ry,points) - jnp.array([1,1,-1],dtype=dtype))<10e-5
+    assert jnp.linalg.norm(jnp.matmul(Rz,points) - jnp.array([-1,1,1],dtype=dtype))<10e-5
     assert jnp.linalg.norm(rot_matrix-jnp.matmul(Rz,jnp.matmul(Ry,Rx)))<10e-5
     rot_matrix = jax_rotation_matrix3d(0.0,0.0,0.0)
 
@@ -390,7 +478,7 @@ def _test_modules():
 
     print(jnp.matmul(rot_matrix,points))
 
-    params = jnp.array([0.0,0.0,0.0,0.0,0.0,0.0])
+    params = jnp.array([0.0,0.0,0.0,0.0,0.0,0.0],dtype=dtype)
     print('evaluating distance')
     loss = affine_cost(params,template_points_proc,dt)
     assert loss<10-3
@@ -399,53 +487,157 @@ def _test_modules():
 
 
 
+def _test_vector_rotation():
+    normal1 = jnp.array(np.random.randn(3))
+    normal1 /= jnp.sqrt(jnp.dot(normal1,normal1))
+    normal2 = jnp.array(np.random.randn(3))
+    normal2 /= jnp.sqrt(jnp.dot(normal2,normal2))
+    rot_mat = rotation_between_vectors(normal1,normal2)
+    normal2_mapped = jnp.matmul(rot_mat,normal2)
+    print(f'========Lin-alg=================')
+    print(f'mapped normal {normal2_mapped}')
+    print(f'original normal {normal1}')
+    assert jnp.linalg.norm(normal2_mapped-normal1)<10-4
 
 
 
+def align_2_sockets(socket1,socket2):
+    pass
 
 
 #need to embed the curves into an array:
 #calculating size of the array to allocate for the distance transform
 if __name__=='__main__':
     # _test_modules()
+    #_test_vector_rotation()
 
-    from jax_transformations3d import jax_transformations3d as jts
+    template_tup, target_tup = _extract_data_cloud()
+    template_points = template_tup[0]
+    target_points   = target_tup[0]
+    template_data   = template_tup[1]
+    target_data     = target_tup[1]
 
-
-    template_points,target_points = _extract_data()
-    template_points_mean  = np.mean(template_points,axis=0,keepdims=True)
-    target_points_mean = np.mean(template_points,axis=0,keepdims=True)
-    template_points -= template_points_mean
-    target_points -= target_points_mean
 
     template_plane = Plane.best_fit(Points(template_points))
     target_plane = Plane.best_fit(Points(target_points))
 
-    normal1 = jnp.array(template_plane.normal)
-    normal2 = jnp.array(target_plane.normal)
 
-    # params = np.array([0.0,0.0,0.0])
-    #
-    # def cost_function(params,normal1,normal2):
-    #     rot_matrix = jax_rotation_matrix3d(params[0],params[1],params[2])
-    #     cost = jnp.sum(jnp.square(normal1-jnp.matmul(rot_matrix,normal2)))
-    #     return cost
-    #
-    #
-    # from functools import partial
-    # # loss_fn = partial(cost_function,normal1=normal1,normal2=normal2)
-    # loss_fn = lambda z: cost_function(z, normal1, normal2)
-    #
-    #
-    # res = optimize.minimize(loss_fn,params,method='BFGS',options={'maxiter':100})
-    #
-    # rot_matrix = jax_rotation_matrix3d(*res.x)
-    rot_matrix = align_Planes(template_plane, target_plane)
-    normal2_mapped = jnp.matmul(rot_matrix,normal2)
+    rot_mat = rotation_between_vectors(template_plane.normal,target_plane.normal)
 
-    print(f'maped nnormal {normal2_mapped}')
-    print(f'original nnormal {normal1}')
+    template_surface = jnp.array(template_data['surface']['RPel']['points'])
+    template_surface = template_surface-jnp.mean(template_surface,axis=0,keepdims=True)
+    target_surface   = jnp.array(target_data['surface']['RPel']['points']).transpose()
 
+    target_surface_trans = jnp.matmul(rot_mat,target_surface-jnp.mean(target_surface,axis=1,keepdims=True))
+    #target_surface_trans = jnp.subtract(target_surface_trans,jnp.mean(template_surface,axis=0,keepdims=True))
+
+    import plotly.graph_objects as go
+
+    import plotly.io as pio
+
+    pio.renderers.default = "browser"
+    pio.renderers
+
+
+
+    vertices,I,J,K = points2mesh3d(template_surface)#todo: extract this data for the target mesh as well: the rotmat
+    _vertices,_I,_J,_K = points2mesh3d(target_surface_trans.transpose())
+    # needs
+    # to act on the vertices
+    x,y,z = vertices.T
+    mesh_plot = go.Mesh3d(x=x
+                                    ,y=y
+                                    ,z=z
+                                    ,i=I
+                                    ,j=J
+                                    ,k=K
+                                    ,color='lightpink',opacity=0.50)
+    x,y,z = _vertices.T
+    mesh_plot_ = go.Mesh3d(x=x
+                                    ,y=y
+                                    ,z=z
+                                    ,i=_I
+                                    ,j=_J
+                                    ,k=_K
+                                    ,color='blue',opacity=0.50)
+    fig = go.Figure(data=[mesh_plot
+                         ,mesh_plot_
+                          ])
+    fig.show()
+
+
+
+    #
+    # skip = 20
+    # fig = plt.figure(figsize=(4,4))
+    #
+    # ax = fig.add_subplot(111, projection='3d')
+    #
+    # ax.plot_surface(template_surface[:,0],template_surface[:,1],template_surface[:,2])
+    # plt.show()
+    #
+    # ax.set_box_aspect(aspect=(1,1,1))
+    # # ax.plot(template_points_proc[:,0],template_points_proc[:,1],template_points_proc[:,2],color='blue',label='Socket plane points')
+    #
+    # ax.scatter(template_surface[::skip,0],template_surface[::skip,1],template_surface[::skip,2],color='blue',alpha=0.5,
+    #         label='Socket plane points')
+    # ax.scatter(target_surface_trans[0,::skip],target_surface_trans[1,::skip],target_surface_trans[2,::skip],
+    #            color='red',
+    #            alpha=0.5,
+    #            label='Socket plane points')
+    #
+    # plt.show()
+
+
+
+
+
+
+    # from jax_transformations3d import jax_transformations3d as jts
+    #
+    #
+    # template_points,target_points = _extract_data()
+    # template_points_mean  = np.mean(template_points,axis=0,keepdims=True)
+    # target_points_mean = np.mean(template_points,axis=0,keepdims=True)
+    # template_points -= template_points_mean
+    # target_points -= target_points_mean
+    #
+    # template_plane = Plane.best_fit(Points(template_points))
+    # target_plane = Plane.best_fit(Points(target_points))
+    #
+    # normal1 = jnp.array(np.random.randn(3))
+    # normal1 /= jnp.sqrt(jnp.dot(normal1,normal1))
+    # normal2 = jnp.array(np.random.randn(3))
+    # normal2 /= jnp.sqrt(jnp.dot(normal2,normal2))
+    #
+    # rot_mat = rotation_between_vectors(normal1,normal2)
+    #
+    # # params = np.array([0.0,0.0,0.0])
+    # #
+    # # def cost_function(params,normal1,normal2):
+    # #     rot_matrix = jax_rotation_matrix3d(params[0],params[1],params[2])
+    # #     cost = jnp.sum(jnp.square(normal1-jnp.matmul(rot_matrix,normal2)))
+    # #     return cost
+    # #
+    # #
+    # # from functools import partial
+    # # # loss_fn = partial(cost_function,normal1=normal1,normal2=normal2)
+    # # loss_fn = lambda z: cost_function(z, normal1, normal2)
+    # #
+    # #
+    # # res = optimize.minimize(loss_fn,params,method='BFGS',options={'maxiter':100})
+    # #
+    # # rot_matrix = jax_rotation_matrix3d(*res.x)
+    # rot_matrix = align_Planes_bfgs(template_plane,target_plane)
+    # normal2_mapped = jnp.matmul(rot_matrix,normal2)
+    # print(f'========BFGS=================')
+    # print(f'maped nnormal {normal2_mapped}')
+    # print(f'original nnormal {normal1}')
+    #
+    # normal2_mapped = jnp.matmul(rot_mat,normal2)
+    # print(f'========Lin-alg=================')
+    # print(f'maped nnormal {normal2_mapped}')
+    # print(f'original nnormal {normal1}')
 
 
 
@@ -484,17 +676,7 @@ if __name__=='__main__':
     # method = 'BFGS'
     # nits =100
     # loss_fun = partial(affine_cost,points=target_points_proc,dist=dt)
-    # fig = plt.figure(figsize=(4,4))
-    #
-    # ax = fig.add_subplot(111, projection='3d')
-    #
-    # ax.set_box_aspect(aspect=(1,1,1))
-    # # ax.plot(template_points_proc[:,0],template_points_proc[:,1],template_points_proc[:,2],color='blue',label='Socket plane points')
-    # ax.scatter(template_points_proc[:,0],template_points_proc[:,1],template_points_proc[:,2],color='blue',
-    #         label='Socket plane points')
-    # point_plot = ax.scatter(target_points_proc[:,0],target_points_proc[:,1],target_points_proc[:,2],color='red',
-    #                      label='Transformed points')
-    # plt.show()
+
     # def callback_function(new_params):
     #     rot_matrix = jax_rotation_matrix3d(new_params[0],new_params[1],new_params[3])
     #     trans_points = jnp.add(jnp.matmul(rot_matrix,target_points_proc),translation)
@@ -505,7 +687,7 @@ if __name__=='__main__':
     # #options = {'disp':False}
     # options = {}
     # options['maxiter'] = nits
-    # params = jnp.array([0.0,0.0,0.0,0.0,0.0,0.0])
+    # params = jnp.array([0.0,0.0,0.0,0.0,0.0,0.0],dtype=dtype)
     # #
     # res = optimize.minimize(loss_fun,params,method=method,options=options)#,callback=callback_function)
     # new_params = res.x

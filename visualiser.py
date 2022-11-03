@@ -29,7 +29,11 @@ from stl import mesh
 
 #### PyQt5 GUI ####
 class Ui_MainWindow(object):
+    """Pyqt5 widget for viewing surfaces. The surfaces need to be stored in pickle dump files
+
+    """
     def __init__(self):
+
         self.output_loc = './'
         self.currentSTL1 = None
         self.currentSTL2 = None
@@ -198,7 +202,7 @@ class Ui_MainWindow(object):
         mean_pos = np.mean(points,axis=0)
         points = points-mean_pos
         #self.viewer1.pan(mean_pos[0],mean_pos[1],mean_pos[2],relative='global')
-        self.viewer1.updateGL()
+#        self.viewer1.updateGL()
         print('mean osition of object is')
         print(mean_pos)
         print('camera position is')
@@ -231,7 +235,7 @@ class Ui_MainWindow(object):
             mean_pos = np.mean(points,axis=0)
             #points = points-mean_pos
             self.viewer2.pan(mean_pos[0],mean_pos[1],mean_pos[2],relative='global')
-            self.viewer2.updateGL()
+            #self.viewer2.updateGL()
             print('mean osition of object is')
             print(mean_pos)
             print('camera position is')
