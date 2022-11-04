@@ -1,8 +1,9 @@
 
 import os.path
 
-
-
+import plotly.graph_objects as go
+import plotly.io as pio
+pio.renderers.default = "browser"
 from read_landmarks import *
 from datetime import datetime
 import pickle
@@ -36,12 +37,15 @@ class HipData(object):
         with open(pickle_path,'rb') as fp:
             data = pickle.load(fp)
         self.data   = data
-        try:
-            self.rot_mat    = self.data['rotmat']
-            self.trans_vect = self.data['translation']
-        except KeyError:
-            self.rot_mat = None
-            self.trans_vect = None
+        # try:
+        #     self.rot_mat    = self.data['rotmat']
+        # except KeyError:
+        #     self.rot_mat = None
+        #
+        # try:
+        #     self.trans_vect = self.data['trans_vect']
+        # except KeyError:
+        #     self.trans_vect = None
 
 
     def rotate(self,points):
@@ -175,7 +179,7 @@ class HipData(object):
         :return: points correponding to the socket opening plane
         :rtype: np.array
         """
-        for side in ['Right']:  #['Right','Left']:
+        for side in ['Left']:  #['Right','Left']:
             k = 0
             for key in ['Ant Lat','Post Lat']:
                 try:
@@ -194,22 +198,30 @@ class HipData(object):
 
     @property
     def rot_mat(self):
-        return self.rot_mat
+        try:
+            rot_mat = self.data['rotmat']
+        except KeyError:
+            rot_mat = None
+        return rot_mat
 
 
     @rot_mat.setter
     def rot_mat(self,val):
         self.data['rotmat'] = val
-        self.rot_mat = val
+#        self.rot_mat = val
 
     @property
     def trans_vect(self):
-        return self.trans_vect
+        try:
+            trans_vect = self.data['translation']
+        except KeyError:
+            trans_vect = None
+        return trans_vect
 
     @trans_vect.setter
     def trans_vect(self,val):
         self.data['translation'] = val
-        self.rot_mat = val
+        #self.rot_mat = val
 
     def save_data(self,location):
         """Saves self.data as a pickle file. The saved file name is the same as the original filename. The pickle
@@ -225,9 +237,23 @@ class HipData(object):
             pickle.dump(out_dict,fp,protocol=pickle.HIGHEST_PROTOCOL)
 
 
+    def get_plotly_graph(self,color='lightpink'):
+        """Currently only plots the right pelvis, will extend the class to have transformations for each pelvis
 
+        :return:
+        :rtype:
+        """
+        vertices,I,J,K = points2mesh3d(self.RPEL[0])#-np.mean(self.RPEL[0],axis=0,keepdims=True))
+        x,y,z = vertices.T
+        mesh_plot = go.Mesh3d(x=x
+                                         ,y=y
+                                         ,z=z
+                                         ,i=I
+                                         ,j=J
+                                         ,k=K
+                                         ,color=color,opacity=0.50)
 
-
+        return mesh_plot
 
 
 
@@ -508,15 +534,20 @@ def align_2_sockets(socket1,socket2):
 #need to embed the curves into an array:
 #calculating size of the array to allocate for the distance transform
 if __name__=='__main__':
-    # _test_modules()
-    #_test_vector_rotation()
 
-    template_tup, target_tup = _extract_data_cloud()
-    template_points = template_tup[0]
-    target_points   = target_tup[0]
-    template_data   = template_tup[1]
-    target_data     = target_tup[1]
 
+    template_shape = HipData('/home/adwaye/PycharmProjects/hip_shape/data/Segmentation_and_landmarks_processed/TOH - '
+                        'Controls/C52.p')
+    mean_pos=np.mean(template_shape.RPEL[0],axis=0,keepdims=True)
+    #template_shape.trans_vect = np.mean(template_shape.RPEL[0],axis=0,keepdims=True)
+    target_shape = HipData('/home/adwaye/PycharmProjects/hip_shape/data/Segmentation_and_landmarks_processed/TOH - '
+                        'Controls/C8.p')
+    #target_shape.trans_vect = np.mean(target_shape.RPEL[0],axis=0,keepdims=True)
+
+
+
+    template_points = template_shape.right_socket
+    target_points = target_shape.right_socket
 
     template_plane = Plane.best_fit(Points(template_points))
     target_plane = Plane.best_fit(Points(target_points))
@@ -524,187 +555,76 @@ if __name__=='__main__':
 
     rot_mat = rotation_between_vectors(template_plane.normal,target_plane.normal)
 
-    template_surface = jnp.array(template_data['surface']['RPel']['points'])
-    template_surface = template_surface-jnp.mean(template_surface,axis=0,keepdims=True)
-    target_surface   = jnp.array(target_data['surface']['RPel']['points']).transpose()
 
-    target_surface_trans = jnp.matmul(rot_mat,target_surface-jnp.mean(target_surface,axis=1,keepdims=True))
-    #target_surface_trans = jnp.subtract(target_surface_trans,jnp.mean(template_surface,axis=0,keepdims=True))
+    target_shape.rot_mat = rot_mat
+    target_shape.trans_vect = -np.mean(target_shape.RPEL[0],axis=0,keepdims=True)
+    template_shape.trans_vect = -np.mean(template_shape.RPEL[0],axis=0,keepdims=True)
 
-    import plotly.graph_objects as go
-
-    import plotly.io as pio
-
-    pio.renderers.default = "browser"
-    pio.renderers
-
-
-
-    vertices,I,J,K = points2mesh3d(template_surface)#todo: extract this data for the target mesh as well: the rotmat
-    _vertices,_I,_J,_K = points2mesh3d(target_surface_trans.transpose())
-    # needs
-    # to act on the vertices
-    x,y,z = vertices.T
-    mesh_plot = go.Mesh3d(x=x
-                                    ,y=y
-                                    ,z=z
-                                    ,i=I
-                                    ,j=J
-                                    ,k=K
-                                    ,color='lightpink',opacity=0.50)
-    x,y,z = _vertices.T
-    mesh_plot_ = go.Mesh3d(x=x
-                                    ,y=y
-                                    ,z=z
-                                    ,i=_I
-                                    ,j=_J
-                                    ,k=_K
-                                    ,color='blue',opacity=0.50)
-    fig = go.Figure(data=[mesh_plot
-                         ,mesh_plot_
+    target_plot   = target_shape.get_plotly_graph()
+    template_plot = template_shape.get_plotly_graph(color='blue')
+    fig =  go.Figure(data=[template_plot
+                         ,target_plot
                           ])
+
     fig.show()
 
-
-
     #
-    # skip = 20
-    # fig = plt.figure(figsize=(4,4))
+    # template_tup, target_tup = _extract_data_cloud()
+    # template_points = template_tup[0]
+    # target_points   = target_tup[0]
+    # template_data   = template_tup[1]
+    # target_data     = target_tup[1]
     #
-    # ax = fig.add_subplot(111, projection='3d')
-    #
-    # ax.plot_surface(template_surface[:,0],template_surface[:,1],template_surface[:,2])
-    # plt.show()
-    #
-    # ax.set_box_aspect(aspect=(1,1,1))
-    # # ax.plot(template_points_proc[:,0],template_points_proc[:,1],template_points_proc[:,2],color='blue',label='Socket plane points')
-    #
-    # ax.scatter(template_surface[::skip,0],template_surface[::skip,1],template_surface[::skip,2],color='blue',alpha=0.5,
-    #         label='Socket plane points')
-    # ax.scatter(target_surface_trans[0,::skip],target_surface_trans[1,::skip],target_surface_trans[2,::skip],
-    #            color='red',
-    #            alpha=0.5,
-    #            label='Socket plane points')
-    #
-    # plt.show()
-
-
-
-
-
-
-    # from jax_transformations3d import jax_transformations3d as jts
-    #
-    #
-    # template_points,target_points = _extract_data()
-    # template_points_mean  = np.mean(template_points,axis=0,keepdims=True)
-    # target_points_mean = np.mean(template_points,axis=0,keepdims=True)
-    # template_points -= template_points_mean
-    # target_points -= target_points_mean
     #
     # template_plane = Plane.best_fit(Points(template_points))
     # target_plane = Plane.best_fit(Points(target_points))
     #
-    # normal1 = jnp.array(np.random.randn(3))
-    # normal1 /= jnp.sqrt(jnp.dot(normal1,normal1))
-    # normal2 = jnp.array(np.random.randn(3))
-    # normal2 /= jnp.sqrt(jnp.dot(normal2,normal2))
     #
-    # rot_mat = rotation_between_vectors(normal1,normal2)
+    # rot_mat = rotation_between_vectors(template_plane.normal,target_plane.normal)
     #
-    # # params = np.array([0.0,0.0,0.0])
-    # #
-    # # def cost_function(params,normal1,normal2):
-    # #     rot_matrix = jax_rotation_matrix3d(params[0],params[1],params[2])
-    # #     cost = jnp.sum(jnp.square(normal1-jnp.matmul(rot_matrix,normal2)))
-    # #     return cost
-    # #
-    # #
-    # # from functools import partial
-    # # # loss_fn = partial(cost_function,normal1=normal1,normal2=normal2)
-    # # loss_fn = lambda z: cost_function(z, normal1, normal2)
-    # #
-    # #
-    # # res = optimize.minimize(loss_fn,params,method='BFGS',options={'maxiter':100})
-    # #
-    # # rot_matrix = jax_rotation_matrix3d(*res.x)
-    # rot_matrix = align_Planes_bfgs(template_plane,target_plane)
-    # normal2_mapped = jnp.matmul(rot_matrix,normal2)
-    # print(f'========BFGS=================')
-    # print(f'maped nnormal {normal2_mapped}')
-    # print(f'original nnormal {normal1}')
+    # template_surface = jnp.array(template_data['surface']['RPel']['points'])
+    # template_surface = template_surface-jnp.mean(template_surface,axis=0,keepdims=True)
+    # target_surface   = jnp.array(target_data['surface']['RPel']['points']).transpose()
     #
-    # normal2_mapped = jnp.matmul(rot_mat,normal2)
-    # print(f'========Lin-alg=================')
-    # print(f'maped nnormal {normal2_mapped}')
-    # print(f'original nnormal {normal1}')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    # template_points_proc,target_points_proc,size = _embed_points_in_array(template_points,target_points,padding=(300,
-    #                                                                                                              300))
-    # dt = _make_distance_transform(points=template_points_proc,size=size,ncpus=2)
+    # target_surface_trans = jnp.matmul(rot_mat,target_surface-jnp.mean(target_surface,axis=1,keepdims=True))
+    # #target_surface_trans = jnp.subtract(target_surface_trans,jnp.mean(template_surface,axis=0,keepdims=True))
     #
     #
-    # from functools import partial
-    # method = 'BFGS'
-    # nits =100
-    # loss_fun = partial(affine_cost,points=target_points_proc,dist=dt)
-
-    # def callback_function(new_params):
-    #     rot_matrix = jax_rotation_matrix3d(new_params[0],new_params[1],new_params[3])
-    #     trans_points = jnp.add(jnp.matmul(rot_matrix,target_points_proc),translation)
-    #     point_plot.set_offsets(np.c_[trans_points[:,0],trans_points[:,1],trans_points[:,2]])
-    #     plt.title(f'{callback_function.nits} iterations')
     #
     #
-    # #options = {'disp':False}
-    # options = {}
-    # options['maxiter'] = nits
-    # params = jnp.array([0.0,0.0,0.0,0.0,0.0,0.0],dtype=dtype)
-    # #
-    # res = optimize.minimize(loss_fun,params,method=method,options=options)#,callback=callback_function)
-    # new_params = res.x
-    # rot_matrix = jax_rotation_matrix3d(new_params[0],new_params[1],new_params[2])
-    # trans_points = jnp.add(jnp.matmul(rot_matrix,target_points_proc.transpose()),jnp.expand_dims(new_params[3:],axis=1))
-    # rot_points   = jnp.matmul(rot_matrix,target_points_proc.transpose())
-    # point_plot = ax.scatter(trans_points[0,:],trans_points[1,:],trans_points[2,:],color='black',
-    #                      label='Transformed points')
+    # pio.renderers
+    #
+    #
+    #
+    # vertices,I,J,K = points2mesh3d(template_surface)#todo: extract this data for the target mesh as well: the rotmat
+    # _vertices,_I,_J,_K = points2mesh3d(target_surface_trans.transpose())
+    # # needs
+    # # to act on the vertices
+    # x,y,z = vertices.T
+    # mesh_plot = go.Mesh3d(x=x
+    #                                 ,y=y
+    #                                 ,z=z
+    #                                 ,i=I
+    #                                 ,j=J
+    #                                 ,k=K
+    #                                 ,color='lightpink',opacity=0.50)
+    # x,y,z = _vertices.T
+    # mesh_plot_ = go.Mesh3d(x=x
+    #                                 ,y=y
+    #                                 ,z=z
+    #                                 ,i=_I
+    #                                 ,j=_J
+    #                                 ,k=_K
+    #                                 ,color='blue',opacity=0.50)
+    # fig = go.Figure(data=[mesh_plot
+    #                      ,mesh_plot_
+    #                       ])
+    # fig.show()
+    #
 
-
-
-
-    #test_modules()
-
-
-
-
+    #
+    #
+    #
 
 
 
