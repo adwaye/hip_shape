@@ -36,7 +36,13 @@ dtype = jnp.float32
 
 
 class HipData(object):
+    """Data class for hip surfaces
+
+    :param pickle_path: path to pickle file. Needs to be the output of data_cleaning._to_pickle
+    :type pickle_path: str
+    """
     def __init__(self,pickle_path):
+
         self.pickle_path = pickle_path
         with open(pickle_path,'rb') as fp:
             data = pickle.load(fp)
@@ -278,6 +284,16 @@ class HipData(object):
         return left_mesh_plot,right_mesh_plot
 
 
+    def decimate(self,max_num_edges):
+        """
+
+        :param max_num_edges:
+        :type max_num_edges:
+        :return:
+        :rtype:
+        """
+        #todo: implement this by reusing the code from resample_mesh.py
+        pass
 
 
 
