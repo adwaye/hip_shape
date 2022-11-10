@@ -6,6 +6,7 @@ import pickle
 from mayavi import mlab
 import numpy as np
 import numpy.linalg
+from data_utils import umeyama,loadSTL
 
 # from argparse import ArgumentParser
 # parser = ArgumentParser()
@@ -38,54 +39,7 @@ paths     = ['UCLH - Controls','TOH - Controls','TOH - FAI','TOH - DDH']
 
 
 
-# Relevant links:
-#   - http://stackoverflow.com/a/32244818/263061 (solution with scale)
-#   - "Least-Squares Rigid Motion Using SVD" (no scale but easy proofs and explains how weights could be added)
 
-# Rigidly (+scale) aligns two point clouds with know point-to-point correspondences
-# with least-squares error.
-# Returns (scale factor c, rotation matrix R, translation vector t) such that
-#   Q = P*cR + t
-# if they align perfectly, or such that
-#   SUM over point i ( | P_i*cR + t - Q_i |^2 )
-# is minimised if they don't align perfectly.
-def umeyama(P,Q):
-    assert P.shape == Q.shape
-    n,dim = P.shape
-
-    centeredP = P - P.mean(axis=0)
-    centeredQ = Q - Q.mean(axis=0)
-
-    C = np.dot(np.transpose(centeredP),centeredQ) / n
-
-    V,S,W = np.linalg.svd(C)
-    d = (np.linalg.det(V) * np.linalg.det(W)) < 0.0
-
-    if d:
-        S[-1] = -S[-1]
-        V[:,-1] = -V[:,-1]
-
-    R = np.dot(V,W)
-
-    varP = np.var(P,axis=0).sum()
-    c = 1 / varP * np.sum(S)  # scale factor
-
-    t = Q.mean(axis=0) - P.mean(axis=0).dot(c * R)
-
-    return c,R,t
-
-
-def rigid_align(P,Q):
-    #todo: the landmarks for the socket plane do not have the same number of landmarks. use distance transform method
-    # for now
-    #domain = 3d array containing both sets of points, set it to 1 where the curve lives
-
-    #dist = distance transform
-    #below are variables to go into scipy minimiser
-    #A = rot
-    #c = scale
-    #t = trans
-    return umeyama(P,Q)
 
 def _to_pickle():
     log_loc  = './log'
@@ -217,13 +171,7 @@ def _create_aligned_data_APP():
 
 
 
-def loadSTL(filename):
-    m = mesh.Mesh.from_file(filename)
-    shape = m.points.shape
-    points = m.points.reshape(-1,3)
-    print(points.shape)
-    faces = np.arange(points.shape[0]).reshape(-1,3)
-    return points,faces
+
 
 def plot_all():
     target_file = "/home/adwaye/PycharmProjects/hip_shape/data/Segmentation_and_landmarks_processed/UCLH - Controls/00796671.p"

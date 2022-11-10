@@ -1,6 +1,7 @@
 
 import os.path
 
+import plotly.graph_objects
 import plotly.graph_objects as go
 import plotly.io as pio
 pio.renderers.default = "browser"
@@ -21,12 +22,15 @@ import jax.scipy.optimize as optimize
 import jax.numpy as jnp
 import edt #got this from https://github.com/seung-lab/euclidean-distance-transform-3d
 import time
+import threading as t
+
 
 source_loc = './data/Segmentation_and_landmarks_raw/'
 target_loc = './data/Segmentation_and_landmarks_processed/'
 APP_aligned_loc = './data/Segmentation_and_landmarks_APP_aligned/'
-Socket_aligned_trans = './data/Segmentation_and_landmarks_socket_aligned/'
-dtype = jnp.float64
+RSocket_aligned_trans = './data/Segmentation_and_landmarks_Rsocket_aligned/'
+LSocket_aligned_trans = './data/Segmentation_and_landmarks_Lsocket_aligned/'
+dtype = jnp.float32
 
 
 
@@ -93,9 +97,9 @@ class HipData(object):
         for key in ['RASIS','LASIS','RTUB','LTUB']:
             try:
                 if k == 0:
-                    points = self.data['landmarks'][key]
+                    points = np.expand_dims(self.data['landmarks'][key],axis=0)
                 else:
-                    points_ = self.data['landmarks'][key]
+                    points_ = np.expand_dims(self.data['landmarks'][key],axis=0)
                     points = np.concatenate((points,points_),axis=0)
                 k+=1
             except KeyError:
@@ -207,6 +211,7 @@ class HipData(object):
 
     @rot_mat.setter
     def rot_mat(self,val):
+        assert val.shape==(3,3)
         self.data['rotmat'] = val
 #        self.rot_mat = val
 
@@ -220,6 +225,7 @@ class HipData(object):
 
     @trans_vect.setter
     def trans_vect(self,val):
+        assert val.shape == (1,3)
         self.data['translation'] = val
         #self.rot_mat = val
 
@@ -237,23 +243,39 @@ class HipData(object):
             pickle.dump(out_dict,fp,protocol=pickle.HIGHEST_PROTOCOL)
 
 
-    def get_plotly_graph(self,color='lightpink'):
-        """Currently only plots the right pelvis, will extend the class to have transformations for each pelvis
+    def get_plotly_graph(self,color: str='lightpink')->list[plotly.graph_objects.mesh3d]:
+        """Returns the plotly 3d graph associated with each of the left and right pelvis
 
-        :return:
-        :rtype:
+        :return: [left_mesh_plot,right_mesh_plot] left and right pelvis pot objects
+        :rtype: tuple(plotly.graph_objects.Mesh3d,plotly.graph_objects.Mesh3d)
         """
-        vertices,I,J,K = points2mesh3d(self.RPEL[0])#-np.mean(self.RPEL[0],axis=0,keepdims=True))
-        x,y,z = vertices.T
-        mesh_plot = go.Mesh3d(x=x
-                                         ,y=y
-                                         ,z=z
-                                         ,i=I
-                                         ,j=J
-                                         ,k=K
-                                         ,color=color,opacity=0.50)
+        left_mesh_plot  = None
+        right_mesh_plot = None
 
-        return mesh_plot
+
+        r_mesh, _ = self.RPEL
+        l_mesh, _ = self.LPEL
+        if r_mesh is not None:
+            vertices,I,J,K = points2mesh3d(r_mesh)#-np.mean(self.RPEL[0],axis=0,keepdims=True))
+            x,y,z = vertices.T
+            right_mesh_plot = go.Mesh3d(x=x
+                                             ,y=y
+                                             ,z=z
+                                             ,i=I
+                                             ,j=J
+                                             ,k=K
+                                             ,color=color,opacity=0.50)
+        if l_mesh is not None:
+            vertices,I,J,K = points2mesh3d(l_mesh)#-np.mean(self.RPEL[0],axis=0,keepdims=True))
+            x,y,z = vertices.T
+            left_mesh_plot = go.Mesh3d(x=x
+                                             ,y=y
+                                             ,z=z
+                                             ,i=I
+                                             ,j=J
+                                             ,k=K
+                                             ,color=color,opacity=0.50)
+        return left_mesh_plot,right_mesh_plot
 
 
 
@@ -360,6 +382,48 @@ def _extract_data_cloud():
     return (template_points,template_data),(target_points,target_data)
 
 
+def umeyama(P,Q):
+    """- http://stackoverflow.com/a/32244818/263061 (solution with scale)
+      - "Least-Squares Rigid Motion Using SVD" (no scale but easy proofs and explains how weights could be added)
+
+    Rigidly (+scale) aligns two point clouds with know point-to-point correspondences
+    with least-squares error.
+    Returns (scale factor c, rotation matrix R, translation vector t) such that
+      Q = P*cR + t
+    if they align perfectly, or such that
+      SUM over point i ( | P_i*cR + t - Q_i |^2 )
+    is minimised if they don't align perfectly.
+
+    :param P:
+    :type P:
+    :param Q:
+    :type Q:
+    :return:
+    :rtype:
+    """
+    assert P.shape == Q.shape
+    n,dim = P.shape
+
+    centeredP = P - P.mean(axis=0)
+    centeredQ = Q - Q.mean(axis=0)
+
+    C = np.dot(np.transpose(centeredP),centeredQ) / n
+
+    V,S,W = np.linalg.svd(C)
+    d = (np.linalg.det(V) * np.linalg.det(W)) < 0.0
+
+    if d:
+        S[-1] = -S[-1]
+        V[:,-1] = -V[:,-1]
+
+    R = np.dot(V,W)
+
+    varP = np.var(P,axis=0).sum()
+    c = 1 / varP * np.sum(S)  # scale factor
+
+    t = Q.mean(axis=0) - P.mean(axis=0).dot(c * R)
+
+    return c,R,t
 
 
 
@@ -400,7 +464,73 @@ def rotation_between_vectors(normal1,normal2):
 
     return rot_mat
 
+def ralign_2_hips(hip1: HipData,hip2: HipData,by: str='RPel')->list[HipData]:
+    """Performs rigid alignment of two hips.
 
+    :param hip1:
+    :type hip1: HipData
+    :param hip2:
+    :type hip2: HipData
+    :param by: options are
+
+    :type by: str
+    :return:
+    :rtype:
+    """
+
+    if by.lower()=='rpel':
+        print('aligning right pelves')
+
+        template_points = hip1.right_socket
+        target_points = hip2.right_socket
+        template_plane = Plane.best_fit(Points(template_points))
+        target_plane = Plane.best_fit(Points(target_points))
+
+        rot_mat = rotation_between_vectors(template_plane.normal,target_plane.normal)
+        mean2 = -np.mean(hip2.RPEL[0],axis=0,keepdims=True)#translation hip1
+        mean1 = -np.mean(hip1.RPEL[0],axis=0,keepdims=True)#translation hip2
+
+
+    elif by.lower() == 'lpel':
+        print('aligning left pelves')
+
+        template_points = hip1.left_socket
+        target_points = hip2.left_socket
+        template_plane = Plane.best_fit(Points(template_points))
+        target_plane = Plane.best_fit(Points(target_points))
+
+        rot_mat = rotation_between_vectors(template_plane.normal,target_plane.normal)
+        mean2 = -np.mean(hip2.LPEL[0],axis=0,keepdims=True)
+        mean1 = -np.mean(hip1.LPEL[0],axis=0,keepdims=True)
+
+    else:
+        print('aligning the whole thing')
+
+        template_points = hip1.APP_coords
+        target_points = hip2.APP_coords
+        # template_plane = Plane.best_fit(Points(template_points))
+        # target_plane = Plane.best_fit(Points(target_points))
+        c,R,t = umeyama(target_points,template_points)
+
+#        rot_mat = rotation_between_vectors(template_plane.normal,target_plane.normal)
+        rot_mat = R
+        mean2 = -np.mean(np.concatenate((hip2.LPEL[0],hip2.RPEL[0]),axis=0),axis=0,keepdims=True)
+        mean1 = -np.mean(np.concatenate((hip1.LPEL[0],hip1.RPEL[0]),axis=0),axis=0,keepdims=True)
+
+    hip1.trans_vect = mean1
+    hip2.rot_mat    = rot_mat
+    hip2.trans_vect = mean2
+
+    return hip1,hip2
+
+
+def loadSTL(filename):
+    m = mesh.Mesh.from_file(filename)
+    shape = m.points.shape
+    points = m.points.reshape(-1,3)
+    print(points.shape)
+    faces = np.arange(points.shape[0]).reshape(-1,3)
+    return points,faces
 
 
 def stl2mesh3d(stl_mesh):
@@ -527,8 +657,13 @@ def _test_vector_rotation():
 
 
 
-def align_2_sockets(socket1,socket2):
-    pass
+
+
+
+
+
+
+
 
 
 #need to embed the curves into an array:
@@ -537,44 +672,18 @@ if __name__=='__main__':
 
 
     template_shape = HipData('/home/adwaye/PycharmProjects/hip_shape/data/Segmentation_and_landmarks_processed/TOH - '
-                        'Controls/C52.p')
+                        'Controls/C4.p')
     mean_pos=np.mean(template_shape.RPEL[0],axis=0,keepdims=True)
+    print(template_shape.APP_coords.shape)
     #template_shape.trans_vect = np.mean(template_shape.RPEL[0],axis=0,keepdims=True)
     target_shape = HipData('/home/adwaye/PycharmProjects/hip_shape/data/Segmentation_and_landmarks_processed/TOH - '
                         'Controls/C8.p')
     #target_shape.trans_vect = np.mean(target_shape.RPEL[0],axis=0,keepdims=True)
 
+    template_shape,target_shape = ralign_2_hips(template_shape,target_shape,by='all')
 
-
-    template_points = template_shape.right_socket
-    target_points = target_shape.right_socket
-
-    template_plane = Plane.best_fit(Points(template_points))
-    target_plane = Plane.best_fit(Points(target_points))
-
-
-    rot_mat = rotation_between_vectors(template_plane.normal,target_plane.normal)
-
-
-    target_shape.rot_mat = rot_mat
-    target_shape.trans_vect = -np.mean(target_shape.RPEL[0],axis=0,keepdims=True)
-    template_shape.trans_vect = -np.mean(template_shape.RPEL[0],axis=0,keepdims=True)
-
-    target_plot   = target_shape.get_plotly_graph()
-    template_plot = template_shape.get_plotly_graph(color='blue')
-    fig =  go.Figure(data=[template_plot
-                         ,target_plot
-                          ])
-
-    fig.show()
-
-    #
-    # template_tup, target_tup = _extract_data_cloud()
-    # template_points = template_tup[0]
-    # target_points   = target_tup[0]
-    # template_data   = template_tup[1]
-    # target_data     = target_tup[1]
-    #
+    # template_points = template_shape.right_socket
+    # target_points = target_shape.right_socket
     #
     # template_plane = Plane.best_fit(Points(template_points))
     # target_plane = Plane.best_fit(Points(target_points))
@@ -582,49 +691,20 @@ if __name__=='__main__':
     #
     # rot_mat = rotation_between_vectors(template_plane.normal,target_plane.normal)
     #
-    # template_surface = jnp.array(template_data['surface']['RPel']['points'])
-    # template_surface = template_surface-jnp.mean(template_surface,axis=0,keepdims=True)
-    # target_surface   = jnp.array(target_data['surface']['RPel']['points']).transpose()
     #
-    # target_surface_trans = jnp.matmul(rot_mat,target_surface-jnp.mean(target_surface,axis=1,keepdims=True))
-    # #target_surface_trans = jnp.subtract(target_surface_trans,jnp.mean(template_surface,axis=0,keepdims=True))
-    #
-    #
-    #
-    #
-    # pio.renderers
-    #
-    #
-    #
-    # vertices,I,J,K = points2mesh3d(template_surface)#todo: extract this data for the target mesh as well: the rotmat
-    # _vertices,_I,_J,_K = points2mesh3d(target_surface_trans.transpose())
-    # # needs
-    # # to act on the vertices
-    # x,y,z = vertices.T
-    # mesh_plot = go.Mesh3d(x=x
-    #                                 ,y=y
-    #                                 ,z=z
-    #                                 ,i=I
-    #                                 ,j=J
-    #                                 ,k=K
-    #                                 ,color='lightpink',opacity=0.50)
-    # x,y,z = _vertices.T
-    # mesh_plot_ = go.Mesh3d(x=x
-    #                                 ,y=y
-    #                                 ,z=z
-    #                                 ,i=_I
-    #                                 ,j=_J
-    #                                 ,k=_K
-    #                                 ,color='blue',opacity=0.50)
-    # fig = go.Figure(data=[mesh_plot
-    #                      ,mesh_plot_
-    #                       ])
-    # fig.show()
-    #
+    # target_shape.rot_mat = rot_mat
+    # target_shape.trans_vect = -np.mean(target_shape.RPEL[0],axis=0,keepdims=True)
+    # template_shape.trans_vect = -np.mean(template_shape.RPEL[0],axis=0,keepdims=True)
 
-    #
-    #
-    #
+    left_plot2,right_plot2   = target_shape.get_plotly_graph()
+    left_plot1,right_plot1 = template_shape.get_plotly_graph(color='blue')
+    fig =  go.Figure(data=[left_plot1
+                          ,left_plot2
+                          ,right_plot1
+                          ,right_plot2
+                          ])
+
+    fig.show()
 
 
 
