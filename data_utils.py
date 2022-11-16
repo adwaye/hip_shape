@@ -1,4 +1,13 @@
+import numpy as np
+import pymeshlab as ml
+import numpy
+import plotly.graph_objects as go
+import plotly.io as pio
+pio.renderers.default = "browser"
+import meshlib.mrmeshpy as mr
+import stl
 
+import warnings
 import os.path
 
 import plotly.graph_objects
@@ -8,9 +17,6 @@ pio.renderers.default = "browser"
 from read_landmarks import *
 from datetime import datetime
 import pickle
-
-import numpy as np
-from stl import mesh  # pip install numpy-stl
 import numpy.linalg
 from skspatial.objects import Plane, Points
 from skspatial.plotting import plot_3d
@@ -40,13 +46,18 @@ class HipData(object):
 
     :param pickle_path: path to pickle file. Needs to be the output of data_cleaning._to_pickle
     :type pickle_path: str
+    :param decimator: object that provided an interface to downsample the number of faces in self.data['surface]['RPEL']
+                      and self.data['surface]['LPEL']
+    :type decimator: MeshDecimator or None
     """
-    def __init__(self,pickle_path):
+    def __init__(self,pickle_path:str,decimator=None):
+
 
         self.pickle_path = pickle_path
         with open(pickle_path,'rb') as fp:
             data = pickle.load(fp)
         self.data   = data
+        self.decimator = decimator
         # try:
         #     self.rot_mat    = self.data['rotmat']
         # except KeyError:
@@ -58,37 +69,42 @@ class HipData(object):
         #     self.trans_vect = None
 
 
-    def rotate(self,points):
-        """
+    def rotate(self,points:numpy.array)->numpy.array:
+        """Rotates a set of points by using self.rot_mat. if self.rot_mat is None, returns the points as is
 
         :param points: points to be rotated
         :type points: array shape (3,N)
         :return: rotated points
-        :rtype: array shape (3,N)
+        :rtype: array shape (N,3)
         """
         if points.shape[0]!=3:
             points = np.transpose(points)
-        if self.rot_mat is None:
-            print('no rotation matrix found in data')
-        else:
+        assert points.shape[0]==3
+        if self.rot_mat is not None:
             center  = np.mean(points,axis=1,keepdims=True)
             points_ = points - np.mean(points,axis=1,keepdims=True)
             points  = np.matmul(self.rot_mat,points_)+center
+
+            #print('no rotation matrix found in data')
+
+
         return points.transpose()
 
-    def translate(self,points):
-        """
+    def translate(self,points:numpy.array)->numpy.array:
+        """Rotates a set of points by using self.trans_vect. if self.trans_vect is None, returns the points as is
 
         :param points: points to be rotated
-        :type points: array shape (3,N)
+        :type points: array shape (N,3)
         :return: translated points
-        :rtype: array shape (3,N)
+        :rtype: array shape (N,3)
         """
-
-        if self.trans_vect is None:
-            print('no translation vector found in data')
-        else:
+        assert points.shape[1]==3
+        if self.trans_vect is not None:
             points = points + self.trans_vect
+
+            #print('no translation vector found in data')
+
+
         return points
 
     @property
@@ -230,12 +246,13 @@ class HipData(object):
         return trans_vect
 
     @trans_vect.setter
-    def trans_vect(self,val):
+    def trans_vect(self,val:numpy.array):
         assert val.shape == (1,3)
         self.data['translation'] = val
         #self.rot_mat = val
 
-    def save_data(self,location):
+
+    def save_data(self,location:str)->None:
         """Saves self.data as a pickle file. The saved file name is the same as the original filename. The pickle
         file is saved in location/self.pickle_path
 
@@ -244,9 +261,11 @@ class HipData(object):
         :return:
         :rtype:
         """
+        if not os.path.isdir(location): os.makedirs(location)
         file_path = os.path.join(location,self.pickle_path.split('/')[-1])
         with open(file_path,'wb') as fp:
-            pickle.dump(out_dict,fp,protocol=pickle.HIGHEST_PROTOCOL)
+            pickle.dump(self.data,fp,protocol=pickle.HIGHEST_PROTOCOL)
+        self.pickle_path = file_path
 
 
     def get_plotly_graph(self,color: str='lightpink')->list[plotly.graph_objects.mesh3d]:
@@ -284,16 +303,120 @@ class HipData(object):
         return left_mesh_plot,right_mesh_plot
 
 
-    def decimate(self,max_num_edges):
-        """
+    def decimate(self,max_num_faces: int,save_path: str=None,step_size: float=0.25,max_it: int=20)->None:
+        """Calls meshlib to reduce the number of faces in the RPel and LPel surfaces.
 
-        :param max_num_edges:
-        :type max_num_edges:
-        :return:
-        :rtype:
+        :param max_num_faces: maximum number of faces
+        :type max_num_faces: int
+        :param save_path: default to None, in which case, the downsampled mesh is not saved. If a path is provided,
+                          then the downsampled mesh is saved for each pelves. self.data is also updated with this info
+        :type save_path: str or None
+        :return: None
+        :rtype: None
         """
-        #todo: implement this by reusing the code from resample_mesh.py
+        if self.decimator is not None:
+            self.decimator.decimate(hipdata=self,max_num_faces=max_num_faces,save_path=save_path,step_size=step_size,
+                                    max_it=max_it)
+
+class MeshDecimator(object):
+
+
+    @staticmethod
+    def decimate(hipdata,**kwargs):
+        """reduces the number of faces in the hipdaya.RPEL and hipdata.LPEL. Will modify attributes of hipdata
+        in particular will modify hipdata.data['surface']['LPel']['points'] and hipdata.data['surface']['LPel'][
+        'faces'].
+
+
+        :param hipdata:
+        :type hipdata: HipData
+        :return: None
+        :rtype: None
+        """
         pass
+
+
+class MeshLibDecimator(MeshDecimator):
+    @staticmethod
+    def decimate(hipdata:HipData,max_num_faces: int,save_path: str=None,step_size: float=0.25,max_it: int=20):
+        """Calls meshlib to reduce the number of faces in the RPel and LPel surfaces. Increases the edge size
+        parameter by step_size in a loop until the number of faces in the resulting mesh object is smaller than
+        max_num_faces or until the number of iterations is bigger than max_it. Will modify attributes of hipdata
+        in particular will modify hipdata.data['surface']['LPel']['points'] and hipdata.data['surface']['LPel'][
+        'faces']. Also have the option of saving the new mesh in a specified location and replacing the value of
+        hipdata.data['surface']['LPel']['mesh_loc'] with the new save location of the downsampled mesh
+
+        :param hipdata: data on which operation is to be perfomed
+        :type hipdata: HipData
+        :param max_num_faces: maximum number of faces
+        :type max_num_faces: int
+        :param save_path: default to None, in which case, the downsampled mesh is not saved. If a path is provided,
+                          then the downsampled mesh is saved for each pelves. self.data is also updated with this info
+        :type save_path: str
+        :param step_size: increments by which the edge length parameter needs to be increased in each loop
+        :type step_size: str
+        :param max_it: maximumg number of times the max_edge_elen argument of mr.DecimateSettings can be increased
+        :type max_it: int
+        :return: None
+        :rtype: None
+        """
+        rpel_path = None
+        lpel_path = None
+        try:
+            rpel_path = hipdata.data['surface']['RPel']['mesh_loc']
+        except KeyError:
+            print('cannot find right pelvis surface')
+        try:
+            lpel_path = hipdata.data['surface']['LPel']['mesh_loc']
+        except KeyError:
+            print('cannot find right pelvis surface')
+
+        for path,name in zip([lpel_path,rpel_path],['LPel','RPel']):
+            if path is not None:
+                mesh = mr.loadMesh(mr.Path(path))
+                # decimate it with max possible deviation 0.5:
+                settings = mr.DecimateSettings()
+                settings.maxError = 10
+                settings.maxEdgeLen = 0.5
+                try:
+                    num_faces_start_r = hipdata.RPEL[0].shape[0] // 3
+                except AttributeError:
+                    num_faces_start_r = 0
+                    print('no right pelvis found')
+                try:
+                    num_faces_start_l = hipdata.LPEL[0].shape[0] // 3
+                except AttributeError:
+                    num_faces_start_l = 0
+                    print('no left pelvis found')
+                num_faces_start = (num_faces_start_l + num_faces_start_r) // 2
+                num_faces = np.inf
+                it = 0
+                while num_faces > max_num_faces:
+                    result = mr.decimateMesh(mesh.value(),settings
+                                             )
+                    num_faces = num_faces_start-result.facesDeleted
+                    #print(result.facesDeleted)
+                    settings.maxEdgeLen += step_size
+                    #print(f'edge length={settings.maxEdgeLen}')
+                    it += 1
+                    if it>max_it:
+                        warnings.warn('max number of iterations reached, might not have converged')
+                        break
+
+                if save_path is None:
+                    file_path = 'tmp.stl'
+
+                else:
+                    if not os.path.isdir(save_path): os.makedirs(save_path)
+                    file_path = os.path.join(save_path,name+'.stl')
+                    hipdata.data['surface'][name]['mesh_loc'] = file_path
+                mr.saveMesh(mesh.value(),mr.Path(file_path))
+                m = stl.mesh.Mesh.from_file(file_path)
+                points,faces = loadSTL(file_path)
+                hipdata.data['surface'][name]['points'] = points
+                hipdata.data['surface'][name]['faces']  = faces
+
+
 
 
 
@@ -483,9 +606,9 @@ def rotation_between_vectors(normal1,normal2):
 def ralign_2_hips(hip1: HipData,hip2: HipData,by: str='RPel')->list[HipData]:
     """Performs rigid alignment of two hips.
 
-    :param hip1:
+    :param hip1: template Hip, this one is kept in inplace
     :type hip1: HipData
-    :param hip2:
+    :param hip2: hip to be transformed
     :type hip2: HipData
     :param by: options are
 
@@ -673,22 +796,63 @@ def _test_vector_rotation():
 
 
 
+def _test_downsampling():
+    decimator = MeshLibDecimator
+    file_path = '/home/adwaye/PycharmProjects/hip_shape/data/Segmentation_and_landmarks_processed/TOH - Controls/C4.p'
+    hip_data = HipData(file_path,decimator)
+    left_plot1,right_plot1 = hip_data.get_plotly_graph()
+    max_num_faces = hip_data.RPEL[0].shape[0]//10
+    save_path = f'/home/adwaye/PycharmProjects/FlowGPLVM/data/mesh_downsample_{max_num_faces}/TOH - Controls/C4'
+    os.removedirs(save_path)
+    rpel_num_faces = hip_data.RPEL[0].shape[0]//3
+    lpel_num_faces = hip_data.LPEL[0].shape[0] // 3
+    print(f'pre-decimate number of faces in RPel={rpel_num_faces}')
+    print(f'pre-decimate number of faces in LPel={lpel_num_faces}')
+    hip_data.decimate(max_num_faces=max_num_faces,
+                      save_path=save_path)
+    hip_data.save_data('/home/adwaye/PycharmProjects/FlowGPLVM/data/TOH - '
+                       'Controls')
+    print(f'post decimate number of faces in RPel={hip_data.RPEL[0].shape[0]//3}')
+    print(f'post decimate number of faces in LPel={hip_data.LPEL[0].shape[0] // 3}')
+    assert rpel_num_faces>hip_data.RPEL[0].shape[0]//3
+    assert lpel_num_faces>hip_data.LPEL[0].shape[0]//3
+    # assert hip_data.RPEL[0].shape[0]//3 < max_num_faces
+    # assert hip_data.LPEL[0].shape[0]//3 < max_num_faces
+    for fname in ['RPel.stl','LPel.stl']:
+        assert os.path.isfile(os.path.join(save_path,fname))
+        points,faces = loadSTL(os.path.join(save_path,fname))
+
+    left_plot2,right_plot2 = hip_data.get_plotly_graph()
+    from plotly.subplots import make_subplots
+    fig = make_subplots(rows=2,cols=1,
+                        specs=[[{'is_3d':True}],
+                               [{'is_3d':True}]],
+                        print_grid=False,subplot_titles=("Original Mesh", "Downsampled mesh"))
+    fig.add_trace(
+        left_plot1,
+
+        row=1,col=1,secondary_y=False)
+    fig.add_trace(
+        right_plot1,
+
+        row=1,col=1,secondary_y=False)
+    fig.add_trace(
+        left_plot2,
+
+        row=2,col=1,secondary_y=False)
+    fig.add_trace(
+        right_plot2,
+
+        row=2,col=1,secondary_y=False)
+    fig.show()
+
+        # assert points.shape[0]//3 < max_num_faces
 
 
 
 
-
-
-
-
-
-#need to embed the curves into an array:
-#calculating size of the array to allocate for the distance transform
-if __name__=='__main__':
-
-
-    template_shape = HipData('/home/adwaye/PycharmProjects/hip_shape/data/Segmentation_and_landmarks_processed/TOH - '
-                        'Controls/C4.p')
+def _test_rotation():
+    template_shape = HipData('/home/adwaye/PycharmProjects/hip_shape/data/Segmentation_and_landmarks_processed/TOH - Controls/C4.p')
     mean_pos=np.mean(template_shape.RPEL[0],axis=0,keepdims=True)
     print(template_shape.APP_coords.shape)
     #template_shape.trans_vect = np.mean(template_shape.RPEL[0],axis=0,keepdims=True)
@@ -696,7 +860,7 @@ if __name__=='__main__':
                         'Controls/C8.p')
     #target_shape.trans_vect = np.mean(target_shape.RPEL[0],axis=0,keepdims=True)
 
-    template_shape,target_shape = ralign_2_hips(template_shape,target_shape,by='all')
+    template_shape,target_shape = ralign_2_hips(template_shape,target_shape,by='RPel')
 
     # template_points = template_shape.right_socket
     # target_points = target_shape.right_socket
@@ -721,6 +885,117 @@ if __name__=='__main__':
                           ])
 
     fig.show()
+
+
+
+def downsample_data(folders:list[str]=[os.path.join(target_loc,f) for f in os.listdir(target_loc)],
+                    reduction_factor:int=10):
+    """Decimates hip meshes stored in pickle files stored in paths given by elements of folders.
+
+    :param folders: list of folders where each element should contain a pickle file of the type output by
+                    data_cleaning._to_pickle
+    :type folders: list[str]
+    :param reduction_factor: amount by which the number of faces should be reduced. If initial mesh has N points
+                             then the final mesh will have <N/10 points
+    :type reduction_factor: int
+    :return: None
+    :rtype: None
+    """
+    decimator = MeshLibDecimator()
+
+    for folder in folders:
+        files = [os.path.join(folder,f) for f in os.listdir(folder) if f.split('.')[-1]=='p']
+        save_path_stl = os.path.join(f'data/stl_downsample_{reduction_factor}',folder.split('/')[-1])
+        save_path_p   = os.path.join(f'data/Segmentation_and_landmarks_downsample_{reduction_factor}',folder.split('/')[-1])
+
+        for i,file in enumerate(files):
+            print('==============')
+            stl_fpath    = os.path.join(save_path_stl,file.split('/')[-1].split('.')[-2])
+
+
+
+            hip_data  = HipData(pickle_path=file,decimator=decimator)
+            try:
+                num_faces_start_r = hip_data.RPEL[0].shape[0]//3
+            except AttributeError:
+                num_faces_start_r = 0
+                print('no right pelvis found')
+            try:
+                num_faces_start_l = hip_data.LPEL[0].shape[0] // 3
+            except AttributeError:
+                num_faces_start_l =0
+                print('no left pelvis found')
+            num_faces_start = (num_faces_start_l+num_faces_start_r)//2
+            if num_faces_start>0:
+                print(f'processing {file}')
+                print(f'initial number of faces right={num_faces_start_r}, left={num_faces_start_l}')
+                hip_data.decimate(save_path=stl_fpath,max_num_faces=num_faces_start//reduction_factor)
+                try:
+                    num_faces_end_r = hip_data.RPEL[0].shape[0] // 3
+                except AttributeError:
+                    num_faces_end_r = 0
+                try:
+                    num_faces_end_l = hip_data.LPEL[0].shape[0] // 3
+                except AttributeError:
+                    num_faces_end_l = 0
+                print(f'final number of faces right={num_faces_end_r}, left={num_faces_end_l}')
+                hip_data.save_data(location=save_path_p)
+                print(f'saved downsampled pickle file at {hip_data.pickle_path}')
+                print(f'saved downsampled stl file(s) at {stl_fpath}')
+                #checking if
+                try:
+                    rpel_path = hip_data.data['surface']['RPel']['mesh_loc']
+                    assert rpel_path==os.path.join(stl_fpath,'RPel.stl')
+                    assert os.path.isfile(os.path.join(stl_fpath,'RPel.stl'))
+                except KeyError: print('kk fane, pna koT drwat')
+                try:
+                    lpel_path = hip_data.data['surface']['LPel']['mesh_loc']
+                    assert lpel_path==os.path.join(stl_fpath,'LPel.stl')
+                    assert os.path.isfile(os.path.join(stl_fpath,'LPel.stl'))
+                except KeyError: print('kk fane, pna koT goss')
+                assert hip_data.pickle_path == os.path.join(save_path_p,file.split('/')[-1])
+
+
+
+def _test_downsampled_data(f_path:str='data/Segmentation_and_landmarks_downsample_10/TOH - Controls/C4.p'):
+    """plots a saved downsampled data point to see how it is doing
+
+    :param f_path:
+    :type f_path:
+    :return:
+    :rtype:
+    """
+    hip_data = HipData(f_path)
+    try:
+        print(f'num points in left pelvis={hip_data.LPEL[0].shape[0]}')
+    except AttributeError:
+        print('no left pelvis')
+
+    try: print(f'num points in right pelvis={hip_data.RPEL[0].shape[0]}')
+    except AttributeError:
+        print('no left pelvis')
+    r_plot,l_plot = hip_data.get_plotly_graph()
+    fig =  go.Figure(data=[r_plot
+                          ,l_plot
+
+                          ])
+
+    fig.show()
+
+
+
+#need to embed the curves into an array:
+#calculating size of the array to allocate for the distance transform
+if __name__=='__main__':
+    #_test_downsampling()
+    downsample_data()
+
+
+
+
+
+    #_test_rotation()
+
 
 
 

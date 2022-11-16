@@ -10,6 +10,7 @@ import stl
 
 
 def resample_mesh(hip: HipData)->HipData:
+
     pass
 
 
@@ -69,7 +70,7 @@ if __name__=='__main__':
     # decimate it with max possible deviation 0.5:
     settings = mr.DecimateSettings()
     settings.maxError = 0.5
-    settings.maxEdgeLen = 2
+    settings.maxEdgeLen = 2.5
     result = mr.decimateMesh(mesh.value(),settings)
     print(result.facesDeleted)
     # 708298
