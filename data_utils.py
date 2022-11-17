@@ -31,11 +31,11 @@ import time
 import threading as t
 
 
-source_loc = './data/Segmentation_and_landmarks_raw/'
-target_loc = './data/Segmentation_and_landmarks_processed/'
-APP_aligned_loc = './data/Segmentation_and_landmarks_APP_aligned/'
-RSocket_aligned_trans = './data/Segmentation_and_landmarks_Rsocket_aligned/'
-LSocket_aligned_trans = './data/Segmentation_and_landmarks_Lsocket_aligned/'
+source_loc = '/home/adwaye/PycharmProjects/FlowGPLVM/data/Segmentation_and_landmarks_raw/'
+target_loc = '/home/adwaye/PycharmProjects/FlowGPLVM/data/Segmentation_and_landmarks_processed/'
+APP_aligned_loc = '/home/adwaye/PycharmProjects/FlowGPLVM/data/Segmentation_and_landmarks_APP_aligned/'
+RSocket_aligned_trans = '/home/adwaye/PycharmProjects/FlowGPLVM/data/Segmentation_and_landmarks_Rsocket_aligned/'
+LSocket_aligned_trans = '/home/adwaye/PycharmProjects/FlowGPLVM/data/Segmentation_and_landmarks_Lsocket_aligned/'
 dtype = jnp.float32
 
 
@@ -888,7 +888,7 @@ def _test_rotation():
 
 
 
-def downsample_data(folders:list[str]=[os.path.join(target_loc,f) for f in os.listdir(target_loc)],
+def downsample_data(folders:list[str],
                     reduction_factor:int=10):
     """Decimates hip meshes stored in pickle files stored in paths given by elements of folders.
 
@@ -988,7 +988,7 @@ def _test_downsampled_data(f_path:str='data/Segmentation_and_landmarks_downsampl
 #calculating size of the array to allocate for the distance transform
 if __name__=='__main__':
     #_test_downsampling()
-    downsample_data()
+    downsample_data(folders = [os.path.join(target_loc,f) for f in os.listdir(target_loc)])
 
 
 
