@@ -1,69 +1,140 @@
-from OpenGL import GL as gl
-from OpenGL import GLUT as glut
-from OpenGL.arrays import vbo
+
+import random,logging
+import concurrent.futures
+import threading,time
+from visualiser import HipDataSource
+import os
+import queue
+import jax.numpy as jnp
+
+from mayavi import mlab
+# from mayavi.api import Engine
+# from tvtk.api import tvtk
 import numpy as np
+SENTINEL = object()
 
-class VBOJiggle(object):
+from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.pyplot as plt
 
-    def __init__(self,nvert=100,jiggliness=0.01):
-        self.nvert = nvert
-        self.jiggliness = jiggliness
 
-        verts = 2*np.random.rand(nvert,2) - 1
-        self.verts = np.require(verts,np.float32,'F')
-        self.vbo = vbo.VBO(self.verts)
 
-    def draw(self):
 
-        gl.glClearColor(0,0,0,0)
-        gl.glClear(gl.GL_COLOR_BUFFER_BIT)
 
-        gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
+def init_vis():
+    # Creates a new Engine, starts it and creates a new scene
+    # engine = Engine()
+    # engine.start()
+    # engine.new_scene()
 
-        self.vbo.bind()
+    # Initialise Plot
 
-        gl.glVertexPointer(2,gl.GL_FLOAT,0,self.vbo)
-        gl.glColor(0,1,0,1)
-        gl.glDrawArrays(gl.GL_LINE_LOOP,0,self.vbo.data.shape[0])
+    hip_data_source = HipDataSource(pickle_path='/home/adwaye/PycharmProjects/hip_shape/data'
+                                                '/Segmentation_and_landmarks_downsample_10/TOH - Controls/C8.p',
+                                    decimator=None)
+    points,faces = hip_data_source.get_data()
+    vertices = points - np.mean(points,axis=0,keepdims=True)
 
-        gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
 
-        self.vbo.unbind()
 
-        self.jiggle()
+    # vertices = np.array([[0,0,0],[1,0,0],[0,1,0],[1,2,1]])
+    # T = np.array([[0,1,2],[1,2,3]])
 
-        glut.glutSwapBuffers()
+    fig = plt.figure()
+    ax = fig.add_subplot(projection='3d')
+    tri_plot= ax.plot_trisurf(vertices[:,0],vertices[:,1],vertices[:,2],triangles=faces,edgecolor=[[0,0,0]],
+                             linewidth=1.0,
+                    alpha=0.0,
+                    shade=False)
 
-    def jiggle(self):
+    plt.show()
 
-        # jiggle half of the vertices around randomly
-        delta = (np.random.rand(self.nvert//2,2) - 0.5)*self.jiggliness
-        self.verts[:self.nvert:2] += delta
 
-        # the data attribute of the vbo is the same as the numpy array
-        # of vertices
-        assert self.verts is self.vbo.data
+    return tri_plot
+#@mlab.animate(delay=500,ui=False)
 
-        # # Approach 1:
-        # # it seems like this ought to work, but it doesn't - all the
-        # # vertices remain static even though the vbo's data gets updated
-        # self.vbo.copy_data()
 
-        # Approach 2:
-        # this works, but it seems unnecessary to copy the whole array
-        # up to the GPU, particularly if the array is large and I have
-        # modified only a small subset of vertices
-        self.vbo.set_array(self.verts)
 
-if __name__ == '__main__':
-    glut.glutInit()
-    glut.glutInitDisplayMode( glut.GLUT_DOUBLE | glut.GLUT_RGB )
-    glut.glutInitWindowSize( 250, 250 )
-    glut.glutInitWindowPosition( 100, 100 )
-    glut.glutCreateWindow( None )
+def jax_func(data):
+    noise = jnp.array(np.random.randn(*data.shape)*10)
+    data = jnp.add(data,noise)
+    return data
 
-    demo = VBOJiggle()
-    glut.glutDisplayFunc( demo.draw )
-    glut.glutIdleFunc( demo.draw )
+def producer_old(pipeline):
+    """Pretend we're getting a message from the network."""
+    for index in range(10):
+        message = random.randint(1, 101)
+        logging.info("Producer got message: %s", message)
+        pipeline.set_message(message, "Producer")
 
-    glut.glutMainLoop()
+    # Send a sentinel message to tell consumer we're done
+    pipeline.set_message(SENTINEL, "Producer")
+
+
+def producer(pipeline):
+    """Pretend we're getting a message from the network."""
+    hip_data_source = HipDataSource(pickle_path='/home/adwaye/PycharmProjects/hip_shape/data'
+                                                '/Segmentation_and_landmarks_downsample_10/TOH - Controls/C4.p',
+                                    decimator=None)
+    points,faces = hip_data_source.get_data()
+    for index in range(0):
+        points = jax_func(points)
+        message = random.randint(1, 101)
+        logging.info(f'Producer got message: {points}')
+        pipeline.set_message(points, "Producer")
+
+    # Send a sentinel message to tell consumer we're done
+    pipeline.set_message(SENTINEL, "Producer")
+
+def consumer(pipeline):
+    """Pretend we're saving a number in the database."""
+    tri_plot = init_vis()
+    mlab.show()
+    message = 0
+    while message is not SENTINEL:
+        points = pipeline.get_message("Consumer")
+        if message is not SENTINEL:
+            logging.info("Consumer storing message: %s", points)
+            tri_plot.set_verts(points)
+
+
+
+
+class Pipeline:
+    """
+    Class to allow a single element pipeline between producer and consumer.
+    """
+    def __init__(self):
+        self.message = 0
+        self.producer_lock = threading.Lock()
+        self.consumer_lock = threading.Lock()
+        self.consumer_lock.acquire()
+
+    def get_message(self, name):
+        self.consumer_lock.acquire()
+        message = self.message
+        self.producer_lock.release()
+        return message
+
+    def set_message(self, message, name):
+        self.producer_lock.acquire()
+        self.message = message
+        self.consumer_lock.release()
+
+
+
+
+
+
+
+if __name__ == "__main__":
+    format = "%(asctime)s: %(message)s"
+    logging.basicConfig(format=format, level=logging.INFO,
+                        datefmt="%H:%M:%S")
+    logging.getLogger().setLevel(logging.DEBUG)
+
+    pipeline = Pipeline()
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+        executor.submit(producer, pipeline)
+        executor.submit(consumer, pipeline)
+
+    #tri_plot = init_vis()

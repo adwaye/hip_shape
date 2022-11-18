@@ -1,5 +1,10 @@
+import jax.numpy as jnp
+import jax
+from tvtk.api import tvtk
 import os
-
+from traits.api import HasTraits,Instance,on_trait_change
+from traitsui.api import View,Item
+from mayavi.core.ui.api import MayaviScene,MlabSceneModel,SceneEditor
 import pyqtgraph
 
 from data_utils import HipData
@@ -12,6 +17,17 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 import sys
+
+import threading
+
+from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.pyplot as plt
+plt.ion()
+
+
+from mayavi import mlab
+from mayavi.api import Engine
+import time
 class Observer(object):
     def __init__(self):
         pass
@@ -37,7 +53,8 @@ class Observer(object):
         :return:
         :rtype:
         """
-        pass
+        self.points = data[0]
+        self.faces  = data[1]
 
 
 
@@ -52,21 +69,6 @@ class GlObserver(Observer,gl.GLViewWidget):
         super().__init__(**kwargs)
         gl.GLViewWidget.__init__(self,**kwargs)
         self.mesh_data = None
-
-
-
-    def set_data(self,data:list):
-        """stores the data as a list of points and faces, able to render multiple meshes due to the list
-        structure of the data
-
-        :param data:
-        :type data:
-        :return:
-        :rtype:
-        """
-
-        self.points = data[0]
-        self.faces  = data[1]
 
     def display_data(self):
         #self.clear()
@@ -101,12 +103,125 @@ class GlObserver(Observer,gl.GLViewWidget):
         self.update()
 
 
-
-class GlObserver(Observer,gl.GLViewWidget):
+class MatplotlibObserver(Observer):
     def __init__(self,**kwargs):
         super().__init__(**kwargs)
-        gl.GLViewWidget.__init__(self,**kwargs)
-        self.mesh_data = None
+        #HasTraits.__init__(self,**kwargs)
+        self.tri_plot= None
+    def set_data(self,data:list):
+
+        super().set_data(data)
+
+    def display_data(self):
+
+        ## PLot to Show
+        if self.tri_plot is None:
+            self.init_mesh()
+            plt.show()
+        else:
+            self.update_visualisation()
+
+    def init_mesh(self):
+        self.fig = plt.figure()
+        self.ax = self.fig.add_subplot(projection='3d')
+        vertices = self.points
+        faces = self.faces
+        self.tri_plot = self.ax.plot_trisurf(vertices[:,0],vertices[:,1],vertices[:,2],triangles=faces,edgecolor=[[0,0,
+                                                                                                                 0]],
+                                   linewidth=1.0,
+                                   alpha=0.0,
+                                   shade=False)
+        plt.pause(0.01)
+        plt.draw()
+
+    def update_visualisation(self):
+#        pass
+
+        self.tri_plot.set_verts_and_codes(verts=self.points,codes=self.faces)
+        plt.pause(0.01)
+        # self.fig.canvas.draw()
+        # self.tri_plot.update()
+
+class MayaviObserver(Observer,HasTraits):
+    def __init__(self,**kwargs):
+        super().__init__(**kwargs)
+        HasTraits.__init__(self,**kwargs)
+        self.view = View(Item('scene',editor=SceneEditor(scene_class=MayaviScene),
+                     height=250,width=300,show_label=False),
+                resizable=True)
+        self.engine = Engine()
+        self.engine.start()
+        self.engine.new_scene()
+        self.mesh = None
+        self.polydata = None
+    def set_data(self,data:list):
+
+        super().set_data(data)
+
+        #self.mesh.mlab_source.set()
+
+    def display_data(self):
+
+        ## PLot to Show
+        if self.mesh is None:
+            self.init_mesh()
+            mlab.show()
+        else:
+            self.update_visualisation()
+
+
+
+        # x = my_mesh.x
+        # y = my_mesh.y
+        # z = my_mesh.z
+        # mlab.points3d(x, y, z)
+        # mlab.show()
+        # color = [(139 / 255,233 / 255,253 / 255),(80 / 255,250 / 255,123 / 255),(139 / 255,233 / 255,253 / 255),
+        #          (80 / 255,250 / 255,123 / 255)]
+        #
+        # if self.plot is None:
+        #     self.mesh_pipeline = mlab.pipeline.triangular_mesh_source(self.points[:,0],self.points[:,1],self.points[:,2],self.faces)
+        #     self.plot = mlab.triangular_mesh(self.points[:,0],self.points[:,1],self.points[:,2],self.faces)
+        # else:
+        #     self.plot.mlab
+        #
+        #     mlab.show()
+        # self.mesh = mlab.triangular_mesh()
+
+
+    def init_mesh(self):
+        self.polydata = tvtk.PolyData(points=self.points,polys=self.faces)
+
+
+        self.mesh = mlab.pipeline.surface(self.polydata)
+
+
+    @mlab.animate(delay=500,ui=False)
+    def update_visualisation(self):
+        pickle_loc = '/home/adwaye/PycharmProjects/hip_shape/data/Segmentation_and_landmarks_downsample_10/TOH - ' \
+                     'Controls/'
+        files = [os.path.join(pickle_loc,f) for f in os.listdir(pickle_loc)]
+
+        # hip_data_source.set_data(pickle_path=pickle_path)
+        # points,faces = hip_data_source.get_data()
+        # points = points - np.mean(points,axis=0,keepdims=True)
+        self.polydata.points = self.points
+        self.polydata.polys = self.faces
+
+
+        # drawing.mlab_source.x = x
+        # drawing.mlab_source.y = y
+        # drawing.mlab_source.z = z
+        # drawing.mlab_source.triangles = faces
+        # drawing.update()
+        self.mesh.parent.parent.update()
+        #drawing.mlab_source.trait_set(x=x,y=y,z=z,triangles=faces)
+        yield
+
+
+
+
+
 
 class DataSource(object):
     def __init__(self,**kwargs):
@@ -149,6 +264,8 @@ class DataSource(object):
         :rtype:
         """
         pass
+
+
 
 
 class HipDataSource(HipData,DataSource):
@@ -209,28 +326,66 @@ def _test_inheritance():
 
 def _test_data_getter():
     import time
+
+    hip_data_source = HipDataSource(pickle_path='/home/adwaye/PycharmProjects/hip_shape/data'
+                                                '/Segmentation_and_landmarks_downsample_10/TOH - Controls/C4.p',
+                                    decimator=None)
+    points,faces = hip_data_source.get_data()
+    print(points,faces)
+
+
+
+    gl_observer = MatplotlibObserver()
+
+    #my_window = MyWindow(gl_observer)
+    # gl_observer.setMinimumWidth(800)
+    # gl_observer.setMinimumHeight(800)
+    hip_data_source.registerObserver(observer=gl_observer)
+    hip_data_source.notifyObservers()
+
+
+
+
+
+    pickle_loc = '/home/adwaye/PycharmProjects/hip_shape/data/Segmentation_and_landmarks_downsample_10/TOH - Controls/'
+    files = [os.path.join(pickle_loc,f) for f in os.listdir(pickle_loc)]
+    for k,pickle_path in enumerate(files):
+        time.sleep(5)
+        if k<10:
+            print(pickle_path)
+            hip_data_source.set_data(pickle_path=pickle_path)
+            hip_data_source.notifyObservers()
+
+        else:
+            break
+    #sys.exit(app.exec_())
+
+
+def _test_mayavi_observer():
+    import time
     print(pyqtgraph.getConfigOption('useOpenGL'))
     pyqtgraph.setConfigOptions(useOpenGL= True)
     hip_data_source = HipDataSource(pickle_path='/home/adwaye/PycharmProjects/hip_shape/data'
                                                 '/Segmentation_and_landmarks_downsample_10/TOH - Controls/C4.p',
-                                    decimator=None)
+                                    decimator=None)#modelOPtDataSource
     points,faces = hip_data_source.get_data()
     print(points,faces)
     app = QApplication(sys.argv)
     app.setStyle('Fusion')
 
 
-    gl_observer = GlObserver()
-    gl_observer.setMinimumWidth(800)
-    gl_observer.setMinimumHeight(800)
-    my_window = MyWindow(gl_observer)
-    hip_data_source.registerObserver(observer=my_window.observer)
+    m_observer = MayaviObserver()
+
+    #my_window = MyWindow(m_observer)
+    # m_observer.setMinimumWidth(800)
+    # m_observer.setMinimumHeight(800)
+    hip_data_source.registerObserver(observer=m_observer)
     hip_data_source.notifyObservers()
 
 
 
 
-    my_window.show()
+    #my_window.show()
     pickle_loc = '/home/adwaye/PycharmProjects/hip_shape/data/Segmentation_and_landmarks_downsample_10/TOH - Controls/'
     files = [os.path.join(pickle_loc,f) for f in os.listdir(pickle_loc)]
     for k,pickle_path in enumerate(files):
@@ -241,14 +396,149 @@ def _test_data_getter():
 
         else:
             break
-    sys.exit(app.exec_())
+    #sys.exit(app.exec_())
+
+
+
+def jax_func(data):
+    noise = jnp.array(np.random.randn(*data.shape)*10)
+    data = jnp.add(data,noise)
+    return data
 
 
 
 
+class SafeTimedThread(threading.Thread):
+    def __init__(self, thread_condition, scan_time, funct, *funct_args):
+        threading.Thread.__init__(self)
 
+        # Thread condition for the function to operate with
+        self.tc = thread_condition
+
+        # Defines the scan time the function is to be run at
+        self.scan_time = scan_time
+
+        # Function to be run
+        self.run_function = funct
+
+        # Function arguments
+        self.funct_args = funct_args
+
+    def run(self):
+        for k in range(10):
+            # Locks the relevant thread
+            self.tc.acquire()
+
+            # Begins timer for elapsed time calculation
+            start_time = time.time()
+
+            # Runs the function that was passed to the thread
+            self.run_function(*self.funct_args)
+
+            # Wakes up relevant threads to listen for the thread release
+            self.tc.notify_all()
+
+            # Releases thread
+            self.tc.release()
+
+            # Calculates the elapsed process time & sleep for the remainder of the scan time
+            end_time = time.time()
+            elapsed_time = end_time - start_time
+            sleep_time = self.scan_time - elapsed_time
+
+            if sleep_time > 0:
+                time.sleep(sleep_time)
+            else:
+                print('Process time exceeds scan time')
+
+
+def _animate_mayavi():
+
+
+    hip_data_source = HipDataSource(pickle_path='/home/adwaye/PycharmProjects/hip_shape/data'
+                                                '/Segmentation_and_landmarks_downsample_10/TOH - Controls/C4.p',
+                                    decimator=None)
+    points,faces = hip_data_source.get_data()
+    points = points - np.mean(points,axis=0,keepdims=True)
+    _lock = threading.Lock()
+
+
+    # def run_main():
+    #     print('Running Main Controller')
+    @jax.jit
+    def run_main():
+        jax_func(data=points)
+
+    def init_vis():
+        # Creates a new Engine, starts it and creates a new scene
+        engine = Engine()
+        engine.start()
+        engine.new_scene()
+
+        # Initialise Plot
+        polydata = tvtk.PolyData(points=points,polys=faces)
+
+
+        mesh = mlab.pipeline.surface(polydata)
+
+        return polydata,mesh
+
+    hip_data_source = HipDataSource(pickle_path='/home/adwaye/PycharmProjects/hip_shape/data'
+                                                '/Segmentation_and_landmarks_downsample_10/TOH - Controls/C8.p',
+                                    decimator=None)
+    points,faces = hip_data_source.get_data()
+    points = points -np.mean(points,axis=0,keepdims=True)
+    @mlab.animate(delay=10,ui=False)
+    def update_visualisation(polydata,mesh):
+        pickle_loc = '/home/adwaye/PycharmProjects/hip_shape/data/Segmentation_and_landmarks_downsample_10/TOH - ' \
+                     'Controls/'
+        files = [os.path.join(pickle_loc,f) for f in os.listdir(pickle_loc)]
+        for k,pickle_path in enumerate(files):
+            time.sleep(5)
+            if k < 10:
+                hip_data_source.set_data(pickle_path=pickle_path)
+                points,faces = hip_data_source.get_data()
+                points = points - np.mean(points,axis=0,keepdims=True)
+                polydata.points = points
+                polydata.polys = faces
+
+                x = points[:,0]
+                y = points[:,1]
+                z = points[:,2]
+                # drawing.mlab_source.x = x
+                # drawing.mlab_source.y = y
+                # drawing.mlab_source.z = z
+                # drawing.mlab_source.triangles = faces
+                # drawing.update()
+                mesh.parent.parent.update()
+                #drawing.mlab_source.trait_set(x=x,y=y,z=z,triangles=faces)
+                yield
+
+            else:
+                break
+        print('Updating Visualisation')
+        # Pretend to receive data from external source
+
+
+    c = threading.Condition()
+
+    # Create display window
+    dwg = init_vis()
+
+    # Create safe timed thread for main thread and start
+    main_thread = SafeTimedThread(c, 1.0, run_main).start()
+
+    # Update using mlab animator
+    vis_thread = update_visualisation(*dwg)
+
+    mlab.show()
+
+
+    #mlab.show()
 
 
 
 if __name__=='__main__':
     _test_data_getter()
+    #_test_mayavi_observer()
+    #_animate_mayavi()

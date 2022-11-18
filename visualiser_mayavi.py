@@ -35,8 +35,9 @@ class Visualization(HasTraits):
             data = pickle.load(fp)
         for key in ['RPel']:
             f_name = data['surface'][key]['mesh_loc']
-            m_data = mlab.pipeline.open(f_name)
+            m_data = mlab.pipeline.open(f_name) #todo: try to use this in the observer.display_data
             obj = mlab.pipeline.surface(m_data)
+
 
         # x = my_mesh.x
         # y = my_mesh.y

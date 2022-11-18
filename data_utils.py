@@ -31,8 +31,8 @@ import time
 import threading as t
 
 
-source_loc = '/home/adwaye/PycharmProjects/FlowGPLVM/data/Segmentation_and_landmarks_raw/'
-target_loc = '/home/adwaye/PycharmProjects/FlowGPLVM/data/Segmentation_and_landmarks_processed/'
+source_loc = '/home/adwaye/PycharmProjects/hip_shape/data/Segmentation_and_landmarks_raw/'
+target_loc = '/home/adwaye/PycharmProjects/hip_shape/data/Segmentation_and_landmarks_processed/'
 APP_aligned_loc = '/home/adwaye/PycharmProjects/FlowGPLVM/data/Segmentation_and_landmarks_APP_aligned/'
 RSocket_aligned_trans = '/home/adwaye/PycharmProjects/FlowGPLVM/data/Segmentation_and_landmarks_Rsocket_aligned/'
 LSocket_aligned_trans = '/home/adwaye/PycharmProjects/FlowGPLVM/data/Segmentation_and_landmarks_Lsocket_aligned/'
@@ -376,8 +376,8 @@ class MeshLibDecimator(MeshDecimator):
                 mesh = mr.loadMesh(mr.Path(path))
                 # decimate it with max possible deviation 0.5:
                 settings = mr.DecimateSettings()
-                settings.maxError = 10
-                settings.maxEdgeLen = 0.5
+                settings.maxError = 10 #todo: open this up to  the user
+                settings.maxEdgeLen = 0.5 #todo: open this up to the user
                 try:
                     num_faces_start_r = hipdata.RPEL[0].shape[0] // 3
                 except AttributeError:
@@ -908,7 +908,7 @@ def downsample_data(folders:list[str],
         save_path_stl = os.path.join(f'data/stl_downsample_{reduction_factor}',folder.split('/')[-1])
         save_path_p   = os.path.join(f'data/Segmentation_and_landmarks_downsample_{reduction_factor}',folder.split('/')[-1])
 
-        for i,file in enumerate(files):
+        for i,file in enumerate(files[1:]):
             print('==============')
             stl_fpath    = os.path.join(save_path_stl,file.split('/')[-1].split('.')[-2])
 
@@ -988,7 +988,7 @@ def _test_downsampled_data(f_path:str='data/Segmentation_and_landmarks_downsampl
 #calculating size of the array to allocate for the distance transform
 if __name__=='__main__':
     #_test_downsampling()
-    downsample_data(folders = [os.path.join(target_loc,f) for f in os.listdir(target_loc)])
+    downsample_data(folders = [os.path.join(target_loc,f) for f in os.listdir(target_loc)][1:],reduction_factor=20)
 
 
 
