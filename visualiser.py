@@ -149,6 +149,7 @@ class MayaviObserver(Observer,HasTraits):
         self.view = View(Item('scene',editor=SceneEditor(scene_class=MayaviScene),
                      height=250,width=300,show_label=False),
                 resizable=True)
+
         self.engine = Engine()
         self.engine.start()
         self.engine.new_scene()
@@ -165,7 +166,7 @@ class MayaviObserver(Observer,HasTraits):
         ## PLot to Show
         if self.mesh is None:
             self.init_mesh()
-            mlab.show()
+
         else:
             self.update_visualisation()
 
@@ -220,8 +221,41 @@ class MayaviObserver(Observer,HasTraits):
 
 
 
+class MayaviVisualiser(MayaviObserver):
+    def __init__(self,generator,**kwargs):
+        super().__init__(**kwargs)
+        self.generator = generator
+
+    @mlab.animate(delay=500)
+    def update_visualisation(self):
+        while True:
+            try:
+                points,faces = next(self.generator)
+            except StopIteration:
+                break
+            self.polydata.points = points
+            self.polydata.polys = faces
+            self.mesh.parent.parent.update()
+            yield
 
 
+
+class MayaviVisualiser(MayaviObserver):
+    def __init__(self,generator,**kwargs):
+        super().__init__(**kwargs)
+        self.generator = generator
+
+    @mlab.animate(delay=500)
+    def update_visualisation(self):
+        while True:
+            try:
+                points,faces = next(self.generator)
+            except StopIteration:
+                break
+            self.polydata.points = points
+            self.polydata.polys = faces
+            self.mesh.parent.parent.update()
+            yield
 
 class DataSource(object):
     def __init__(self,**kwargs):

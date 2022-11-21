@@ -5,7 +5,7 @@ import jax.scipy.optimize as optimize
 import jax.numpy as jnp
 import edt #got this from https://github.com/seung-lab/euclidean-distance-transform-3d
 import time
-
+dtype = jnp.float32
 
 class FourierFitter(object):
     def __init__(self,x,y,order=20):
