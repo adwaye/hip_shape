@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function
 from mayavi import mlab
 import numpy as np
 import math
-from visualiser import HipDataSource, MayaviObserver
+from visualiser import HipDataSource, MayaviVisualiser
 import os
 from tvtk.api import tvtk
 import jax
