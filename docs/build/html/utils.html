@@ -1,0 +1,409 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="python" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>utils module &mdash; hip_shape 0.0.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> hip_shape
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">utils module</a></li>
+</ul>
+</div>
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">hip_shape</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>utils module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/utils.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="module-utils">
+<span id="utils-module"></span><h1>utils module<a class="headerlink" href="#module-utils" title="Permalink to this headline">¶</a></h1>
+<p>Contains some methods used to align hips</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="utils.FourierFitter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">utils.</span></span><span class="sig-name descname"><span class="pre">FourierFitter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#FourierFitter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.FourierFitter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#utils.FourierFitter.get_locust" title="utils.FourierFitter.get_locust"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_locust</span></code></a>()</p></td>
+<td><p>returns the A0, C0 from Nonlinear Shape Manifolds as Shape Priors in Level Set Segmentation and Tracking :return:</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 58%" />
+<col style="width: 42%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>get_coeffs</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>sample_pts</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="utils.FourierFitter.get_coeffs">
+<span class="sig-name descname"><span class="pre">get_coeffs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#FourierFitter.get_coeffs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.FourierFitter.get_coeffs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="utils.FourierFitter.get_locust">
+<span class="sig-name descname"><span class="pre">get_locust</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#FourierFitter.get_locust"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.FourierFitter.get_locust" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the A0, C0 from
+Nonlinear Shape Manifolds as Shape Priors in Level Set Segmentation and
+Tracking
+:return:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="utils.FourierFitter.sample_pts">
+<span class="sig-name descname"><span class="pre">sample_pts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#FourierFitter.sample_pts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.FourierFitter.sample_pts" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.affine_cost">
+<span class="sig-prename descclassname"><span class="pre">utils.</span></span><span class="sig-name descname"><span class="pre">affine_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">affine_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dist</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#affine_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.affine_cost" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>affine_params</strong> (<em>array</em>) -- affine parameters
+yaw_angle   = affine_params[0]
+pitch_angle = affine_params[1]
+roll_angle  = affine_params[2]
+translation = affine_params[3:]</p></li>
+<li><p><strong>points</strong> -- </p></li>
+<li><p><strong>dist</strong> -- </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.align_Planes_bfgs">
+<span class="sig-prename descclassname"><span class="pre">utils.</span></span><span class="sig-name descname"><span class="pre">align_Planes_bfgs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plane1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plane2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#align_Planes_bfgs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.align_Planes_bfgs" title="Permalink to this definition">¶</a></dt>
+<dd><p>rotates two planes so that they are parallel to each other. Uses bfgs to find optimal yaw, pitch and roll angle that minimizes the distance between the normal of plane1 and the rotated normal of plane2</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>plane1</strong> (<em>skspatial.objects.plane.Plane</em>) -- reference plane</p></li>
+<li><p><strong>plane2</strong> (<em>plane to be rotated</em>) -- skspatial.objects.plane.Plane</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>rotation matrix mapping plane2 onto plane1</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>jnp.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.eval_distance">
+<span class="sig-prename descclassname"><span class="pre">utils.</span></span><span class="sig-name descname"><span class="pre">eval_distance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dist</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#eval_distance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.eval_distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>finds the value of the scalar field dist with support [0,dist.shape[0]] imes[0,dist.shape[1]]   imes[0,dist.shape[1]]</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>points</strong> -- np.array [N,3] list of points wwhere the scalar field given by dist needs to be evaluated</p></li>
+<li><p><strong>dist</strong> -- scalar array with support [0,dist.shape[0]]  imes[0,dist.shape[1]]   imes[0,
+dist.shape[1]] np.array size [Nx,Ny,Nz]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>array of values [N]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.jax_eval_distance">
+<span class="sig-prename descclassname"><span class="pre">utils.</span></span><span class="sig-name descname"><span class="pre">jax_eval_distance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dist</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#jax_eval_distance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.jax_eval_distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>finds the value of the scalar field dist with support [0,dist.shape[0]] imes[0,dist.shape[1]]   imes[0,dist.shape[1]]</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>points</strong> -- np.array [N,3] list of points wwhere the scalar field given by dist needs to be evaluated</p></li>
+<li><p><strong>dist</strong> -- scalar array with support [0,dist.shape[0]]  imes[0,dist.shape[1]]   imes[0,
+dist.shape[1]] np.array size [Nx,Ny,Nz]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>array of values [N]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.jax_pitch_matrix">
+<span class="sig-prename descclassname"><span class="pre">utils.</span></span><span class="sig-name descname"><span class="pre">jax_pitch_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">angle</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#jax_pitch_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.jax_pitch_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the pitch matrix with angle (rotation around y-axis) see <a class="reference external" href="https://en.wikipedia.org/wiki">https://en.wikipedia.org/wiki</a> /Rotation_matrix in_three_dimensions</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>angle</strong> -- </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+<p>#https: // en.wikipedia.org / wiki / Rotation_matrix  #In_three_dimensions</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.jax_roll_matrix">
+<span class="sig-prename descclassname"><span class="pre">utils.</span></span><span class="sig-name descname"><span class="pre">jax_roll_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">angle</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#jax_roll_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.jax_roll_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the roll matrix with angle (rotation around x-axis) see <a class="reference external" href="https://en.wikipedia.org/wiki">https://en.wikipedia.org/wiki</a> /Rotation_matrix in_three_dimensions</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>angle</strong> -- </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.jax_rotation_matrix3d">
+<span class="sig-prename descclassname"><span class="pre">utils.</span></span><span class="sig-name descname"><span class="pre">jax_rotation_matrix3d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">yaw_angle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pitch_angle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">roll_angle</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#jax_rotation_matrix3d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.jax_rotation_matrix3d" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build a 3d rotation matrix see <a class="reference external" href="https://en.wikipedia.org/wiki">https://en.wikipedia.org/wiki</a> /Rotation_matrix in_three_dimensions</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>yaw_angle</strong> (<em>float scalar</em>) -- z-axis rotation angle:param yaw_angle:</p></li>
+<li><p><strong>pitch_angle</strong> (<em>float scalar</em>) -- y-axis rotation angle</p></li>
+<li><p><strong>roll_angle</strong> (<em>float scalar</em>) -- z-axis rotation angle</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>3d rotation matrix</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>jax array shape (3,3)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.jax_yaw_matrix">
+<span class="sig-prename descclassname"><span class="pre">utils.</span></span><span class="sig-name descname"><span class="pre">jax_yaw_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">angle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.5707963267948966</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#jax_yaw_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.jax_yaw_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the yaw matrix with angle (rotation around z-axis) see <a class="reference external" href="https://en.wikipedia.org/wiki">https://en.wikipedia.org/wiki</a> /Rotation_matrix in_three_dimensions</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>angle</strong> -- </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+<p>#https: // en.wikipedia.org / wiki / Rotation_matrix  #In_three_dimensions</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.sample_fourier">
+<span class="sig-prename descclassname"><span class="pre">utils.</span></span><span class="sig-name descname"><span class="pre">sample_fourier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#sample_fourier"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.sample_fourier" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2022, Adwaye Rambojun.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

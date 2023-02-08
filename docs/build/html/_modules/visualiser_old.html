@@ -1,0 +1,471 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="python" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>visualiser_old &mdash; hip_shape 0.0.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> hip_shape
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">hip_shape</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html">Module code</a> &raquo;</li>
+        
+      <li>visualiser_old</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for visualiser_old</h1><div class="highlight"><pre>
+<span></span><span class="c1">#from PyQt5 import QtCore, QtWidgets, QtWebEngineWidgets</span>
+<span class="c1">#from PyQt5.QtWidgets import *</span>
+
+<span class="kn">from</span> <span class="nn">pyface.qt</span> <span class="kn">import</span> <span class="n">QtGui</span><span class="p">,</span><span class="n">QtCore</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="c1"># from numpy import cos</span>
+
+<span class="kn">from</span> <span class="nn">visualiser_utils</span> <span class="kn">import</span> <span class="n">xray_selection_menu</span><span class="p">,</span> <span class="n">stl2mesh3d</span>
+
+
+<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;ETS_TOOLKIT&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;qt4&#39;</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+
+<span class="c1">## create Mayavi Widget and show</span>
+<span class="kn">from</span> <span class="nn">pyqtgraph.Qt</span> <span class="kn">import</span> <span class="n">QtCore</span><span class="p">,</span><span class="n">QtGui</span>
+<span class="kn">import</span> <span class="nn">pyqtgraph</span> <span class="k">as</span> <span class="nn">pg</span>
+<span class="kn">import</span> <span class="nn">pyqtgraph.opengl</span> <span class="k">as</span> <span class="nn">gl</span>
+
+<span class="kn">from</span> <span class="nn">PyQt5.QtWidgets</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">PyQt5.QtCore</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">PyQt5.QtGui</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">stl</span> <span class="kn">import</span> <span class="n">mesh</span>
+
+
+
+
+
+<span class="c1">#### PyQt5 GUI ####</span>
+<div class="viewcode-block" id="Ui_MainWindow"><a class="viewcode-back" href="../visualiser_old.html#visualiser_old.Ui_MainWindow">[docs]</a><span class="k">class</span> <span class="nc">Ui_MainWindow</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Pyqt5 widget for viewing surfaces. The surfaces need to be stored in pickle dump files</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_loc</span> <span class="o">=</span> <span class="s1">&#39;./&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">currentSTL1</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">currentSTL2</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sizeObject</span> <span class="o">=</span> <span class="n">QDesktopWidget</span><span class="p">()</span><span class="o">.</span><span class="n">screenGeometry</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; Screen size : &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sizeObject</span><span class="o">.</span><span class="n">height</span><span class="p">())</span> <span class="o">+</span> <span class="s2">&quot;x&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sizeObject</span><span class="o">.</span><span class="n">width</span><span class="p">()))</span>
+
+
+<div class="viewcode-block" id="Ui_MainWindow.setupUi"><a class="viewcode-back" href="../visualiser_old.html#visualiser_old.Ui_MainWindow.setupUi">[docs]</a>    <span class="k">def</span> <span class="nf">setupUi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">MainWindow</span><span class="p">):</span>
+        <span class="c1">## MAIN WINDOW</span>
+        <span class="n">MainWindow</span><span class="o">.</span><span class="n">setObjectName</span><span class="p">(</span><span class="s2">&quot;MainWindow&quot;</span><span class="p">)</span>
+        <span class="n">MainWindow</span><span class="o">.</span><span class="n">setGeometry</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span><span class="mi">200</span><span class="p">,</span><span class="mi">1100</span><span class="p">,</span><span class="mi">700</span><span class="p">)</span>
+
+        <span class="c1">## CENTRAL WIDGET</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">centralwidget</span> <span class="o">=</span> <span class="n">QWidget</span><span class="p">(</span><span class="n">MainWindow</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">centralwidget</span><span class="o">.</span><span class="n">setObjectName</span><span class="p">(</span><span class="s2">&quot;centralwidget&quot;</span><span class="p">)</span>
+        <span class="n">MainWindow</span><span class="o">.</span><span class="n">setCentralWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">centralwidget</span><span class="p">)</span>
+
+        <span class="c1">##top-bottom layout:</span>
+        <span class="n">main_layout</span>  <span class="o">=</span> <span class="n">QHBoxLayout</span><span class="p">()</span>
+
+        <span class="c1">## left side</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">menu1</span> <span class="o">=</span> <span class="n">xray_selection_menu</span><span class="p">()</span>
+        <span class="n">scrollbar1</span> <span class="o">=</span> <span class="n">QScrollArea</span><span class="p">(</span><span class="n">widgetResizable</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">scrollbar1</span><span class="o">.</span><span class="n">setMinimumHeight</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+        <span class="n">scrollbar1</span><span class="o">.</span><span class="n">setMaximumHeight</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+        <span class="n">scrollbar1</span><span class="o">.</span><span class="n">setWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">menu1</span><span class="p">)</span>
+        <span class="n">splitter1</span> <span class="o">=</span> <span class="n">QSplitter</span><span class="p">(</span><span class="n">orientation</span><span class="o">=</span><span class="n">Qt</span><span class="o">.</span><span class="n">Vertical</span><span class="p">)</span>
+        <span class="n">splitter1</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">scrollbar1</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">viewer1</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">GLViewWidget</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">viewer1</span><span class="o">.</span><span class="n">setMinimumWidth</span><span class="p">(</span><span class="mi">800</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">viewer1</span><span class="o">.</span><span class="n">setMinimumHeight</span><span class="p">(</span><span class="mi">800</span><span class="p">)</span>
+        <span class="n">splitter1</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">viewer1</span><span class="p">)</span>
+
+        <span class="c1">#right side</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">menu2</span> <span class="o">=</span> <span class="n">xray_selection_menu</span><span class="p">()</span>
+        <span class="n">scrollbar2</span> <span class="o">=</span> <span class="n">QScrollArea</span><span class="p">(</span><span class="n">widgetResizable</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">scrollbar2</span><span class="o">.</span><span class="n">setMinimumHeight</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+        <span class="n">scrollbar2</span><span class="o">.</span><span class="n">setMaximumHeight</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+        <span class="n">scrollbar2</span><span class="o">.</span><span class="n">setWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">menu2</span><span class="p">)</span>
+        <span class="n">splitter2</span> <span class="o">=</span> <span class="n">QSplitter</span><span class="p">(</span><span class="n">orientation</span><span class="o">=</span><span class="n">Qt</span><span class="o">.</span><span class="n">Vertical</span><span class="p">)</span>
+        <span class="n">splitter2</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">scrollbar2</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">viewer2</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">GLViewWidget</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">viewer2</span><span class="o">.</span><span class="n">setMinimumWidth</span><span class="p">(</span><span class="mi">800</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">viewer2</span><span class="o">.</span><span class="n">setMinimumHeight</span><span class="p">(</span><span class="mi">800</span><span class="p">)</span>
+        <span class="n">splitter2</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">viewer2</span><span class="p">)</span>
+
+        <span class="n">main_splitter</span> <span class="o">=</span> <span class="n">QSplitter</span><span class="p">(</span><span class="n">orientation</span><span class="o">=</span><span class="n">Qt</span><span class="o">.</span><span class="n">Horizontal</span><span class="p">)</span>
+        <span class="n">main_splitter</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">splitter1</span><span class="p">)</span>
+        <span class="n">main_splitter</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">splitter2</span><span class="p">)</span>
+        <span class="n">main_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">main_splitter</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">centralwidget</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">main_layout</span><span class="p">)</span>
+
+
+
+        <span class="c1">## SET TEXT</span>
+<span class="c1">#        self.retranslateUi(MainWindow)</span>
+        <span class="n">QtCore</span><span class="o">.</span><span class="n">QMetaObject</span><span class="o">.</span><span class="n">connectSlotsByName</span><span class="p">(</span><span class="n">MainWindow</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">connect_sub_buttons</span><span class="p">()</span></div>
+
+<span class="c1">#     def retranslateUi(self,MainWindow):</span>
+<span class="c1">#         _translate = QtCore.QCoreApplication.translate</span>
+<span class="c1">#         MainWindow.setWindowTitle(_translate(&quot;MainWindow&quot;,&quot;Simulator&quot;))</span>
+<span class="c1"># #        self.button_default.setText(_translate(&quot;MainWindow&quot;,&quot;Default Values&quot;))</span>
+<span class="c1">#         self.button_previous_data.setText(_translate(&quot;MainWindow&quot;,&quot;Previous Values&quot;))</span>
+
+<div class="viewcode-block" id="Ui_MainWindow.change_wd1"><a class="viewcode-back" href="../visualiser_old.html#visualiser_old.Ui_MainWindow.change_wd1">[docs]</a>    <span class="k">def</span> <span class="nf">change_wd1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_loc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">menu1</span><span class="o">.</span><span class="n">wd_info</span><span class="o">.</span><span class="n">text</span><span class="p">()</span>
+        <span class="c1">#self.image_widget.output_loc = self.output_loc</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_loc</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_loc</span><span class="p">)</span>
+        <span class="c1"># self.xray_selection_menu.wd_info.setText(self.output_loc)</span>
+        <span class="c1"># self.menu1.combobox_xrayid.clear()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">menu1</span><span class="o">.</span><span class="n">combobox_studyid</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">display_studies1</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Ui_MainWindow.change_wd2"><a class="viewcode-back" href="../visualiser_old.html#visualiser_old.Ui_MainWindow.change_wd2">[docs]</a>    <span class="k">def</span> <span class="nf">change_wd2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_loc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">menu2</span><span class="o">.</span><span class="n">wd_info</span><span class="o">.</span><span class="n">text</span><span class="p">()</span>
+        <span class="c1">#self.image_widget.output_loc = self.output_loc</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_loc</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_loc</span><span class="p">)</span>
+        <span class="c1"># self.xray_selection_menu.wd_info.setText(self.output_loc)</span>
+        <span class="c1"># self.menu2.combobox_xrayid.clear()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">menu2</span><span class="o">.</span><span class="n">combobox_studyid</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">display_studies2</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Ui_MainWindow.display_studies1"><a class="viewcode-back" href="../visualiser_old.html#visualiser_old.Ui_MainWindow.display_studies1">[docs]</a>    <span class="k">def</span> <span class="nf">display_studies1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_loc</span><span class="p">):</span>
+            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">studies</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_loc</span><span class="p">)</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="s1">&#39;p&#39;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">studies</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">menu1</span><span class="o">.</span><span class="n">combobox_studyid</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">it</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Ui_MainWindow.display_studies2"><a class="viewcode-back" href="../visualiser_old.html#visualiser_old.Ui_MainWindow.display_studies2">[docs]</a>    <span class="k">def</span> <span class="nf">display_studies2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_loc</span><span class="p">):</span>
+            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">studies</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_loc</span><span class="p">)</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="s1">&#39;p&#39;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">studies</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">menu2</span><span class="o">.</span><span class="n">combobox_studyid</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">it</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Ui_MainWindow.connect_sub_buttons"><a class="viewcode-back" href="../visualiser_old.html#visualiser_old.Ui_MainWindow.connect_sub_buttons">[docs]</a>    <span class="k">def</span> <span class="nf">connect_sub_buttons</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">display_studies1</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">display_studies2</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">menu1</span><span class="o">.</span><span class="n">wd_info</span><span class="o">.</span><span class="n">textChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">change_wd1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">menu2</span><span class="o">.</span><span class="n">wd_info</span><span class="o">.</span><span class="n">textChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">change_wd2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">menu1</span><span class="o">.</span><span class="n">combobox_studyid</span><span class="o">.</span><span class="n">currentIndexChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">showSTL1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">menu2</span><span class="o">.</span><span class="n">combobox_studyid</span><span class="o">.</span><span class="n">currentIndexChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">showSTL2</span><span class="p">)</span></div>
+        <span class="c1"># self.menu1.current_study_info.textChanged.connect(self.open_study_creator)</span>
+        <span class="c1"># self.menu1.current_file_info.textChanged.connect(self.open_xray_adder)</span>
+
+<div class="viewcode-block" id="Ui_MainWindow.display_CT1"><a class="viewcode-back" href="../visualiser_old.html#visualiser_old.Ui_MainWindow.display_CT1">[docs]</a>    <span class="k">def</span> <span class="nf">display_CT1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">menu1</span><span class="o">.</span><span class="n">combobox_studyid</span><span class="o">.</span><span class="n">count</span><span class="p">()</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">study_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">menu1</span><span class="o">.</span><span class="n">combobox_studyid</span><span class="o">.</span><span class="n">currentText</span><span class="p">()</span>
+            <span class="n">meta_loc</span>   <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_loc</span><span class="p">,</span><span class="n">study_name</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">meta_loc</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">menu1</span><span class="o">.</span><span class="n">combobox_xrayid</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">load_selected_xrays1</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Ui_MainWindow.display_CT2"><a class="viewcode-back" href="../visualiser_old.html#visualiser_old.Ui_MainWindow.display_CT2">[docs]</a>    <span class="k">def</span> <span class="nf">display_CT2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">menu2</span><span class="o">.</span><span class="n">combobox_studyid</span><span class="o">.</span><span class="n">count</span><span class="p">()</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">study_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">menu2</span><span class="o">.</span><span class="n">combobox_studyid</span><span class="o">.</span><span class="n">currentText</span><span class="p">()</span>
+            <span class="n">meta_loc</span>   <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_loc</span><span class="p">,</span><span class="n">study_name</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">meta_loc</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">menu2</span><span class="o">.</span><span class="n">combobox_xrayid</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">load_selected_xrays2</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Ui_MainWindow.load_selected_xrays1"><a class="viewcode-back" href="../visualiser_old.html#visualiser_old.Ui_MainWindow.load_selected_xrays1">[docs]</a>    <span class="k">def</span> <span class="nf">load_selected_xrays1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">menu1</span><span class="o">.</span><span class="n">wd_info</span><span class="o">.</span><span class="n">text</span><span class="p">(),</span><span class="bp">self</span><span class="o">.</span><span class="n">menu1</span><span class="o">.</span><span class="n">combobox_studyid</span><span class="o">.</span><span class="n">currentText</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mayavi_widget1</span><span class="o">.</span><span class="n">visualization</span><span class="o">.</span><span class="n">file_name</span> <span class="o">=</span> <span class="n">filename</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mayavi_widget1</span><span class="o">.</span><span class="n">visualization</span><span class="o">.</span><span class="n">update_plot</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Ui_MainWindow.load_selected_xrays2"><a class="viewcode-back" href="../visualiser_old.html#visualiser_old.Ui_MainWindow.load_selected_xrays2">[docs]</a>    <span class="k">def</span> <span class="nf">load_selected_xrays2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">menu2</span><span class="o">.</span><span class="n">wd_info</span><span class="o">.</span><span class="n">text</span><span class="p">(),</span><span class="bp">self</span><span class="o">.</span><span class="n">menu2</span><span class="o">.</span><span class="n">combobox_studyid</span><span class="o">.</span><span class="n">currentText</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mayavi_widget2</span><span class="o">.</span><span class="n">visualization</span><span class="o">.</span><span class="n">file_name</span> <span class="o">=</span> <span class="n">filename</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mayavi_widget2</span><span class="o">.</span><span class="n">visualization</span><span class="o">.</span><span class="n">update_plot</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Ui_MainWindow.showSTL1"><a class="viewcode-back" href="../visualiser_old.html#visualiser_old.Ui_MainWindow.showSTL1">[docs]</a>    <span class="k">def</span> <span class="nf">showSTL1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1">#todo: load from pickle directly</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">currentSTL1</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">viewer1</span><span class="o">.</span><span class="n">removeItem</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">currentSTL1</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">viewer1</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="n">file_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">menu1</span><span class="o">.</span><span class="n">wd_info</span><span class="o">.</span><span class="n">text</span><span class="p">(),</span><span class="bp">self</span><span class="o">.</span><span class="n">menu1</span><span class="o">.</span><span class="n">combobox_studyid</span><span class="o">.</span><span class="n">currentText</span><span class="p">())</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span><span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fp</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
+        <span class="n">k</span><span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;RPel&#39;</span><span class="p">,</span><span class="s1">&#39;LPel&#39;</span><span class="p">]:</span>
+            <span class="n">f_name</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;surface&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;mesh_loc&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+                <span class="n">points</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;surface&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;points&#39;</span><span class="p">]</span>
+                <span class="n">faces</span>  <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;surface&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;faces&#39;</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">points_</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;surface&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;points&#39;</span><span class="p">]</span>
+                <span class="n">faces_</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">points_</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span><span class="o">+</span><span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">faces_</span><span class="p">)</span>
+                <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">points</span><span class="p">,</span><span class="n">points_</span><span class="p">),</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">faces</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">faces</span> <span class="p">,</span><span class="n">faces_</span><span class="p">),</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">k</span><span class="o">+=</span><span class="mi">1</span>
+
+
+            <span class="c1">#points,faces = self.loadSTL(f_name)</span>
+
+
+        <span class="n">mean_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">points</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="n">points</span><span class="o">-</span><span class="n">mean_pos</span>
+        <span class="c1">#self.viewer1.pan(mean_pos[0],mean_pos[1],mean_pos[2],relative=&#39;global&#39;)</span>
+<span class="c1">#        self.viewer1.updateGL()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;mean osition of object is&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">mean_pos</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;camera position is&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">viewer1</span><span class="o">.</span><span class="n">cameraPosition</span><span class="p">())</span>
+
+        <span class="n">meshdata</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">MeshData</span><span class="p">(</span><span class="n">vertexes</span><span class="o">=</span><span class="n">points</span><span class="p">,</span><span class="n">faces</span><span class="o">=</span><span class="n">faces</span><span class="p">)</span>
+        <span class="n">mesh</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">GLMeshItem</span><span class="p">(</span><span class="n">meshdata</span><span class="o">=</span><span class="n">meshdata</span><span class="p">,</span><span class="n">smooth</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">drawFaces</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">drawEdges</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">edgeColor</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span>
+                             <span class="n">shader</span><span class="o">=</span><span class="s1">&#39;shaded&#39;</span><span class="p">)</span>
+        <span class="c1">#scatter = gl.GLScatterPlotItem(pos=)#todo: add socket coordinates: link this to some tick box</span>
+        <span class="c1">#scatter = gl.GLScatterPlotItem(pos=)#todo: add APP coordinates: link this to some tick box</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">viewer1</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">mesh</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">viewer1</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">currentSTL1</span> <span class="o">=</span> <span class="n">mesh</span></div>
+
+<div class="viewcode-block" id="Ui_MainWindow.showSTL2"><a class="viewcode-back" href="../visualiser_old.html#visualiser_old.Ui_MainWindow.showSTL2">[docs]</a>    <span class="k">def</span> <span class="nf">showSTL2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1">#todo: load from pickle directly</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">currentSTL2</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">viewer2</span><span class="o">.</span><span class="n">removeItem</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">currentSTL2</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">viewer2</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="n">file_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">menu2</span><span class="o">.</span><span class="n">wd_info</span><span class="o">.</span><span class="n">text</span><span class="p">(),</span><span class="bp">self</span><span class="o">.</span><span class="n">menu2</span><span class="o">.</span><span class="n">combobox_studyid</span><span class="o">.</span><span class="n">currentText</span><span class="p">())</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span><span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fp</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;RPel&#39;</span><span class="p">]:</span>
+            <span class="n">f_name</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;surface&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;mesh_loc&#39;</span><span class="p">]</span>
+            <span class="c1"># points = data[&#39;surface&#39;][key][&#39;points&#39;]</span>
+            <span class="c1"># faces  = data[&#39;surface&#39;][key][&#39;points&#39;]</span>
+            <span class="n">points</span><span class="p">,</span><span class="n">faces</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loadSTL</span><span class="p">(</span><span class="n">f_name</span><span class="p">)</span>
+
+
+            <span class="n">mean_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">points</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="c1">#points = points-mean_pos</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">viewer2</span><span class="o">.</span><span class="n">pan</span><span class="p">(</span><span class="n">mean_pos</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">mean_pos</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">mean_pos</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span><span class="n">relative</span><span class="o">=</span><span class="s1">&#39;global&#39;</span><span class="p">)</span>
+            <span class="c1">#self.viewer2.updateGL()</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;mean osition of object is&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">mean_pos</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;camera position is&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">viewer2</span><span class="o">.</span><span class="n">cameraPosition</span><span class="p">())</span>
+
+            <span class="n">meshdata</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">MeshData</span><span class="p">(</span><span class="n">vertexes</span><span class="o">=</span><span class="n">points</span><span class="p">,</span><span class="n">faces</span><span class="o">=</span><span class="n">faces</span><span class="p">)</span>
+            <span class="n">mesh</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">GLMeshItem</span><span class="p">(</span><span class="n">meshdata</span><span class="o">=</span><span class="n">meshdata</span><span class="p">,</span><span class="n">smooth</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">drawFaces</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">drawEdges</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">edgeColor</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span>
+                             <span class="n">shader</span><span class="o">=</span><span class="s1">&#39;shaded&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">viewer2</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">mesh</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">viewer2</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">currentSTL2</span> <span class="o">=</span> <span class="n">mesh</span></div>
+
+<div class="viewcode-block" id="Ui_MainWindow.loadSTL"><a class="viewcode-back" href="../visualiser_old.html#visualiser_old.Ui_MainWindow.loadSTL">[docs]</a>    <span class="k">def</span> <span class="nf">loadSTL</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">filename</span><span class="p">):</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">Mesh</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">faces</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">points</span><span class="p">,</span><span class="n">faces</span></div></div>
+
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">sys</span>
+
+    <span class="n">app</span> <span class="o">=</span> <span class="n">QApplication</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">setStyle</span><span class="p">(</span><span class="s1">&#39;Fusion&#39;</span><span class="p">)</span>
+    <span class="n">MainWindow</span> <span class="o">=</span> <span class="n">QMainWindow</span><span class="p">()</span>
+
+    <span class="n">ui</span> <span class="o">=</span> <span class="n">Ui_MainWindow</span><span class="p">()</span>
+    <span class="n">ui</span><span class="o">.</span><span class="n">setupUi</span><span class="p">(</span><span class="n">MainWindow</span><span class="p">)</span>
+    <span class="n">MainWindow</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="n">app</span><span class="o">.</span><span class="n">exec_</span><span class="p">())</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2022, Adwaye Rambojun.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

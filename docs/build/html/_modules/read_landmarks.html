@@ -1,0 +1,888 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="python" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>read_landmarks &mdash; hip_shape 0.0.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> hip_shape
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">hip_shape</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html">Module code</a> &raquo;</li>
+        
+      <li>read_landmarks</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for read_landmarks</h1><div class="highlight"><pre>
+<span></span><span class="c1">#from mayavi import mlab</span>
+<span class="kn">from</span> <span class="nn">stl</span> <span class="kn">import</span> <span class="n">mesh</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">openpyxl</span>
+<span class="kn">from</span> <span class="nn">skspatial.objects</span> <span class="kn">import</span> <span class="n">Plane</span><span class="p">,</span> <span class="n">Points</span>
+<span class="kn">from</span> <span class="nn">skspatial.plotting</span> <span class="kn">import</span> <span class="n">plot_3d</span>
+<span class="kn">from</span> <span class="nn">mpl_toolkits.mplot3d</span> <span class="kn">import</span> <span class="n">Axes3D</span>
+
+<span class="c1"># path = &#39;./data/UCLH-Controls&#39;</span>
+<span class="c1">#</span>
+<span class="c1"># studies = [f for f in os.listdir(path) if os.path.isdir(os.path.join(path,f))]</span>
+<span class="c1">#</span>
+<span class="c1"># study = studies[0]</span>
+<span class="c1">#</span>
+<span class="c1">#</span>
+<span class="c1"># study_path = os.path.join(path,study)</span>
+<span class="c1"># xlsx_file = [f for f in os.listdir(study_path) if f.split(&#39;.&#39;)[-1]==&quot;xlsx&quot;][0]</span>
+<span class="c1">#</span>
+<span class="c1">#</span>
+<span class="c1"># xlsx_path  = os.path.join(study_path,xlsx_file)</span>
+<span class="c1"># # Define variable to load the wookbook</span>
+<span class="c1"># workbook = openpyxl.load_workbook(xlsx_path,data_only=True)</span>
+<span class="c1">#</span>
+<span class="c1"># # Define variable to read the active sheet:</span>
+<span class="c1"># worksheet = workbook.active</span>
+
+
+<span class="c1"># # Iterate the loop to read the cell values</span>
+<span class="c1"># for i in range(0, worksheet.max_row):</span>
+<span class="c1">#     for col in worksheet.iter_cols(1, worksheet.max_column):</span>
+<span class="c1">#         print(col[i].value, end=&quot;\t\t&quot;)</span>
+<span class="c1">#     print(&#39;&#39;)</span>
+
+
+<div class="viewcode-block" id="find_structure_coordinate_socket"><a class="viewcode-back" href="../read_landmarks.html#read_landmarks.find_structure_coordinate_socket">[docs]</a><span class="k">def</span> <span class="nf">find_structure_coordinate_socket</span><span class="p">(</span><span class="n">worksheet</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Finds the coordinates of landmarks from an excel file. this assumes that the excel file does not follow any specific format and is arranged in a disorderly manner.</span>
+
+<span class="sd">    :param worksheet: object returned by openpyxl.load_workbook().active</span>
+<span class="sd">    :return: dictionary of landmarks column and row where these coordinates point to where one should iterate to get</span>
+<span class="sd">    the landmarks</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+
+    <span class="c1"># Iterate the loop to read the cell values</span>
+    <span class="c1">#rows start at 1</span>
+    <span class="c1">#columns start at 0</span>
+    <span class="n">my_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">worksheet</span><span class="o">.</span><span class="n">max_row</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">worksheet</span><span class="o">.</span><span class="n">iter_cols</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">worksheet</span><span class="o">.</span><span class="n">max_column</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">col</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s2">&quot;ant lat&quot;</span> <span class="ow">in</span> <span class="n">col</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+                    <span class="c1">#print(&quot;found ant column at &quot;+col[i].column_letter+str(col[i].row))</span>
+
+                    <span class="n">ant_col</span> <span class="o">=</span> <span class="n">col</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">column</span><span class="o">-</span><span class="mi">1</span>
+                    <span class="n">ant_row</span> <span class="o">=</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span>
+                    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">worksheet</span><span class="p">[</span><span class="n">ant_row</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">ant_col</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="s2">&quot;right&quot;</span> <span class="ow">in</span> <span class="n">worksheet</span><span class="p">[</span><span class="n">ant_row</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">ant_col</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+                            <span class="n">my_dict</span><span class="p">[</span><span class="s1">&#39;Right Ant Lat Col&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ant_col</span>
+                            <span class="n">my_dict</span><span class="p">[</span><span class="s1">&#39;Right Ant Lat Row&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ant_row</span>
+                    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">worksheet</span><span class="p">[</span><span class="n">ant_row</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">ant_col</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="s2">&quot;left&quot;</span> <span class="ow">in</span> <span class="n">worksheet</span><span class="p">[</span><span class="n">ant_row</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">ant_col</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+                            <span class="n">my_dict</span><span class="p">[</span><span class="s1">&#39;Left Ant Lat Col&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ant_col</span>
+                            <span class="n">my_dict</span><span class="p">[</span><span class="s1">&#39;Left Ant Lat Row&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ant_row</span>
+                <span class="k">elif</span> <span class="s2">&quot;post lat&quot;</span> <span class="ow">in</span> <span class="n">col</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+                    <span class="c1">#print(&quot;found post column at &quot;+col[i].column_letter+str(col[i].row))</span>
+
+                    <span class="n">ant_col</span> <span class="o">=</span> <span class="n">col</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">column</span><span class="o">-</span><span class="mi">1</span>
+                    <span class="n">ant_row</span> <span class="o">=</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span>
+                    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">worksheet</span><span class="p">[</span><span class="n">ant_row</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">ant_col</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="s2">&quot;right&quot;</span> <span class="ow">in</span> <span class="n">worksheet</span><span class="p">[</span><span class="n">ant_row</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">ant_col</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+                            <span class="c1">#print(&#39;saving right post lat coords&#39;)</span>
+                            <span class="n">my_dict</span><span class="p">[</span><span class="s1">&#39;Right Post Lat Col&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ant_col</span>
+                            <span class="n">my_dict</span><span class="p">[</span><span class="s1">&#39;Right Post Lat Row&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ant_row</span>
+                    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">worksheet</span><span class="p">[</span><span class="n">ant_row</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">ant_col</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="s2">&quot;left&quot;</span> <span class="ow">in</span> <span class="n">worksheet</span><span class="p">[</span><span class="n">ant_row</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">ant_col</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+                            <span class="n">my_dict</span><span class="p">[</span><span class="s1">&#39;Left Post Lat Col&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ant_col</span>
+                            <span class="n">my_dict</span><span class="p">[</span><span class="s1">&#39;Left Post Lat Row&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ant_row</span>
+
+    <span class="k">return</span> <span class="n">my_dict</span></div>
+
+
+<div class="viewcode-block" id="find_app_coordinates"><a class="viewcode-back" href="../read_landmarks.html#read_landmarks.find_app_coordinates">[docs]</a><span class="k">def</span> <span class="nf">find_app_coordinates</span><span class="p">(</span><span class="n">worksheet</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Finds the app coordinate from the worksheet. The output is a dictionary of APP landmarks with keys:</span>
+
+<span class="sd">    * &#39;RASIS&#39; : np.array shape (,3) location of the right anterior illiac spine on the triangular mesh definining the anterior pelvic plane</span>
+<span class="sd">    * &#39;LASIS&#39; : np.array shape (,3) location of the left anterior illiac spine on the triangular mesh definining the anterior pelvic plane</span>
+<span class="sd">    * &#39;RTUB&#39;  : np.array shape (,3) location of the right acetabulum on the triangular mesh definining the anterior pelvic plane</span>
+<span class="sd">    * &#39;LTUB&#39;  : np.array shape (,3) location of the left acetabulum on the triangular mesh definining the anterior</span>
+
+<span class="sd">    :param worksheet: object returned by openpyxl.load_workbook().active</span>
+<span class="sd">    :type worksheet:</span>
+<span class="sd">    :return: dictionary of app landmarks.</span>
+<span class="sd">    :rtype: dict</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">my_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">worksheet</span><span class="o">.</span><span class="n">max_row</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">worksheet</span><span class="o">.</span><span class="n">iter_cols</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">worksheet</span><span class="o">.</span><span class="n">max_column</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">col</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s2">&quot;acetabulum&quot;</span> <span class="ow">in</span> <span class="n">col</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+                    <span class="c1">#print(&quot;found column at &quot; + col[i].column_letter + str(col[i].row))</span>
+
+                    <span class="n">ant_col</span> <span class="o">=</span> <span class="n">col</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">column</span> <span class="o">-</span> <span class="mi">1</span>
+                    <span class="n">ant_row</span> <span class="o">=</span> <span class="n">i</span>
+                    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">6</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">worksheet</span><span class="p">[</span><span class="n">ant_row</span> <span class="o">+</span> <span class="n">k</span><span class="p">][</span><span class="n">ant_col</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
+
+                            <span class="k">if</span> <span class="s2">&quot;rasis&quot;</span> <span class="ow">in</span> <span class="n">worksheet</span><span class="p">[</span><span class="n">ant_row</span> <span class="o">+</span> <span class="n">k</span><span class="p">][</span><span class="n">ant_col</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+                                <span class="n">my_dict</span><span class="p">[</span><span class="s1">&#39;RASIS Col&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ant_col</span>
+                                <span class="n">my_dict</span><span class="p">[</span><span class="s1">&#39;RASIS Row&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ant_row</span> <span class="o">+</span> <span class="n">k</span>
+                            <span class="k">elif</span> <span class="s2">&quot;lasis&quot;</span> <span class="ow">in</span> <span class="n">worksheet</span><span class="p">[</span><span class="n">ant_row</span> <span class="o">+</span> <span class="n">k</span><span class="p">][</span><span class="n">ant_col</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+                                <span class="n">my_dict</span><span class="p">[</span><span class="s1">&#39;LASIS Col&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ant_col</span>
+                                <span class="n">my_dict</span><span class="p">[</span><span class="s1">&#39;LASIS Row&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ant_row</span> <span class="o">+</span> <span class="n">k</span>
+                            <span class="k">elif</span> <span class="s2">&quot;ltub&quot;</span> <span class="ow">in</span> <span class="n">worksheet</span><span class="p">[</span><span class="n">ant_row</span> <span class="o">+</span> <span class="n">k</span><span class="p">][</span><span class="n">ant_col</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+                                <span class="n">my_dict</span><span class="p">[</span><span class="s1">&#39;LTUB Col&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ant_col</span>
+                                <span class="n">my_dict</span><span class="p">[</span><span class="s1">&#39;LTUB Row&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ant_row</span> <span class="o">+</span> <span class="n">k</span>
+                            <span class="k">elif</span> <span class="s2">&quot;rtub&quot;</span> <span class="ow">in</span> <span class="n">worksheet</span><span class="p">[</span><span class="n">ant_row</span> <span class="o">+</span> <span class="n">k</span><span class="p">][</span><span class="n">ant_col</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+                                <span class="n">my_dict</span><span class="p">[</span><span class="s1">&#39;RTUB Col&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ant_col</span>
+                                <span class="n">my_dict</span><span class="p">[</span><span class="s1">&#39;RTUB Row&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ant_row</span> <span class="o">+</span> <span class="n">k</span>
+
+    <span class="n">it</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">out_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;RASIS&#39;</span><span class="p">,</span><span class="s1">&#39;LASIS&#39;</span><span class="p">,</span><span class="s1">&#39;RTUB&#39;</span><span class="p">,</span><span class="s1">&#39;LTUB&#39;</span><span class="p">]:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">row_val</span> <span class="o">=</span> <span class="n">my_dict</span><span class="p">[</span><span class="n">key</span> <span class="o">+</span> <span class="s1">&#39; Row&#39;</span><span class="p">]</span>
+            <span class="n">col_val</span> <span class="o">=</span> <span class="n">my_dict</span><span class="p">[</span><span class="n">key</span> <span class="o">+</span> <span class="s1">&#39; Col&#39;</span><span class="p">]</span>
+            <span class="n">coord_temp</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">4</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">worksheet</span><span class="p">[</span><span class="n">row_val</span><span class="p">][</span><span class="n">col_val</span> <span class="o">+</span> <span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">coord_temp</span> <span class="o">+=</span> <span class="p">[</span><span class="n">worksheet</span><span class="p">[</span><span class="n">row_val</span><span class="p">][</span><span class="n">col_val</span> <span class="o">+</span> <span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">]</span>
+
+            <span class="n">out_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">coord_temp</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;cannot find &#39;</span><span class="o">+</span><span class="n">key</span><span class="p">)</span>
+        <span class="n">it</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">out_dict</span></div>
+
+
+<div class="viewcode-block" id="axisEqual3D"><a class="viewcode-back" href="../read_landmarks.html#read_landmarks.axisEqual3D">[docs]</a><span class="k">def</span> <span class="nf">axisEqual3D</span><span class="p">(</span><span class="n">ax</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Transforms an ax object into one with equal scales.</span>
+
+<span class="sd">    :param ax:</span>
+<span class="sd">    :type ax:</span>
+<span class="sd">    :return:</span>
+<span class="sd">    :rtype:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">extents</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">getattr</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="s1">&#39;get_</span><span class="si">{}</span><span class="s1">lim&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dim</span><span class="p">))()</span> <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="s1">&#39;xyz&#39;</span><span class="p">])</span>
+    <span class="n">sz</span> <span class="o">=</span> <span class="n">extents</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">extents</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">centers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">extents</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">maxsize</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">sz</span><span class="p">))</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">maxsize</span><span class="o">/</span><span class="mi">2</span>
+    <span class="k">for</span> <span class="n">ctr</span><span class="p">,</span> <span class="n">dim</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">centers</span><span class="p">,</span> <span class="s1">&#39;xyz&#39;</span><span class="p">):</span>
+        <span class="nb">getattr</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="s1">&#39;set_</span><span class="si">{}</span><span class="s1">lim&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dim</span><span class="p">))(</span><span class="n">ctr</span> <span class="o">-</span> <span class="n">r</span><span class="p">,</span> <span class="n">ctr</span> <span class="o">+</span> <span class="n">r</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="find_coordinates_from_worksheet"><a class="viewcode-back" href="../read_landmarks.html#read_landmarks.find_coordinates_from_worksheet">[docs]</a><span class="k">def</span> <span class="nf">find_coordinates_from_worksheet</span><span class="p">(</span><span class="n">worksheet</span><span class="p">,</span><span class="n">my_dict</span><span class="p">,</span><span class="n">key</span><span class="o">=</span><span class="s2">&quot;Right Ant Lat&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;extracts the socket coordinates from an excelt sheet by using the coordinates where the search should start</span>
+
+<span class="sd">    :param worksheet: loaded excel file by pyopenxl</span>
+<span class="sd">    :param my_dict:   dictionary containing column and row indices for where the information can be found</span>
+<span class="sd">    :param key: Which side and part of the socket to look for</span>
+<span class="sd">                choices : &quot;Right Ant Lat&quot;, &quot;Right Post Lat&quot;, &quot;Left Ant Lat&quot;, &quot;Left Post Lat&quot;</span>
+<span class="sd">                these are keys of the dictionary output by find_structure_coordinate_socket</span>
+<span class="sd">    :return: np.array shape (N,3) or None if nothing is found</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">row_val</span> <span class="o">=</span> <span class="n">my_dict</span><span class="p">[</span><span class="n">key</span><span class="o">+</span><span class="s1">&#39; Row&#39;</span><span class="p">]</span>
+        <span class="n">col_val</span> <span class="o">=</span> <span class="n">my_dict</span><span class="p">[</span><span class="n">key</span><span class="o">+</span><span class="s1">&#39; Col&#39;</span><span class="p">]</span>
+        <span class="n">ix</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">jx</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">coordinates</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">while</span> <span class="n">worksheet</span><span class="p">[</span><span class="n">row_val</span> <span class="o">+</span> <span class="n">ix</span><span class="p">][</span><span class="n">col_val</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">coord_list</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">):</span>
+                <span class="n">coord_list</span> <span class="o">+=</span> <span class="p">[</span><span class="n">worksheet</span><span class="p">[</span><span class="n">row_val</span> <span class="o">+</span> <span class="n">ix</span><span class="p">][</span><span class="n">col_val</span> <span class="o">+</span> <span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">ix</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">coordinates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">coord_list</span><span class="p">),</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">coordinates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">coordinates</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">coord_list</span><span class="p">),</span><span class="mi">0</span><span class="p">)),</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">ix</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">coordinates</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="n">out</span> <span class="o">=</span>  <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+
+
+
+<div class="viewcode-block" id="find_imOriginSpacing_from_worksheet"><a class="viewcode-back" href="../read_landmarks.html#read_landmarks.find_imOriginSpacing_from_worksheet">[docs]</a><span class="k">def</span> <span class="nf">find_imOriginSpacing_from_worksheet</span><span class="p">(</span><span class="n">worksheet</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Reads the image origin and spacing from the worksheet corresponding to a landmark xlsx file from the landmark data</span>
+
+<span class="sd">    :param worksheet: worksheet loaded from openpyxl.load_workbook().active</span>
+<span class="sd">    :return: list of origin,spacing which are both np array of shape [1,3] showing the location of the image origin and</span>
+<span class="sd">    the spacing of the origin</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">my_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">origin</span>  <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">spacing</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">worksheet</span><span class="o">.</span><span class="n">max_row</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">worksheet</span><span class="o">.</span><span class="n">iter_cols</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">worksheet</span><span class="o">.</span><span class="n">max_column</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">col</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s2">&quot;image origin&quot;</span> <span class="ow">in</span> <span class="n">col</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+                    <span class="c1"># print(&quot;found image origin &quot;+col[i].column_letter+str(col[i].row))</span>
+
+                    <span class="n">col_val</span> <span class="o">=</span> <span class="n">col</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">column</span>
+
+                    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">):</span>
+                        <span class="n">origin</span> <span class="o">+=</span> <span class="p">[</span><span class="n">worksheet</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="n">col_val</span> <span class="o">+</span> <span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">]</span>
+                        <span class="n">spacing</span> <span class="o">+=</span> <span class="p">[</span><span class="n">worksheet</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">2</span><span class="p">][</span><span class="n">col_val</span> <span class="o">+</span> <span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">]</span>
+                        <span class="c1"># print(&quot;col val={:}&quot;.format(col_val))</span>
+                        <span class="c1"># print(&quot;row val={:}&quot;.format(i+1))</span>
+                <span class="c1"># else:</span>
+                <span class="c1">#     print(&quot;error no image origin information in file&quot;)</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">origin</span><span class="p">)</span><span class="o">==</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">origin</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">origin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">origin</span><span class="p">)</span>
+        <span class="n">origin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">origin</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">spacing</span><span class="p">)</span><span class="o">==</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">origin</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">spacing</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">spacing</span><span class="p">)</span>
+        <span class="n">spacing</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">spacing</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">origin</span><span class="p">,</span><span class="n">spacing</span></div>
+
+
+
+
+
+<div class="viewcode-block" id="plot_landmark_uclh_controls"><a class="viewcode-back" href="../read_landmarks.html#read_landmarks.plot_landmark_uclh_controls">[docs]</a><span class="k">def</span> <span class="nf">plot_landmark_uclh_controls</span><span class="p">(</span><span class="n">path</span> <span class="o">=</span> <span class="s1">&#39;./data/Segmentation_and_landmarks_raw/UCLH - Controls&#39;</span><span class="p">,</span> <span class="n">k</span> <span class="o">=</span> <span class="mi">10</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;plots the landmark on top of the stl file representing the pelvis surface for the folder UCLH - Controls. The folder structure for path is as follows:</span>
+<span class="sd">    ::</span>
+<span class="sd">        | path</span>
+<span class="sd">        | ├── C4</span>
+<span class="sd">        | │   ├── Left</span>
+<span class="sd">        | │   │   ├── C4_LPEL.mha</span>
+<span class="sd">        | │   │   ├── C4_LPEL.vtk</span>
+<span class="sd">        | │   │   ├── C4_LPEL.stl</span>
+<span class="sd">        | │   └── Right</span>
+<span class="sd">        | │   │   ├── C4_RPEL.mha</span>
+<span class="sd">        | │   │   ├── C4_RPEL.vtk</span>
+<span class="sd">        | │   │   ├── C4_RPEL.stl</span>
+<span class="sd">        | │   └── landmarks.xlsx</span>
+
+<span class="sd">    The ladmakrs are saved in landmarks.xlsx.</span>
+
+<span class="sd">    :param path: path to folder containing the raw data.</span>
+<span class="sd">    :type path: str</span>
+<span class="sd">    :param k: index showing which folder to select from path</span>
+<span class="sd">    :type k: int</span>
+<span class="sd">    :return:</span>
+<span class="sd">    :rtype:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1">#path = &#39;./data/Segmentation_and_landmarks_raw/UCLH - Controls&#39; #transformation works</span>
+    <span class="c1">#path = &#39;./data/Segmentation_and_landmarks_raw/TOH - DDH&#39; #transformation works</span>
+    <span class="c1">#path = &#39;./data/Segmentation_and_landmarks_raw/TOH - FAI&#39;#tranformation works</span>
+    <span class="c1">#path = &#39;./data/Segmentation_and_landmarks_raw/TOH - Controls&#39;#transformation works</span>
+    <span class="c1">#path = &#39;./data/Segmentation_and_landmarks_raw/UCLH - Dysplastics&#39; #transformation does not work</span>
+
+
+    <span class="n">studies</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">path</span><span class="p">))</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span><span class="n">f</span><span class="p">))]</span>
+
+    <span class="n">study</span> <span class="o">=</span> <span class="n">studies</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+
+
+
+
+
+    <span class="n">study_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span><span class="n">study</span><span class="p">)</span>
+
+    <span class="n">xlsx_file</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">study_path</span><span class="p">)</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;xlsx&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">xlsx_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">study_path</span><span class="p">,</span><span class="n">xlsx_file</span><span class="p">)</span>
+
+    <span class="c1"># Define variable to load the wookbook</span>
+    <span class="n">workbook</span> <span class="o">=</span> <span class="n">openpyxl</span><span class="o">.</span><span class="n">load_workbook</span><span class="p">(</span><span class="n">xlsx_path</span><span class="p">,</span><span class="n">data_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># Define variable to read the active sheet:</span>
+    <span class="n">worksheet</span> <span class="o">=</span> <span class="n">workbook</span><span class="o">.</span><span class="n">active</span>
+
+
+    <span class="n">origin</span><span class="p">,</span><span class="n">spacing</span> <span class="o">=</span> <span class="n">find_imOriginSpacing_from_worksheet</span><span class="p">(</span><span class="n">worksheet</span><span class="p">)</span>
+
+
+    <span class="n">my_dict</span> <span class="o">=</span> <span class="n">find_structure_coordinate_socket</span><span class="p">(</span><span class="n">worksheet</span><span class="p">)</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">))</span>
+
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="s1">&#39;3d&#39;</span><span class="p">)</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_box_aspect</span><span class="p">(</span><span class="n">aspect</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+
+
+    <span class="n">folders</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">study_path</span><span class="p">)</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">study_path</span><span class="p">,</span><span class="n">f</span><span class="p">))</span> <span class="ow">and</span> <span class="s1">&#39;left&#39;</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">folders</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+        <span class="n">study_subpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">study_path</span><span class="p">,</span><span class="n">folders</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">stl_file</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">study_subpath</span><span class="p">)</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;stl&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">stl_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">study_subpath</span><span class="p">,</span><span class="n">stl_file</span><span class="p">)</span>
+        <span class="n">mesh_file</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">Mesh</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">stl_path</span><span class="p">)</span>
+        <span class="n">point_cloud</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">Mesh</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">stl_path</span><span class="p">)</span><span class="o">.</span><span class="n">v0</span><span class="o">/</span><span class="n">spacing</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">point_cloud</span><span class="p">[::</span><span class="mi">10</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span><span class="n">point_cloud</span><span class="p">[::</span><span class="mi">10</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span><span class="n">point_cloud</span><span class="p">[::</span><span class="mi">10</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span><span class="n">s</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;lightgreen&#39;</span><span class="p">,</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Stl surface&#39;</span><span class="p">)</span>
+    <span class="n">folders</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">study_path</span><span class="p">)</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">study_path</span><span class="p">,</span><span class="n">f</span><span class="p">))</span> <span class="ow">and</span> <span class="s1">&#39;right&#39;</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">folders</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+        <span class="n">study_subpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">study_path</span><span class="p">,</span><span class="n">folders</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">stl_file</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">study_subpath</span><span class="p">)</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;stl&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">stl_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">study_subpath</span><span class="p">,</span><span class="n">stl_file</span><span class="p">)</span>
+        <span class="n">point_cloud</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">Mesh</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">stl_path</span><span class="p">)</span><span class="o">.</span><span class="n">v0</span><span class="o">/</span><span class="n">spacing</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">point_cloud</span><span class="p">[::</span><span class="mi">10</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span><span class="n">point_cloud</span><span class="p">[::</span><span class="mi">10</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span><span class="n">point_cloud</span><span class="p">[::</span><span class="mi">10</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span><span class="n">s</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;lightgreen&#39;</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="n">study</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;Right Ant Lat&#39;</span><span class="p">,</span><span class="s1">&#39;Right Post Lat&#39;</span><span class="p">,</span><span class="s1">&#39;Left Ant Lat&#39;</span><span class="p">,</span><span class="s1">&#39;Left Post Lat&#39;</span><span class="p">]:</span>
+        <span class="n">coords</span>  <span class="o">=</span> <span class="n">find_coordinates_from_worksheet</span><span class="p">(</span><span class="n">worksheet</span><span class="o">=</span><span class="n">worksheet</span><span class="p">,</span><span class="n">my_dict</span><span class="o">=</span><span class="n">my_dict</span><span class="p">,</span><span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">coords</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">mean_coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span>
+            <span class="c1">#scaling = np.array([[0.8379,0.8379,1.5]])</span>
+            <span class="c1">#origin  = np.array([[-209.1,-375.1,-760.5]])</span>
+            <span class="c1">#coords = ((coords-mean_coords)*spacing)+mean_coords</span>
+            <span class="n">coords</span> <span class="o">=</span> <span class="n">coords</span><span class="o">+</span><span class="p">(</span><span class="n">origin</span><span class="p">)</span><span class="o">/</span><span class="n">spacing</span>
+            <span class="c1">#</span>
+            <span class="c1">#coords = scaling*coords</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">coords</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span><span class="n">coords</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span><span class="n">coords</span><span class="p">[:,</span><span class="mi">2</span><span class="p">],</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Socket plane points&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">coords</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span><span class="n">coords</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span><span class="n">coords</span><span class="p">[:,</span><span class="mi">2</span><span class="p">],</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span><span class="n">s</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>  <span class="c1"># plot the</span>
+            <span class="c1"># point (2,3,4) on the figure</span>
+
+    <span class="c1"># folders = [f for f in os.listdir(study_path) if os.path.isdir(os.path.join(study_path,f)) and &#39;left&#39; in f.lower()]</span>
+    <span class="c1"># study_subpath = os.path.join(study_path,folders[0])</span>
+    <span class="c1"># stl_file = [f for f in os.listdir(study_subpath) if f.split(&#39;.&#39;)[-1] == &#39;stl&#39;][0]</span>
+    <span class="c1"># stl_path = os.path.join(study_subpath,stl_file)</span>
+    <span class="c1"># point_cloud = mesh.Mesh.from_file(stl_path).v0/spacing</span>
+    <span class="c1"># ax.scatter(point_cloud[::10,0],point_cloud[::10,1],point_cloud[::10,2],alpha=0.3,s=1,color=&#39;lightgreen&#39;)</span>
+    <span class="c1"># folders = [f for f in os.listdir(study_path) if os.path.isdir(os.path.join(study_path,f)) and &#39;right&#39; in f.lower()]</span>
+    <span class="c1"># study_subpath = os.path.join(study_path,folders[0])</span>
+    <span class="c1"># stl_file = [f for f in os.listdir(study_subpath) if f.split(&#39;.&#39;)[-1] == &#39;stl&#39;][0]</span>
+    <span class="c1"># stl_path = os.path.join(study_subpath,stl_file)</span>
+    <span class="c1"># point_cloud = mesh.Mesh.from_file(stl_path).v0/spacing</span>
+    <span class="c1"># ax.scatter(point_cloud[::10,0],point_cloud[::10,1],point_cloud[::10,2],alpha=0.3,s=1,color=&#39;lightgreen&#39;)</span>
+    <span class="c1">#axisEqual3D(ax)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s2">&quot;Folder =&quot;</span><span class="o">+</span><span class="n">study_path</span><span class="o">+</span><span class="s2">&quot; k = </span><span class="si">{:}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span></div>
+
+
+<div class="viewcode-block" id="plot_landmark"><a class="viewcode-back" href="../read_landmarks.html#read_landmarks.plot_landmark">[docs]</a><span class="k">def</span> <span class="nf">plot_landmark</span><span class="p">(</span><span class="n">path</span> <span class="o">=</span> <span class="s1">&#39;./data/Segmentation_and_landmarks_raw/UCLH - Controls&#39;</span><span class="p">,</span> <span class="n">k</span> <span class="o">=</span> <span class="mi">10</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;plots the landmark on top of the stl file representing the pelvis surface for the folder UCLH - Controls. The folder structure for path is as follows:</span>
+<span class="sd">    ::</span>
+<span class="sd">        | path</span>
+<span class="sd">        | ├── C4</span>
+<span class="sd">        | │   ├── Left</span>
+<span class="sd">        | │   │   ├── C4_LPEL.mha</span>
+<span class="sd">        | │   │   ├── C4_LPEL.vtk</span>
+<span class="sd">        | │   │   ├── C4_LPEL.stl</span>
+<span class="sd">        | │   └── Right</span>
+<span class="sd">        | │   │   ├── C4_RPEL.mha</span>
+<span class="sd">        | │   │   ├── C4_RPEL.vtk</span>
+<span class="sd">        | │   │   ├── C4_RPEL.stl</span>
+<span class="sd">        | │   └── landmarks.xlsx</span>
+
+<span class="sd">    The ladmakrs are saved in landmarks.xlsx.</span>
+
+<span class="sd">    :param path: path to folder containing the raw data.</span>
+<span class="sd">    :type path: str</span>
+<span class="sd">    :param k: index showing which folder to select from path</span>
+<span class="sd">    :type k: int</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1">#path = &#39;./data/Segmentation_and_landmarks_raw/UCLH - Controls&#39; #transformation works</span>
+    <span class="c1">#path = &#39;./data/Segmentation_and_landmarks_raw/TOH - DDH&#39; #transformation works</span>
+    <span class="c1">#path = &#39;./data/Segmentation_and_landmarks_raw/TOH - FAI&#39;#tranformation works</span>
+    <span class="c1">#path = &#39;./data/Segmentation_and_landmarks_raw/TOH - Controls&#39;#transformation works</span>
+    <span class="c1">#path = &#39;./data/Segmentation_and_landmarks_raw/UCLH - Dysplastics&#39; #transformation does not work</span>
+
+
+    <span class="n">studies</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">path</span><span class="p">))</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span><span class="n">f</span><span class="p">))]</span>
+
+    <span class="n">study</span> <span class="o">=</span> <span class="n">studies</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+
+
+
+
+
+    <span class="n">study_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span><span class="n">study</span><span class="p">)</span>
+
+    <span class="n">xlsx_file</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">study_path</span><span class="p">)</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;xlsx&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">xlsx_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">study_path</span><span class="p">,</span><span class="n">xlsx_file</span><span class="p">)</span>
+
+    <span class="c1"># Define variable to load the wookbook</span>
+    <span class="n">workbook</span> <span class="o">=</span> <span class="n">openpyxl</span><span class="o">.</span><span class="n">load_workbook</span><span class="p">(</span><span class="n">xlsx_path</span><span class="p">,</span><span class="n">data_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># Define variable to read the active sheet:</span>
+    <span class="n">worksheet</span> <span class="o">=</span> <span class="n">workbook</span><span class="o">.</span><span class="n">active</span>
+    <span class="n">origin</span><span class="p">,</span><span class="n">spacing</span> <span class="o">=</span> <span class="n">find_imOriginSpacing_from_worksheet</span><span class="p">(</span><span class="n">worksheet</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">spacing</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;UCLH - Dysplastics&#39;</span><span class="p">:</span>
+        <span class="n">spacing</span><span class="p">[:,[</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">spacing</span><span class="p">[:,[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">]]</span>
+        <span class="n">spacing</span> <span class="o">=</span> <span class="n">spacing</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
+
+    <span class="n">my_dict</span> <span class="o">=</span> <span class="n">find_structure_coordinate_socket</span><span class="p">(</span><span class="n">worksheet</span><span class="p">)</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">))</span>
+
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="s1">&#39;3d&#39;</span><span class="p">)</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_box_aspect</span><span class="p">(</span><span class="n">aspect</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+
+
+    <span class="n">folders</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">study_path</span><span class="p">)</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">study_path</span><span class="p">,</span><span class="n">f</span><span class="p">))</span> <span class="ow">and</span> <span class="s1">&#39;left&#39;</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">folders</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+        <span class="n">study_subpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">study_path</span><span class="p">,</span><span class="n">folders</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">stl_file_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">study_subpath</span><span class="p">)</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;stl&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">stl_file_list</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">stl_file</span> <span class="o">=</span> <span class="n">stl_file_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">stl_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">study_subpath</span><span class="p">,</span><span class="n">stl_file</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">stl_file_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">study_path</span><span class="p">)</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;stl&#39;</span><span class="p">]</span>
+            <span class="n">stl_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">study_path</span><span class="p">,</span><span class="n">stl_file_list</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">point_cloud</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">Mesh</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">stl_path</span><span class="p">)</span><span class="o">.</span><span class="n">v0</span><span class="c1">#/spacing</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">point_cloud</span><span class="p">[::</span><span class="mi">10</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span><span class="n">point_cloud</span><span class="p">[::</span><span class="mi">10</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span><span class="n">point_cloud</span><span class="p">[::</span><span class="mi">10</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span><span class="n">s</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;lightgreen&#39;</span><span class="p">,</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Stl surface&#39;</span><span class="p">)</span>
+    <span class="n">folders</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">study_path</span><span class="p">)</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">study_path</span><span class="p">,</span><span class="n">f</span><span class="p">))</span> <span class="ow">and</span> <span class="s1">&#39;right&#39;</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">folders</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+        <span class="n">study_subpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">study_path</span><span class="p">,</span><span class="n">folders</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">stl_file_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">study_subpath</span><span class="p">)</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;stl&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">stl_file_list</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">stl_file</span> <span class="o">=</span> <span class="n">stl_file_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">stl_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">study_subpath</span><span class="p">,</span><span class="n">stl_file</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">stl_file_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">study_path</span><span class="p">)</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;stl&#39;</span><span class="p">]</span>
+            <span class="n">stl_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">study_path</span><span class="p">,</span><span class="n">stl_file_list</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="n">point_cloud</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">Mesh</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">stl_path</span><span class="p">)</span><span class="o">.</span><span class="n">v0</span><span class="c1">#/spacing</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">point_cloud</span><span class="p">[::</span><span class="mi">10</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span><span class="n">point_cloud</span><span class="p">[::</span><span class="mi">10</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span><span class="n">point_cloud</span><span class="p">[::</span><span class="mi">10</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span><span class="n">s</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;lightgreen&#39;</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="n">study</span><span class="p">)</span>
+    <span class="nb">iter</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;Right Ant Lat&#39;</span><span class="p">,</span><span class="s1">&#39;Right Post Lat&#39;</span><span class="p">]:</span>
+        <span class="n">coords</span>  <span class="o">=</span> <span class="n">find_coordinates_from_worksheet</span><span class="p">(</span><span class="n">worksheet</span><span class="o">=</span><span class="n">worksheet</span><span class="p">,</span><span class="n">my_dict</span><span class="o">=</span><span class="n">my_dict</span><span class="p">,</span><span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">coords</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">mean_coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span>
+            <span class="c1">#scaling = np.array([[0.8379,0.8379,1.5]])</span>
+            <span class="c1">#origin  = np.array([[-209.1,-375.1,-760.5]])</span>
+            <span class="c1">#coords = ((coords-mean_coords)*spacing)+mean_coords</span>
+            <span class="n">coords</span> <span class="o">=</span> <span class="n">coords</span><span class="o">*</span><span class="n">spacing</span><span class="o">+</span><span class="p">(</span><span class="n">origin</span><span class="p">)</span>
+
+            <span class="c1">#</span>
+            <span class="c1">#coords = scaling*coords</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">coords</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span><span class="n">coords</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span><span class="n">coords</span><span class="p">[:,</span><span class="mi">2</span><span class="p">],</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Socket plane points&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">coords</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span><span class="n">coords</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span><span class="n">coords</span><span class="p">[:,</span><span class="mi">2</span><span class="p">],</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span><span class="n">s</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>  <span class="c1"># plot the</span>
+            <span class="k">if</span> <span class="nb">iter</span> <span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+                <span class="n">coords_big</span> <span class="o">=</span> <span class="n">coords</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">coords_big</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">coords_big</span><span class="p">,</span><span class="n">coords</span><span class="p">),</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="nb">iter</span> <span class="o">+=</span><span class="mi">1</span>
+    <span class="k">if</span> <span class="n">coords_big</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+
+        <span class="n">right_plane</span> <span class="o">=</span> <span class="n">Plane</span><span class="o">.</span><span class="n">best_fit</span><span class="p">(</span><span class="n">Points</span><span class="p">(</span><span class="n">coords_big</span><span class="p">))</span>
+
+        <span class="n">lims</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">coords_big</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">coords_big</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1">#right_plane.plot_3d(ax,lims_x=(lims[0][0],lims[1][0]),lims_y=(lims[0][1],lims[1][1]))</span>
+        <span class="n">right_plane</span><span class="o">.</span><span class="n">plot_3d</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span><span class="n">lims_y</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">150</span><span class="p">,</span><span class="mi">50</span><span class="p">),</span><span class="n">lims_x</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">75</span><span class="p">,</span><span class="mi">50</span><span class="p">),</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
+
+
+
+    <span class="nb">iter</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;Left Ant Lat&#39;</span><span class="p">,</span><span class="s1">&#39;Left Post Lat&#39;</span><span class="p">]:</span>
+        <span class="n">coords</span>  <span class="o">=</span> <span class="n">find_coordinates_from_worksheet</span><span class="p">(</span><span class="n">worksheet</span><span class="o">=</span><span class="n">worksheet</span><span class="p">,</span><span class="n">my_dict</span><span class="o">=</span><span class="n">my_dict</span><span class="p">,</span><span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">coords</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">mean_coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span>
+            <span class="c1">#scaling = np.array([[0.8379,0.8379,1.5]])</span>
+            <span class="c1">#origin  = np.array([[-209.1,-375.1,-760.5]])</span>
+            <span class="c1">#coords = ((coords-mean_coords)*spacing)+mean_coords</span>
+            <span class="n">coords</span> <span class="o">=</span> <span class="n">coords</span><span class="o">*</span><span class="n">spacing</span><span class="o">+</span><span class="p">(</span><span class="n">origin</span><span class="p">)</span>
+            <span class="c1">#</span>
+            <span class="c1">#coords = scaling*coords</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">coords</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span><span class="n">coords</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span><span class="n">coords</span><span class="p">[:,</span><span class="mi">2</span><span class="p">],</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Socket plane points&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">coords</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span><span class="n">coords</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span><span class="n">coords</span><span class="p">[:,</span><span class="mi">2</span><span class="p">],</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span><span class="n">s</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>  <span class="c1"># plot the</span>
+            <span class="k">if</span> <span class="nb">iter</span> <span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+                <span class="n">coords_big</span> <span class="o">=</span> <span class="n">coords</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">coords_big</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">coords_big</span><span class="p">,</span><span class="n">coords</span><span class="p">),</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="nb">iter</span> <span class="o">+=</span><span class="mi">1</span>
+    <span class="k">if</span> <span class="n">coords_big</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">left_plane</span> <span class="o">=</span> <span class="n">Plane</span><span class="o">.</span><span class="n">best_fit</span><span class="p">(</span><span class="n">Points</span><span class="p">(</span><span class="n">coords_big</span><span class="p">))</span>
+
+        <span class="n">lims</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">coords_big</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">coords_big</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">left_plane</span><span class="o">.</span><span class="n">plot_3d</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span><span class="n">lims_y</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">150</span><span class="p">,</span><span class="mi">50</span><span class="p">),</span><span class="n">lims_x</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">75</span><span class="p">,</span><span class="mi">50</span><span class="p">),</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
+
+        <span class="c1">#right_plane.plot_3d(ax,lims_x=(lims[0][0],lims[1][0]),lims_y=(lims[0][1],lims[1][1]))</span>
+
+        <span class="c1"># point (2,3,4) on the figure</span>
+
+    <span class="c1"># folders = [f for f in os.listdir(study_path) if os.path.isdir(os.path.join(study_path,f)) and &#39;left&#39; in f.lower()]</span>
+    <span class="c1"># study_subpath = os.path.join(study_path,folders[0])</span>
+    <span class="c1"># stl_file = [f for f in os.listdir(study_subpath) if f.split(&#39;.&#39;)[-1] == &#39;stl&#39;][0]</span>
+    <span class="c1"># stl_path = os.path.join(study_subpath,stl_file)</span>
+    <span class="c1"># point_cloud = mesh.Mesh.from_file(stl_path).v0/spacing</span>
+    <span class="c1"># ax.scatter(point_cloud[::10,0],point_cloud[::10,1],point_cloud[::10,2],alpha=0.3,s=1,color=&#39;lightgreen&#39;)</span>
+    <span class="c1"># folders = [f for f in os.listdir(study_path) if os.path.isdir(os.path.join(study_path,f)) and &#39;right&#39; in f.lower()]</span>
+    <span class="c1"># study_subpath = os.path.join(study_path,folders[0])</span>
+    <span class="c1"># stl_file = [f for f in os.listdir(study_subpath) if f.split(&#39;.&#39;)[-1] == &#39;stl&#39;][0]</span>
+    <span class="c1"># stl_path = os.path.join(study_subpath,stl_file)</span>
+    <span class="c1"># point_cloud = mesh.Mesh.from_file(stl_path).v0/spacing</span>
+    <span class="c1"># ax.scatter(point_cloud[::10,0],point_cloud[::10,1],point_cloud[::10,2],alpha=0.3,s=1,color=&#39;lightgreen&#39;)</span>
+    <span class="c1">#axisEqual3D(ax)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s2">&quot;Folder =&quot;</span><span class="o">+</span><span class="n">study_path</span><span class="o">+</span><span class="s2">&quot; k = </span><span class="si">{:}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span></div>
+
+
+
+
+
+
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span><span class="o">==</span><span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="s1">&#39;./data/Segmentation_and_landmarks_raw/UCLH - Controls&#39;</span> <span class="c1">#transformation works</span>
+    <span class="n">studies</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">path</span><span class="p">))</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span><span class="n">f</span><span class="p">))]</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">1234</span>
+                   <span class="p">)</span>
+    <span class="n">choices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">high</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">studies</span><span class="p">),</span><span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">choices</span><span class="o">.</span><span class="n">tolist</span><span class="p">():</span>
+        <span class="n">fig</span><span class="p">,</span><span class="n">ax</span> <span class="o">=</span> <span class="n">plot_landmark</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span><span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">)</span>
+        <span class="n">study</span> <span class="o">=</span> <span class="n">studies</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+        <span class="n">study_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span><span class="n">study</span><span class="p">)</span>
+
+        <span class="n">xlsx_file</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">study_path</span><span class="p">)</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;xlsx&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">xlsx_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">study_path</span><span class="p">,</span><span class="n">xlsx_file</span><span class="p">)</span>
+
+        <span class="c1"># Define variable to load the wookbook</span>
+        <span class="n">workbook</span> <span class="o">=</span> <span class="n">openpyxl</span><span class="o">.</span><span class="n">load_workbook</span><span class="p">(</span><span class="n">xlsx_path</span><span class="p">,</span><span class="n">data_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Define variable to read the active sheet:</span>
+        <span class="n">worksheet</span> <span class="o">=</span> <span class="n">workbook</span><span class="o">.</span><span class="n">active</span>
+
+
+        <span class="n">my_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">worksheet</span><span class="o">.</span><span class="n">max_row</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">worksheet</span><span class="o">.</span><span class="n">iter_cols</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">worksheet</span><span class="o">.</span><span class="n">max_column</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">col</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="s2">&quot;acetabulum&quot;</span> <span class="ow">in</span> <span class="n">col</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;found column at &quot;</span><span class="o">+</span><span class="n">col</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">column_letter</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">col</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">row</span><span class="p">))</span>
+
+                        <span class="n">ant_col</span> <span class="o">=</span> <span class="n">col</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">column</span><span class="o">-</span><span class="mi">1</span>
+                        <span class="n">ant_row</span> <span class="o">=</span> <span class="n">i</span>
+                        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">6</span><span class="p">):</span>
+                            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">worksheet</span><span class="p">[</span><span class="n">ant_row</span><span class="o">+</span><span class="n">k</span><span class="p">][</span><span class="n">ant_col</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
+
+                                <span class="k">if</span> <span class="s2">&quot;rasis&quot;</span> <span class="ow">in</span> <span class="n">worksheet</span><span class="p">[</span><span class="n">ant_row</span><span class="o">+</span><span class="n">k</span> <span class="p">][</span><span class="n">ant_col</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+                                    <span class="n">my_dict</span><span class="p">[</span><span class="s1">&#39;RASIS Col&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ant_col</span>
+                                    <span class="n">my_dict</span><span class="p">[</span><span class="s1">&#39;RASIS Row&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ant_row</span><span class="o">+</span><span class="n">k</span>
+                                <span class="k">elif</span> <span class="s2">&quot;lasis&quot;</span> <span class="ow">in</span> <span class="n">worksheet</span><span class="p">[</span><span class="n">ant_row</span><span class="o">+</span><span class="n">k</span> <span class="p">][</span><span class="n">ant_col</span> <span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+                                    <span class="n">my_dict</span><span class="p">[</span><span class="s1">&#39;LASIS Col&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ant_col</span>
+                                    <span class="n">my_dict</span><span class="p">[</span><span class="s1">&#39;LASIS Row&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ant_row</span><span class="o">+</span><span class="n">k</span>
+                                <span class="k">elif</span> <span class="s2">&quot;ltub&quot;</span> <span class="ow">in</span> <span class="n">worksheet</span><span class="p">[</span><span class="n">ant_row</span><span class="o">+</span><span class="n">k</span> <span class="p">][</span><span class="n">ant_col</span> <span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+                                    <span class="n">my_dict</span><span class="p">[</span><span class="s1">&#39;LTUB Col&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ant_col</span>
+                                    <span class="n">my_dict</span><span class="p">[</span><span class="s1">&#39;LTUB Row&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ant_row</span><span class="o">+</span><span class="n">k</span>
+                                <span class="k">elif</span> <span class="s2">&quot;rtub&quot;</span> <span class="ow">in</span> <span class="n">worksheet</span><span class="p">[</span><span class="n">ant_row</span><span class="o">+</span><span class="n">k</span><span class="p">][</span><span class="n">ant_col</span> <span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+                                    <span class="n">my_dict</span><span class="p">[</span><span class="s1">&#39;RTUB Col&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ant_col</span>
+                                    <span class="n">my_dict</span><span class="p">[</span><span class="s1">&#39;RTUB Row&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ant_row</span><span class="o">+</span><span class="n">k</span>
+
+
+        <span class="n">it</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;RASIS&#39;</span><span class="p">,</span><span class="s1">&#39;LASIS&#39;</span><span class="p">,</span><span class="s1">&#39;RTUB&#39;</span><span class="p">,</span><span class="s1">&#39;LTUB&#39;</span><span class="p">]:</span>
+            <span class="n">row_val</span> <span class="o">=</span> <span class="n">my_dict</span><span class="p">[</span><span class="n">key</span> <span class="o">+</span> <span class="s1">&#39; Row&#39;</span><span class="p">]</span>
+            <span class="n">col_val</span> <span class="o">=</span> <span class="n">my_dict</span><span class="p">[</span><span class="n">key</span> <span class="o">+</span> <span class="s1">&#39; Col&#39;</span><span class="p">]</span>
+            <span class="n">coord_temp</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">4</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">worksheet</span><span class="p">[</span><span class="n">row_val</span><span class="p">][</span><span class="n">col_val</span><span class="o">+</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">coord_temp</span> <span class="o">+=</span><span class="p">[</span><span class="n">worksheet</span><span class="p">[</span><span class="n">row_val</span><span class="p">][</span><span class="n">col_val</span><span class="o">+</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">it</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+                <span class="n">coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">coord_temp</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">coords_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">coord_temp</span><span class="p">])</span>
+                <span class="n">coords</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">coords</span><span class="p">,</span><span class="n">coords_</span><span class="p">),</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+            <span class="n">it</span><span class="o">+=</span><span class="mi">1</span>
+
+
+        <span class="c1"># coords = np.array([[79.86,-51.64,1141],</span>
+        <span class="c1">#                    [    -105.1, - 61.88,1141],</span>
+        <span class="c1">#                    [-0.140000000000015, - 50.36,1050],</span>
+        <span class="c1">#                    [-22.54, - 51.64,    1048],</span>
+        <span class="c1">#                    ])</span>
+        <span class="n">origin</span><span class="p">,</span><span class="n">spacing</span> <span class="o">=</span> <span class="n">find_imOriginSpacing_from_worksheet</span><span class="p">(</span><span class="n">worksheet</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">spacing</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="s1">&#39;UCLH - Dysplastics&#39;</span><span class="p">:</span>
+            <span class="n">spacing</span><span class="p">[:,[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">spacing</span><span class="p">[:,[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]]</span>
+            <span class="n">spacing</span> <span class="o">=</span> <span class="n">spacing</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
+            <span class="c1">#coords[:,[2, 1]] = coords[:,[1, 2]]</span>
+            <span class="c1">#coords  = coords*np.array([[1,1,-1]])</span>
+
+        <span class="c1">#coords = coords</span>
+        <span class="c1">#coords = coords * spacing + (origin)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">coords</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span><span class="n">coords</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span><span class="n">coords</span><span class="p">[:,</span><span class="mi">2</span><span class="p">],</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;APP points&#39;</span><span class="p">)</span>
+        <span class="n">axisEqual3D</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+
+
+        <span class="c1">#plot_landmark_uclh_controls(k=7)</span>
+        <span class="c1">#=========================================================================</span>
+        <span class="c1">#Attempting to get the right transformation for UCLH - Dysplastics</span>
+        <span class="c1">#=========================================================================</span>
+        <span class="c1"># path = &#39;./data/Segmentation_and_landmarks_raw/UCLH - Dysplastics&#39;</span>
+        <span class="c1">#</span>
+        <span class="c1"># studies = [f for f in sorted(os.listdir(path)) if os.path.isdir(os.path.join(path,f))]</span>
+        <span class="c1"># k =10</span>
+        <span class="c1"># study = studies[k]</span>
+        <span class="c1">#</span>
+        <span class="c1">#</span>
+        <span class="c1">#</span>
+        <span class="c1">#</span>
+        <span class="c1"># study_path = os.path.join(path,study)</span>
+        <span class="c1">#</span>
+        <span class="c1"># xlsx_file = [f for f in os.listdir(study_path) if f.split(&#39;.&#39;)[-1] == &quot;xlsx&quot;][0]</span>
+        <span class="c1">#</span>
+        <span class="c1"># xlsx_path = os.path.join(study_path,xlsx_file)</span>
+        <span class="c1">#</span>
+        <span class="c1"># # Define variable to load the wookbook</span>
+        <span class="c1"># workbook = openpyxl.load_workbook(xlsx_path,data_only=True)</span>
+        <span class="c1">#</span>
+        <span class="c1"># # Define variable to read the active sheet:</span>
+        <span class="c1"># worksheet = workbook.active</span>
+        <span class="c1"># origin,spacing = find_imOriginSpacing_from_worksheet(worksheet)</span>
+        <span class="c1">#</span>
+        <span class="c1"># my_dict = find_structure_coordinate_socket(worksheet)</span>
+        <span class="c1"># fig = plt.figure(figsize=(4,4))</span>
+        <span class="c1">#</span>
+        <span class="c1"># ax = fig.add_subplot(111, projection=&#39;3d&#39;)</span>
+        <span class="c1"># ax.set_box_aspect(aspect=(1,1,1))</span>
+        <span class="c1">#</span>
+        <span class="c1">#</span>
+        <span class="c1"># folders = [f for f in os.listdir(study_path) if os.path.isdir(os.path.join(study_path,f)) and &#39;left&#39; in f.lower()]</span>
+        <span class="c1"># if len(folders)&gt;0:</span>
+        <span class="c1">#     study_subpath = os.path.join(study_path,folders[0])</span>
+        <span class="c1">#     stl_file = [f for f in os.listdir(study_subpath) if f.split(&#39;.&#39;)[-1] == &#39;stl&#39;][0]</span>
+        <span class="c1">#     stl_path = os.path.join(study_subpath,stl_file)</span>
+        <span class="c1">#     point_cloud = mesh.Mesh.from_file(stl_path).v0/spacing</span>
+        <span class="c1">#     ax.scatter(point_cloud[::10,0],point_cloud[::10,1],point_cloud[::10,2],alpha=0.3,s=1,color=&#39;lightgreen&#39;)</span>
+        <span class="c1"># folders = [f for f in os.listdir(study_path) if os.path.isdir(os.path.join(study_path,f)) and &#39;right&#39; in f.lower()]</span>
+        <span class="c1"># if len(folders)&gt;0:</span>
+        <span class="c1">#     study_subpath = os.path.join(study_path,folders[0])</span>
+        <span class="c1">#     stl_file = [f for f in os.listdir(study_subpath) if f.split(&#39;.&#39;)[-1] == &#39;stl&#39;][0]</span>
+        <span class="c1">#     stl_path = os.path.join(study_subpath,stl_file)</span>
+        <span class="c1">#     point_cloud = mesh.Mesh.from_file(stl_path).v0/spacing</span>
+        <span class="c1">#     ax.scatter(point_cloud[::10,0],point_cloud[::10,1],point_cloud[::10,2],alpha=0.3,s=1,color=&#39;lightgreen&#39;)</span>
+        <span class="c1">#</span>
+        <span class="c1">#</span>
+        <span class="c1"># print(study)</span>
+        <span class="c1"># for key in [&#39;Right Ant Lat&#39;,&#39;Right Post Lat&#39;,&#39;Left Ant Lat&#39;,&#39;Left Post Lat&#39;]:</span>
+        <span class="c1">#     coords  = find_coordinates_from_worksheet(worksheet=worksheet,my_dict=my_dict,key=key)</span>
+        <span class="c1">#     print(key)</span>
+        <span class="c1">#     if coords is not None:</span>
+        <span class="c1">#         print(coords)</span>
+        <span class="c1">#</span>
+        <span class="c1">#</span>
+        <span class="c1">#         mean_coords = np.mean(coords,axis=0,keepdims=True)</span>
+        <span class="c1">#         #scaling = np.array([[0.8379,0.8379,1.5]])</span>
+        <span class="c1">#         #origin  = np.array([[-209.1,-375.1,-760.5]])</span>
+        <span class="c1">#         #coords = ((coords-mean_coords)*spacing)+mean_coords</span>
+        <span class="c1">#         coords = coords + (origin) / spacing</span>
+        <span class="c1">#         # mean_coords = np.mean(coords,axis=0,keepdims=True)</span>
+        <span class="c1">#         # centre_points_ = np.mean(np.concatenate((mean_coords,np.mean(point_cloud,axis=0,keepdims=True))),axis=0)</span>
+        <span class="c1">#         # centre_points = np.array([[0,0,centre_points_[2]]])</span>
+        <span class="c1">#         coords = coords-centre_points</span>
+        <span class="c1">#         coords = coords-2*np.array([[0,0,1]])*coords#reflection in z axis</span>
+        <span class="c1">#         coords = coords+centre_points</span>
+        <span class="c1">#</span>
+        <span class="c1">#         # centre_points = np.array([[0,centre_points_[2],0]])</span>
+        <span class="c1">#         # coords = coords-centre_points</span>
+        <span class="c1">#         # coords = coords-2*np.array([[0,1,0]])*coords#reflection in y axis</span>
+        <span class="c1">#         # coords = coords+centre_points</span>
+        <span class="c1">#         # #</span>
+        <span class="c1">#         #coords = scaling*coords</span>
+        <span class="c1">#         ax.plot(coords[:,0],coords[:,1],coords[:,2],color=&#39;blue&#39;)</span>
+        <span class="c1">#         ax.scatter(coords[:,0],coords[:,1],coords[:,2],color=&#39;black&#39;,s=2)  # plot the point (2,3,4) on the figure</span>
+        <span class="c1">#</span>
+        <span class="c1"># axisEqual3D(ax)</span>
+        <span class="c1"># fig.suptitle(&quot;Folder =&quot; + study_path + &quot; k = {:}&quot;.format(k))</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2022, Adwaye Rambojun.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

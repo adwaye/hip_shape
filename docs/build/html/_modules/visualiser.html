@@ -1,0 +1,794 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="python" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>visualiser &mdash; hip_shape 0.0.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> hip_shape
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">hip_shape</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html">Module code</a> &raquo;</li>
+        
+      <li>visualiser</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for visualiser</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Conatins methods used to make a mayavi visualiser along with a data source. Most of the classes are unused.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">jax.numpy</span> <span class="k">as</span> <span class="nn">jnp</span>
+<span class="kn">import</span> <span class="nn">jax</span>
+<span class="kn">from</span> <span class="nn">tvtk.api</span> <span class="kn">import</span> <span class="n">tvtk</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">traits.api</span> <span class="kn">import</span> <span class="n">HasTraits</span><span class="p">,</span><span class="n">Instance</span><span class="p">,</span><span class="n">on_trait_change</span>
+<span class="kn">from</span> <span class="nn">traitsui.api</span> <span class="kn">import</span> <span class="n">View</span><span class="p">,</span><span class="n">Item</span>
+<span class="kn">from</span> <span class="nn">mayavi.core.ui.api</span> <span class="kn">import</span> <span class="n">MayaviScene</span><span class="p">,</span><span class="n">MlabSceneModel</span><span class="p">,</span><span class="n">SceneEditor</span>
+<span class="kn">import</span> <span class="nn">pyqtgraph</span>
+
+<span class="kn">from</span> <span class="nn">data_utils</span> <span class="kn">import</span> <span class="n">HipData</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">pyqtgraph.Qt</span> <span class="kn">import</span> <span class="n">QtCore</span><span class="p">,</span><span class="n">QtGui</span>
+<span class="kn">import</span> <span class="nn">pyqtgraph</span> <span class="k">as</span> <span class="nn">pg</span>
+<span class="kn">import</span> <span class="nn">pyqtgraph.opengl</span> <span class="k">as</span> <span class="nn">gl</span>
+
+<span class="kn">from</span> <span class="nn">PyQt5.QtWidgets</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">PyQt5.QtCore</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">PyQt5.QtGui</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="kn">import</span> <span class="nn">threading</span>
+
+<span class="kn">from</span> <span class="nn">mpl_toolkits.mplot3d</span> <span class="kn">import</span> <span class="n">Axes3D</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ion</span><span class="p">()</span>
+
+
+<span class="kn">from</span> <span class="nn">mayavi</span> <span class="kn">import</span> <span class="n">mlab</span>
+<span class="kn">from</span> <span class="nn">mayavi.api</span> <span class="kn">import</span> <span class="n">Engine</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<div class="viewcode-block" id="Observer"><a class="viewcode-back" href="../visualiser.html#visualiser.Observer">[docs]</a><span class="k">class</span> <span class="nc">Observer</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base Observer class&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;needs to be overridden so that the subject (DataSource) can remove the observer</span>
+
+<span class="sd">        :param other: variable to be compared</span>
+<span class="sd">        :type other: object</span>
+<span class="sd">        :return: True if equal and False if not</span>
+<span class="sd">        :rtype: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span><span class="n">Observer</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="Observer.set_data"><a class="viewcode-back" href="../visualiser.html#visualiser.Observer.set_data">[docs]</a>    <span class="k">def</span> <span class="nf">set_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">data</span><span class="p">:</span><span class="nb">list</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;method to read in the data</span>
+
+<span class="sd">        :param data:data[0] should be vertices, and data[1] should be connectivity matrix of vertices,</span>
+<span class="sd">        :type data:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        :rtype:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">points</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">faces</span>  <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span></div>
+
+
+
+
+<div class="viewcode-block" id="Observer.display_data"><a class="viewcode-back" href="../visualiser.html#visualiser.Observer.display_data">[docs]</a>    <span class="k">def</span> <span class="nf">display_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div></div>
+
+
+
+<div class="viewcode-block" id="GlObserver"><a class="viewcode-back" href="../visualiser.html#visualiser.GlObserver">[docs]</a><span class="k">class</span> <span class="nc">GlObserver</span><span class="p">(</span><span class="n">Observer</span><span class="p">,</span><span class="n">gl</span><span class="o">.</span><span class="n">GLViewWidget</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;OPen Gl observer class to display data</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">gl</span><span class="o">.</span><span class="n">GLViewWidget</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mesh_data</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="GlObserver.display_data"><a class="viewcode-back" href="../visualiser.html#visualiser.GlObserver.display_data">[docs]</a>    <span class="k">def</span> <span class="nf">display_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1">#self.clear()</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">faces</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">faces</span>
+        <span class="n">mean_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">points</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="n">points</span> <span class="o">-</span> <span class="n">mean_pos</span>
+
+        <span class="c1">#        self.viewer1.updateGL()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;mean osition of object is&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">mean_pos</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;camera position is&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cameraPosition</span><span class="p">())</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+
+
+            <span class="n">meshdata</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">MeshData</span><span class="p">(</span><span class="n">vertexes</span><span class="o">=</span><span class="n">points</span><span class="p">,</span><span class="n">faces</span><span class="o">=</span><span class="n">faces</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mesh_item</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">GLMeshItem</span><span class="p">(</span><span class="n">meshdata</span><span class="o">=</span><span class="n">meshdata</span><span class="p">,</span><span class="n">smooth</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">drawFaces</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">drawEdges</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">edgeColor</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span>
+                                                                                                                <span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span>
+                                 <span class="n">shader</span><span class="o">=</span><span class="s1">&#39;shaded&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mesh_data</span> <span class="o">=</span> <span class="n">meshdata</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh_item</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pan</span><span class="p">(</span><span class="n">mean_pos</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">mean_pos</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">mean_pos</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span><span class="n">relative</span><span class="o">=</span><span class="s1">&#39;global&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mesh_data</span><span class="o">.</span><span class="n">setFaces</span><span class="p">(</span><span class="n">faces</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mesh_data</span><span class="o">.</span><span class="n">setVertexes</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mesh_item</span><span class="o">.</span><span class="n">setMeshData</span><span class="p">(</span><span class="n">meshdata</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh_data</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mesh_item</span><span class="o">.</span><span class="n">meshDataChanged</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mesh_item</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="MatplotlibObserver"><a class="viewcode-back" href="../visualiser.html#visualiser.MatplotlibObserver">[docs]</a><span class="k">class</span> <span class="nc">MatplotlibObserver</span><span class="p">(</span><span class="n">Observer</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="c1">#HasTraits.__init__(self,**kwargs)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tri_plot</span><span class="o">=</span> <span class="kc">None</span>
+<div class="viewcode-block" id="MatplotlibObserver.set_data"><a class="viewcode-back" href="../visualiser.html#visualiser.MatplotlibObserver.set_data">[docs]</a>    <span class="k">def</span> <span class="nf">set_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">data</span><span class="p">:</span><span class="nb">list</span><span class="p">):</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MatplotlibObserver.display_data"><a class="viewcode-back" href="../visualiser.html#visualiser.MatplotlibObserver.display_data">[docs]</a>    <span class="k">def</span> <span class="nf">display_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="c1">## PLot to Show</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tri_plot</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">init_mesh</span><span class="p">()</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update_visualisation</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="MatplotlibObserver.init_mesh"><a class="viewcode-back" href="../visualiser.html#visualiser.MatplotlibObserver.init_mesh">[docs]</a>    <span class="k">def</span> <span class="nf">init_mesh</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">projection</span><span class="o">=</span><span class="s1">&#39;3d&#39;</span><span class="p">)</span>
+        <span class="n">vertices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span>
+        <span class="n">faces</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">faces</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tri_plot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">plot_trisurf</span><span class="p">(</span><span class="n">vertices</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span><span class="n">vertices</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span><span class="n">vertices</span><span class="p">[:,</span><span class="mi">2</span><span class="p">],</span><span class="n">triangles</span><span class="o">=</span><span class="n">faces</span><span class="p">,</span><span class="n">edgecolor</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span>
+                                                                                                                 <span class="mi">0</span><span class="p">]],</span>
+                                   <span class="n">linewidth</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+                                   <span class="n">alpha</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                                   <span class="n">shade</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">pause</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="MatplotlibObserver.update_visualisation"><a class="viewcode-back" href="../visualiser.html#visualiser.MatplotlibObserver.update_visualisation">[docs]</a>    <span class="k">def</span> <span class="nf">update_visualisation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="c1">#        pass</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">tri_plot</span><span class="o">.</span><span class="n">set_verts_and_codes</span><span class="p">(</span><span class="n">verts</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">,</span><span class="n">codes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">faces</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">pause</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span></div></div>
+        <span class="c1"># self.fig.canvas.draw()</span>
+        <span class="c1"># self.tri_plot.update()</span>
+
+<div class="viewcode-block" id="MayaviObserver"><a class="viewcode-back" href="../visualiser.html#visualiser.MayaviObserver">[docs]</a><span class="k">class</span> <span class="nc">MayaviObserver</span><span class="p">(</span><span class="n">Observer</span><span class="p">,</span><span class="n">HasTraits</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">HasTraits</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">view</span> <span class="o">=</span> <span class="n">View</span><span class="p">(</span><span class="n">Item</span><span class="p">(</span><span class="s1">&#39;scene&#39;</span><span class="p">,</span><span class="n">editor</span><span class="o">=</span><span class="n">SceneEditor</span><span class="p">(</span><span class="n">scene_class</span><span class="o">=</span><span class="n">MayaviScene</span><span class="p">),</span>
+                     <span class="n">height</span><span class="o">=</span><span class="mi">250</span><span class="p">,</span><span class="n">width</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span><span class="n">show_label</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+                <span class="n">resizable</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">engine</span> <span class="o">=</span> <span class="n">Engine</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">new_scene</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">polydata</span> <span class="o">=</span> <span class="kc">None</span>
+<div class="viewcode-block" id="MayaviObserver.set_data"><a class="viewcode-back" href="../visualiser.html#visualiser.MayaviObserver.set_data">[docs]</a>    <span class="k">def</span> <span class="nf">set_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">data</span><span class="p">:</span><span class="nb">list</span><span class="p">):</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span></div>
+
+        <span class="c1">#self.mesh.mlab_source.set()</span>
+
+<div class="viewcode-block" id="MayaviObserver.display_data"><a class="viewcode-back" href="../visualiser.html#visualiser.MayaviObserver.display_data">[docs]</a>    <span class="k">def</span> <span class="nf">display_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="c1">## PLot to Show</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">init_mesh</span><span class="p">()</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update_visualisation</span><span class="p">()</span></div>
+
+
+
+        <span class="c1"># x = my_mesh.x</span>
+        <span class="c1"># y = my_mesh.y</span>
+        <span class="c1"># z = my_mesh.z</span>
+        <span class="c1"># mlab.points3d(x, y, z)</span>
+        <span class="c1"># mlab.show()</span>
+        <span class="c1"># color = [(139 / 255,233 / 255,253 / 255),(80 / 255,250 / 255,123 / 255),(139 / 255,233 / 255,253 / 255),</span>
+        <span class="c1">#          (80 / 255,250 / 255,123 / 255)]</span>
+        <span class="c1">#</span>
+        <span class="c1"># if self.plot is None:</span>
+        <span class="c1">#     self.mesh_pipeline = mlab.pipeline.triangular_mesh_source(self.points[:,0],self.points[:,1],self.points[:,2],self.faces)</span>
+        <span class="c1">#     self.plot = mlab.triangular_mesh(self.points[:,0],self.points[:,1],self.points[:,2],self.faces)</span>
+        <span class="c1"># else:</span>
+        <span class="c1">#     self.plot.mlab</span>
+        <span class="c1">#</span>
+        <span class="c1">#     mlab.show()</span>
+        <span class="c1"># self.mesh = mlab.triangular_mesh()</span>
+
+
+<div class="viewcode-block" id="MayaviObserver.init_mesh"><a class="viewcode-back" href="../visualiser.html#visualiser.MayaviObserver.init_mesh">[docs]</a>    <span class="k">def</span> <span class="nf">init_mesh</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">polydata</span> <span class="o">=</span> <span class="n">tvtk</span><span class="o">.</span><span class="n">PolyData</span><span class="p">(</span><span class="n">points</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">,</span><span class="n">polys</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">faces</span><span class="p">)</span>
+
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span> <span class="o">=</span> <span class="n">mlab</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">surface</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">polydata</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MayaviObserver.update_visualisation"><a class="viewcode-back" href="../visualiser.html#visualiser.MayaviObserver.update_visualisation">[docs]</a>    <span class="nd">@mlab</span><span class="o">.</span><span class="n">animate</span><span class="p">(</span><span class="n">delay</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span><span class="n">ui</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">update_visualisation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">pickle_loc</span> <span class="o">=</span> <span class="s1">&#39;/home/adwaye/PycharmProjects/hip_shape/data/Segmentation_and_landmarks_downsample_10/TOH - &#39;</span> \
+                     <span class="s1">&#39;Controls/&#39;</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pickle_loc</span><span class="p">,</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">pickle_loc</span><span class="p">)]</span>
+
+        <span class="c1"># hip_data_source.set_data(pickle_path=pickle_path)</span>
+        <span class="c1"># points,faces = hip_data_source.get_data()</span>
+        <span class="c1"># points = points - np.mean(points,axis=0,keepdims=True)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">polydata</span><span class="o">.</span><span class="n">points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">polydata</span><span class="o">.</span><span class="n">polys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">faces</span>
+
+
+        <span class="c1"># drawing.mlab_source.x = x</span>
+        <span class="c1"># drawing.mlab_source.y = y</span>
+        <span class="c1"># drawing.mlab_source.z = z</span>
+        <span class="c1"># drawing.mlab_source.triangles = faces</span>
+        <span class="c1"># drawing.update()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+        <span class="c1">#drawing.mlab_source.trait_set(x=x,y=y,z=z,triangles=faces)</span>
+        <span class="k">yield</span></div></div>
+
+
+
+<div class="viewcode-block" id="MayaviVisualiser"><a class="viewcode-back" href="../visualiser.html#visualiser.MayaviVisualiser">[docs]</a><span class="k">class</span> <span class="nc">MayaviVisualiser</span><span class="p">(</span><span class="n">MayaviObserver</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Main visualiser to be paired with loops.</span>
+
+<span class="sd">    :param generator: python generator object whose output of __next__ is a list of points,faces which represent the</span>
+<span class="sd">    array of vertex coordinates and face indices respectively such that points[faces[:,i]] are the coordinates of the</span>
+<span class="sd">    i-th triangle.</span>
+<span class="sd">    :type generator: generator</span>
+<span class="sd">    :param kwargs:</span>
+<span class="sd">    :type kwargs:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">generator</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">generator</span> <span class="o">=</span> <span class="n">generator</span>
+
+<div class="viewcode-block" id="MayaviVisualiser.update_visualisation"><a class="viewcode-back" href="../visualiser.html#visualiser.MayaviVisualiser.update_visualisation">[docs]</a>    <span class="nd">@mlab</span><span class="o">.</span><span class="n">animate</span><span class="p">(</span><span class="n">delay</span><span class="o">=</span><span class="mi">500</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">update_visualisation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">points</span><span class="p">,</span><span class="n">faces</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">polydata</span><span class="o">.</span><span class="n">points</span> <span class="o">=</span> <span class="n">points</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">polydata</span><span class="o">.</span><span class="n">polys</span> <span class="o">=</span> <span class="n">faces</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+            <span class="k">yield</span></div></div>
+
+
+
+
+<div class="viewcode-block" id="DataSource"><a class="viewcode-back" href="../visualiser.html#visualiser.DataSource">[docs]</a><span class="k">class</span> <span class="nc">DataSource</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;dependent class of observer pattern. Currently not being used. Switched to a generator based approach to visualisation&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">observers</span> <span class="o">=</span> <span class="p">[]</span>
+
+
+
+<div class="viewcode-block" id="DataSource.registerObserver"><a class="viewcode-back" href="../visualiser.html#visualiser.DataSource.registerObserver">[docs]</a>    <span class="k">def</span> <span class="nf">registerObserver</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">observer</span><span class="p">:</span><span class="n">Observer</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Registers an observer who is then updated each time the data is changed in DataSource</span>
+
+<span class="sd">        :param observer:</span>
+<span class="sd">        :type observer:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        :rtype:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">observers</span><span class="o">+=</span><span class="p">[</span><span class="n">observer</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="DataSource.removeObserver"><a class="viewcode-back" href="../visualiser.html#visualiser.DataSource.removeObserver">[docs]</a>    <span class="k">def</span> <span class="nf">removeObserver</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">observer</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Cycles the list of observers registered so far, checks which element is equal to observer and removes</span>
+<span class="sd">        the observer</span>
+
+<span class="sd">        :return:</span>
+<span class="sd">        :rtype:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">observers</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">observer</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DataSource.notifyObservers"><a class="viewcode-back" href="../visualiser.html#visualiser.DataSource.notifyObservers">[docs]</a>    <span class="k">def</span> <span class="nf">notifyObservers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Notufy the observers that the data has changed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">obs</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">observers</span><span class="p">):</span>
+            <span class="n">obs</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="n">obs</span><span class="o">.</span><span class="n">display_data</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="DataSource.get_data"><a class="viewcode-back" href="../visualiser.html#visualiser.DataSource.get_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">-&gt;</span><span class="nb">list</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;This needs to be ovewritten for each new class</span>
+
+<span class="sd">        :return:</span>
+<span class="sd">        :rtype:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div></div>
+
+
+
+
+<div class="viewcode-block" id="HipDataSource"><a class="viewcode-back" href="../visualiser.html#visualiser.HipDataSource">[docs]</a><span class="k">class</span> <span class="nc">HipDataSource</span><span class="p">(</span><span class="n">HipData</span><span class="p">,</span><span class="n">DataSource</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Subclass of data_utils.HipData and visualiser.DataSource.</span>
+
+<span class="sd">    :param pickle_path: path to pickle file output of data_cleaning.to_pickle</span>
+<span class="sd">    :type pickle_path: str</span>
+<span class="sd">    :param decimator: the decimator object to be used</span>
+<span class="sd">    :type decimator: data_utils.Decimator</span>
+<span class="sd">    :param kwargs:</span>
+<span class="sd">    :type kwargs:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">pickle_path</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span><span class="n">decimator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">pickle_path</span><span class="o">=</span><span class="n">pickle_path</span><span class="p">,</span><span class="n">decimator</span><span class="o">=</span><span class="n">decimator</span><span class="p">)</span>
+        <span class="n">DataSource</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="HipDataSource.set_data"><a class="viewcode-back" href="../visualiser.html#visualiser.HipDataSource.set_data">[docs]</a>    <span class="k">def</span> <span class="nf">set_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">pickle_path</span><span class="p">:</span><span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Method to change the data in the</span>
+
+<span class="sd">        :param data:</span>
+<span class="sd">        :type data:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        :rtype:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">pickle_path</span><span class="o">=</span><span class="n">pickle_path</span><span class="p">,</span><span class="n">decimator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">decimator</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">notifyObservers</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="HipDataSource.get_data"><a class="viewcode-back" href="../visualiser.html#visualiser.HipDataSource.get_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span><span class="nb">list</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;returns the surface of the Left and right pelvis as list [vertice,connectivity_matrix]</span>
+
+<span class="sd">        :return:</span>
+<span class="sd">        :rtype:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">points1</span><span class="p">,</span><span class="n">faces1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RPEL</span>
+        <span class="n">points2</span><span class="p">,</span><span class="n">faces2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">LPEL</span>
+        <span class="k">if</span> <span class="n">points1</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">points</span> <span class="o">=</span> <span class="n">points1</span>
+            <span class="n">faces</span>  <span class="o">=</span> <span class="n">faces2</span>
+            <span class="k">if</span> <span class="n">points2</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">points</span><span class="p">,</span><span class="n">points2</span><span class="p">])</span>
+                <span class="n">faces</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">faces</span><span class="p">,</span><span class="n">faces2</span><span class="o">+</span><span class="n">points1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">points</span> <span class="o">=</span> <span class="n">points2</span>
+            <span class="n">faces</span>  <span class="o">=</span> <span class="n">faces2</span>
+
+
+        <span class="k">return</span> <span class="n">points</span><span class="p">,</span><span class="n">faces</span></div></div>
+
+
+
+
+<div class="viewcode-block" id="MyWindow"><a class="viewcode-back" href="../visualiser.html#visualiser.MyWindow">[docs]</a><span class="k">class</span> <span class="nc">MyWindow</span><span class="p">(</span><span class="n">QMainWindow</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">observer</span><span class="p">:</span><span class="n">Observer</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">observer</span> <span class="o">=</span> <span class="n">observer</span></div>
+
+
+<span class="k">def</span> <span class="nf">_test_inheritance</span><span class="p">():</span>
+    <span class="n">hip_data_source</span> <span class="o">=</span> <span class="n">HipDataSource</span><span class="p">(</span><span class="n">pickle_path</span><span class="o">=</span><span class="s1">&#39;/home/adwaye/PycharmProjects/hip_shape/data&#39;</span>
+                                                <span class="s1">&#39;/Segmentation_and_landmarks_downsample_10/TOH - Controls/C4.p&#39;</span><span class="p">,</span>
+                                    <span class="n">decimator</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">hip_data_source</span><span class="o">.</span><span class="n">observers</span><span class="o">==</span><span class="p">[]</span>
+    <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">hip_data_source</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">dict</span>
+
+
+<span class="k">def</span> <span class="nf">_test_data_getter</span><span class="p">():</span>
+    <span class="kn">import</span> <span class="nn">time</span>
+
+    <span class="n">hip_data_source</span> <span class="o">=</span> <span class="n">HipDataSource</span><span class="p">(</span><span class="n">pickle_path</span><span class="o">=</span><span class="s1">&#39;/home/adwaye/PycharmProjects/hip_shape/data&#39;</span>
+                                                <span class="s1">&#39;/Segmentation_and_landmarks_downsample_10/TOH - Controls/C4.p&#39;</span><span class="p">,</span>
+                                    <span class="n">decimator</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">points</span><span class="p">,</span><span class="n">faces</span> <span class="o">=</span> <span class="n">hip_data_source</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">points</span><span class="p">,</span><span class="n">faces</span><span class="p">)</span>
+
+
+
+    <span class="n">gl_observer</span> <span class="o">=</span> <span class="n">MatplotlibObserver</span><span class="p">()</span>
+
+    <span class="c1">#my_window = MyWindow(gl_observer)</span>
+    <span class="c1"># gl_observer.setMinimumWidth(800)</span>
+    <span class="c1"># gl_observer.setMinimumHeight(800)</span>
+    <span class="n">hip_data_source</span><span class="o">.</span><span class="n">registerObserver</span><span class="p">(</span><span class="n">observer</span><span class="o">=</span><span class="n">gl_observer</span><span class="p">)</span>
+    <span class="n">hip_data_source</span><span class="o">.</span><span class="n">notifyObservers</span><span class="p">()</span>
+
+
+
+
+
+    <span class="n">pickle_loc</span> <span class="o">=</span> <span class="s1">&#39;/home/adwaye/PycharmProjects/hip_shape/data/Segmentation_and_landmarks_downsample_10/TOH - Controls/&#39;</span>
+    <span class="n">files</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pickle_loc</span><span class="p">,</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">pickle_loc</span><span class="p">)]</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">pickle_path</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">files</span><span class="p">):</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">k</span><span class="o">&lt;</span><span class="mi">10</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">pickle_path</span><span class="p">)</span>
+            <span class="n">hip_data_source</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">pickle_path</span><span class="o">=</span><span class="n">pickle_path</span><span class="p">)</span>
+            <span class="n">hip_data_source</span><span class="o">.</span><span class="n">notifyObservers</span><span class="p">()</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">break</span>
+    <span class="c1">#sys.exit(app.exec_())</span>
+
+
+<span class="k">def</span> <span class="nf">_test_mayavi_observer</span><span class="p">():</span>
+    <span class="kn">import</span> <span class="nn">time</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">pyqtgraph</span><span class="o">.</span><span class="n">getConfigOption</span><span class="p">(</span><span class="s1">&#39;useOpenGL&#39;</span><span class="p">))</span>
+    <span class="n">pyqtgraph</span><span class="o">.</span><span class="n">setConfigOptions</span><span class="p">(</span><span class="n">useOpenGL</span><span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="n">hip_data_source</span> <span class="o">=</span> <span class="n">HipDataSource</span><span class="p">(</span><span class="n">pickle_path</span><span class="o">=</span><span class="s1">&#39;/home/adwaye/PycharmProjects/hip_shape/data&#39;</span>
+                                                <span class="s1">&#39;/Segmentation_and_landmarks_downsample_10/TOH - Controls/C4.p&#39;</span><span class="p">,</span>
+                                    <span class="n">decimator</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span><span class="c1">#modelOPtDataSource</span>
+    <span class="n">points</span><span class="p">,</span><span class="n">faces</span> <span class="o">=</span> <span class="n">hip_data_source</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">points</span><span class="p">,</span><span class="n">faces</span><span class="p">)</span>
+    <span class="n">app</span> <span class="o">=</span> <span class="n">QApplication</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">setStyle</span><span class="p">(</span><span class="s1">&#39;Fusion&#39;</span><span class="p">)</span>
+
+
+    <span class="n">m_observer</span> <span class="o">=</span> <span class="n">MayaviObserver</span><span class="p">()</span>
+
+    <span class="c1">#my_window = MyWindow(m_observer)</span>
+    <span class="c1"># m_observer.setMinimumWidth(800)</span>
+    <span class="c1"># m_observer.setMinimumHeight(800)</span>
+    <span class="n">hip_data_source</span><span class="o">.</span><span class="n">registerObserver</span><span class="p">(</span><span class="n">observer</span><span class="o">=</span><span class="n">m_observer</span><span class="p">)</span>
+    <span class="n">hip_data_source</span><span class="o">.</span><span class="n">notifyObservers</span><span class="p">()</span>
+
+
+
+
+    <span class="c1">#my_window.show()</span>
+    <span class="n">pickle_loc</span> <span class="o">=</span> <span class="s1">&#39;/home/adwaye/PycharmProjects/hip_shape/data/Segmentation_and_landmarks_downsample_10/TOH - Controls/&#39;</span>
+    <span class="n">files</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pickle_loc</span><span class="p">,</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">pickle_loc</span><span class="p">)]</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">pickle_path</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">files</span><span class="p">):</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">k</span><span class="o">&lt;</span><span class="mi">10</span><span class="p">:</span>
+            <span class="n">hip_data_source</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">pickle_path</span><span class="o">=</span><span class="n">pickle_path</span><span class="p">)</span>
+            <span class="n">hip_data_source</span><span class="o">.</span><span class="n">notifyObservers</span><span class="p">()</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">break</span>
+    <span class="c1">#sys.exit(app.exec_())</span>
+
+
+
+<div class="viewcode-block" id="jax_func"><a class="viewcode-back" href="../visualiser.html#visualiser.jax_func">[docs]</a><span class="k">def</span> <span class="nf">jax_func</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="n">noise</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="o">*</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">*</span><span class="mi">10</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="n">noise</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">data</span></div>
+
+
+
+
+<div class="viewcode-block" id="SafeTimedThread"><a class="viewcode-back" href="../visualiser.html#visualiser.SafeTimedThread">[docs]</a><span class="k">class</span> <span class="nc">SafeTimedThread</span><span class="p">(</span><span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Testing threding to update mayavi visualiser.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">thread_condition</span><span class="p">,</span> <span class="n">scan_time</span><span class="p">,</span> <span class="n">funct</span><span class="p">,</span> <span class="o">*</span><span class="n">funct_args</span><span class="p">):</span>
+        <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="c1"># Thread condition for the function to operate with</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tc</span> <span class="o">=</span> <span class="n">thread_condition</span>
+
+        <span class="c1"># Defines the scan time the function is to be run at</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scan_time</span> <span class="o">=</span> <span class="n">scan_time</span>
+
+        <span class="c1"># Function to be run</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">run_function</span> <span class="o">=</span> <span class="n">funct</span>
+
+        <span class="c1"># Function arguments</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">funct_args</span> <span class="o">=</span> <span class="n">funct_args</span>
+
+<div class="viewcode-block" id="SafeTimedThread.run"><a class="viewcode-back" href="../visualiser.html#visualiser.SafeTimedThread.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+            <span class="c1"># Locks the relevant thread</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tc</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>
+
+            <span class="c1"># Begins timer for elapsed time calculation</span>
+            <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+            <span class="c1"># Runs the function that was passed to the thread</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">run_function</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">funct_args</span><span class="p">)</span>
+
+            <span class="c1"># Wakes up relevant threads to listen for the thread release</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tc</span><span class="o">.</span><span class="n">notify_all</span><span class="p">()</span>
+
+            <span class="c1"># Releases thread</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tc</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+
+            <span class="c1"># Calculates the elapsed process time &amp; sleep for the remainder of the scan time</span>
+            <span class="n">end_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+            <span class="n">elapsed_time</span> <span class="o">=</span> <span class="n">end_time</span> <span class="o">-</span> <span class="n">start_time</span>
+            <span class="n">sleep_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scan_time</span> <span class="o">-</span> <span class="n">elapsed_time</span>
+
+            <span class="k">if</span> <span class="n">sleep_time</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">sleep_time</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Process time exceeds scan time&#39;</span><span class="p">)</span></div></div>
+
+
+<span class="k">def</span> <span class="nf">_animate_mayavi</span><span class="p">():</span>
+
+
+    <span class="n">hip_data_source</span> <span class="o">=</span> <span class="n">HipDataSource</span><span class="p">(</span><span class="n">pickle_path</span><span class="o">=</span><span class="s1">&#39;/home/adwaye/PycharmProjects/hip_shape/data&#39;</span>
+                                                <span class="s1">&#39;/Segmentation_and_landmarks_downsample_10/TOH - Controls/C4.p&#39;</span><span class="p">,</span>
+                                    <span class="n">decimator</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">points</span><span class="p">,</span><span class="n">faces</span> <span class="o">=</span> <span class="n">hip_data_source</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span>
+    <span class="n">points</span> <span class="o">=</span> <span class="n">points</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">points</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">_lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+
+
+    <span class="c1"># def run_main():</span>
+    <span class="c1">#     print(&#39;Running Main Controller&#39;)</span>
+    <span class="nd">@jax</span><span class="o">.</span><span class="n">jit</span>
+    <span class="k">def</span> <span class="nf">run_main</span><span class="p">():</span>
+        <span class="n">jax_func</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">points</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">init_vis</span><span class="p">():</span>
+        <span class="c1"># Creates a new Engine, starts it and creates a new scene</span>
+        <span class="n">engine</span> <span class="o">=</span> <span class="n">Engine</span><span class="p">()</span>
+        <span class="n">engine</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+        <span class="n">engine</span><span class="o">.</span><span class="n">new_scene</span><span class="p">()</span>
+
+        <span class="c1"># Initialise Plot</span>
+        <span class="n">polydata</span> <span class="o">=</span> <span class="n">tvtk</span><span class="o">.</span><span class="n">PolyData</span><span class="p">(</span><span class="n">points</span><span class="o">=</span><span class="n">points</span><span class="p">,</span><span class="n">polys</span><span class="o">=</span><span class="n">faces</span><span class="p">)</span>
+
+
+        <span class="n">mesh</span> <span class="o">=</span> <span class="n">mlab</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">surface</span><span class="p">(</span><span class="n">polydata</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">polydata</span><span class="p">,</span><span class="n">mesh</span>
+
+    <span class="n">hip_data_source</span> <span class="o">=</span> <span class="n">HipDataSource</span><span class="p">(</span><span class="n">pickle_path</span><span class="o">=</span><span class="s1">&#39;/home/adwaye/PycharmProjects/hip_shape/data&#39;</span>
+                                                <span class="s1">&#39;/Segmentation_and_landmarks_downsample_10/TOH - Controls/C8.p&#39;</span><span class="p">,</span>
+                                    <span class="n">decimator</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">points</span><span class="p">,</span><span class="n">faces</span> <span class="o">=</span> <span class="n">hip_data_source</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span>
+    <span class="n">points</span> <span class="o">=</span> <span class="n">points</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">points</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="nd">@mlab</span><span class="o">.</span><span class="n">animate</span><span class="p">(</span><span class="n">delay</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span><span class="n">ui</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">update_visualisation</span><span class="p">(</span><span class="n">polydata</span><span class="p">,</span><span class="n">mesh</span><span class="p">):</span>
+        <span class="n">pickle_loc</span> <span class="o">=</span> <span class="s1">&#39;/home/adwaye/PycharmProjects/hip_shape/data/Segmentation_and_landmarks_downsample_10/TOH - &#39;</span> \
+                     <span class="s1">&#39;Controls/&#39;</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pickle_loc</span><span class="p">,</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">pickle_loc</span><span class="p">)]</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">pickle_path</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">files</span><span class="p">):</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">:</span>
+                <span class="n">hip_data_source</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">pickle_path</span><span class="o">=</span><span class="n">pickle_path</span><span class="p">)</span>
+                <span class="n">points</span><span class="p">,</span><span class="n">faces</span> <span class="o">=</span> <span class="n">hip_data_source</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span>
+                <span class="n">points</span> <span class="o">=</span> <span class="n">points</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">points</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">polydata</span><span class="o">.</span><span class="n">points</span> <span class="o">=</span> <span class="n">points</span>
+                <span class="n">polydata</span><span class="o">.</span><span class="n">polys</span> <span class="o">=</span> <span class="n">faces</span>
+
+                <span class="n">x</span> <span class="o">=</span> <span class="n">points</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="n">points</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">z</span> <span class="o">=</span> <span class="n">points</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span>
+                <span class="c1"># drawing.mlab_source.x = x</span>
+                <span class="c1"># drawing.mlab_source.y = y</span>
+                <span class="c1"># drawing.mlab_source.z = z</span>
+                <span class="c1"># drawing.mlab_source.triangles = faces</span>
+                <span class="c1"># drawing.update()</span>
+                <span class="n">mesh</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+                <span class="c1">#drawing.mlab_source.trait_set(x=x,y=y,z=z,triangles=faces)</span>
+                <span class="k">yield</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">break</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Updating Visualisation&#39;</span><span class="p">)</span>
+        <span class="c1"># Pretend to receive data from external source</span>
+
+
+    <span class="n">c</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Condition</span><span class="p">()</span>
+
+    <span class="c1"># Create display window</span>
+    <span class="n">dwg</span> <span class="o">=</span> <span class="n">init_vis</span><span class="p">()</span>
+
+    <span class="c1"># Create safe timed thread for main thread and start</span>
+    <span class="n">main_thread</span> <span class="o">=</span> <span class="n">SafeTimedThread</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">run_main</span><span class="p">)</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+    <span class="c1"># Update using mlab animator</span>
+    <span class="n">vis_thread</span> <span class="o">=</span> <span class="n">update_visualisation</span><span class="p">(</span><span class="o">*</span><span class="n">dwg</span><span class="p">)</span>
+
+    <span class="n">mlab</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+
+    <span class="c1">#mlab.show()</span>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span><span class="o">==</span><span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">_test_data_getter</span><span class="p">()</span>
+    <span class="c1">#_test_mayavi_observer()</span>
+    <span class="c1">#_animate_mayavi()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2022, Adwaye Rambojun.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

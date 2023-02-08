@@ -1,0 +1,249 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="python" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>data_cleaning module &mdash; hip_shape 0.0.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> hip_shape
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">data_cleaning module</a></li>
+</ul>
+</div>
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">hip_shape</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>data_cleaning module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/data_cleaning.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="module-data_cleaning">
+<span id="data-cleaning-module"></span><h1>data_cleaning module<a class="headerlink" href="#module-data_cleaning" title="Permalink to this headline">¶</a></h1>
+<p>Script to turn the raw data into pickle files for easier loading</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="data_cleaning.to_pickle">
+<span class="sig-prename descclassname"><span class="pre">data_cleaning.</span></span><span class="sig-name descname"><span class="pre">to_pickle</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_cleaning.html#to_pickle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_cleaning.to_pickle" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Reads the raw files from ottawa and puts all the relevant data into a dictionary before saving said dictionary to a pickle file. The locations of the raw data to be converted as well as the target destination are global variables in the script. The dictionary out_dict for each data point has the following keys:</dt><dd><ol class="arabic simple">
+<li><dl class="simple">
+<dt><strong>out_dict['surface']</strong>: is a dictionary that saves the Pelvis surfaces and has keys 'RPel' and 'LPel' for the right pelvis and left pelvis respectively. out_dict['surface']['RPel']  and out_dict['surface']['RPel'] are a dictionaries with keys.</dt><dd><ul class="simple">
+<li><p>'points' : np.array shape [N1,3] of vertices.</p></li>
+<li><p>'faces'  : np.array shape [N2,3] of simplices where vertices[faces[:,i]] would be the coordinates of the i-th vertex in each triangle.</p></li>
+<li><p>'mesh_loc': the location of the raw mesh .stl file</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>out_dict['landmarks']</strong>: is a dictionary containing the ladnmarks placed on the hips with keys</dt><dd><ul class="simple">
+<li><p>'RASIS' : np.array shape (,3) location of the right anterior illiac spine on the triangular mesh definining the anterior pelvic plane</p></li>
+<li><p>'LASIS' : np.array shape (,3) location of the left anterior illiac spine on the triangular mesh definining the anterior pelvic plane</p></li>
+<li><p>'RTUB'  : np.array shape (,3) location of the right acetabulum on the triangular mesh definining the anterior pelvic plane</p></li>
+<li><p>'LTUB'  : np.array shape (,3) location of the left acetabulum on the triangular mesh definining the anterior</p></li>
+<li><p>'Right Ant Lat' : np.array shape (n1,3) right anterior socket crest</p></li>
+<li><p>'Right Post Lat': np.array shape (n2,3) right posterior socket crest</p></li>
+<li><p>'Left Ant Lat'  : np.array shape (n3,3) left anterior socket crest</p></li>
+<li><p>'Left Post Lat' : np.array shape (n4,3) left posterior socket crest</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ol>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2022, Adwaye Rambojun.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,574 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="python" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>utils &mdash; hip_shape 0.0.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> hip_shape
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">hip_shape</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html">Module code</a> &raquo;</li>
+        
+      <li>utils</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for utils</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Contains some methods used to align hips&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">ndimage</span> <span class="k">as</span> <span class="n">ndi</span>
+<span class="kn">from</span> <span class="nn">jax.scipy</span> <span class="kn">import</span> <span class="n">ndimage</span> <span class="k">as</span> <span class="n">jndi</span>
+<span class="kn">import</span> <span class="nn">jax.scipy.optimize</span> <span class="k">as</span> <span class="nn">optimize</span>
+<span class="kn">import</span> <span class="nn">jax.numpy</span> <span class="k">as</span> <span class="nn">jnp</span>
+<span class="kn">import</span> <span class="nn">edt</span> <span class="c1">#got this from https://github.com/seung-lab/euclidean-distance-transform-3d</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="n">dtype</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">float32</span>
+
+<div class="viewcode-block" id="FourierFitter"><a class="viewcode-back" href="../utils.html#utils.FourierFitter">[docs]</a><span class="k">class</span> <span class="nc">FourierFitter</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">order</span><span class="o">=</span><span class="mi">20</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_x</span> <span class="o">=</span> <span class="n">x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_y</span> <span class="o">=</span> <span class="n">y</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_order</span> <span class="o">=</span> <span class="n">order</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">get_locust</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">get_coeffs</span><span class="p">()</span>
+
+
+
+<div class="viewcode-block" id="FourierFitter.get_locust"><a class="viewcode-back" href="../utils.html#utils.FourierFitter.get_locust">[docs]</a>    <span class="k">def</span> <span class="nf">get_locust</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        returns the A0, C0 from</span>
+<span class="sd">        Nonlinear Shape Manifolds as Shape Priors in Level Set Segmentation and</span>
+<span class="sd">        Tracking</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_x</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_y</span>
+
+        <span class="n">K</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">delta_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">delta_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">delta_t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">delta_x</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">delta_y</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">t_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([([</span><span class="mf">0.0</span><span class="p">]),</span><span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">delta_t</span><span class="p">)])</span>
+
+        <span class="n">perimeter</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">delta_t</span><span class="p">)</span>
+        <span class="n">psi_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">delta_x</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">delta_x</span> <span class="o">/</span> <span class="n">delta_t</span><span class="p">)</span> <span class="o">*</span> <span class="n">t_array</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="n">psi_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">delta_y</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">delta_y</span> <span class="o">/</span> <span class="n">delta_t</span><span class="p">)</span> <span class="o">*</span> <span class="n">t_array</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+        <span class="n">t_diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">t_array</span><span class="p">)</span>
+        <span class="n">t_diff</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">t_diff2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">t_array</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">t_diff2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">A0</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">perimeter</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">delta_x</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">delta_t</span><span class="p">))</span> <span class="o">*</span> <span class="n">t_diff2</span> <span class="o">+</span> <span class="n">psi_x</span> <span class="o">*</span> <span class="n">t_diff</span><span class="p">)</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">C0</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">perimeter</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">delta_x</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">delta_t</span><span class="p">))</span> <span class="o">*</span> <span class="n">t_diff2</span> <span class="o">+</span> <span class="n">psi_x</span> <span class="o">*</span> <span class="n">t_diff</span><span class="p">)</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">A0</span> <span class="o">=</span> <span class="n">A0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">C0</span> <span class="o">=</span> <span class="n">C0</span></div>
+
+
+<div class="viewcode-block" id="FourierFitter.get_coeffs"><a class="viewcode-back" href="../utils.html#utils.FourierFitter.get_coeffs">[docs]</a>    <span class="k">def</span> <span class="nf">get_coeffs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_x</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_y</span>
+
+        <span class="n">delta_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">delta_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">delta_t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">delta_x</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">delta_y</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">t_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([([</span><span class="mf">0.0</span><span class="p">]),</span><span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">delta_t</span><span class="p">)])</span>
+
+        <span class="n">perimeter</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">delta_t</span><span class="p">)</span>
+        <span class="n">psi_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">delta_x</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">delta_x</span> <span class="o">/</span> <span class="n">delta_t</span><span class="p">)</span> <span class="o">*</span> <span class="n">t_array</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="n">psi_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">delta_y</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">delta_y</span> <span class="o">/</span> <span class="n">delta_t</span><span class="p">)</span> <span class="o">*</span> <span class="n">t_array</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+        <span class="n">t_diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">t_array</span><span class="p">)</span>
+        <span class="n">t_diff</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">t_diff2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">t_array</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">t_diff2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">A0</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">perimeter</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">delta_x</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">delta_t</span><span class="p">))</span> <span class="o">*</span> <span class="n">t_diff2</span> <span class="o">+</span> <span class="n">psi_x</span> <span class="o">*</span> <span class="n">t_diff</span><span class="p">)</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">C0</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">perimeter</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">delta_y</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">delta_t</span><span class="p">))</span> <span class="o">*</span> <span class="n">t_diff2</span> <span class="o">+</span> <span class="n">psi_y</span> <span class="o">*</span> <span class="n">t_diff</span><span class="p">)</span> <span class="o">+</span> <span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">order</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_order</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">order</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">constants</span> <span class="o">=</span> <span class="n">perimeter</span> <span class="o">/</span> <span class="p">(</span><span class="n">k</span> <span class="o">*</span> <span class="n">k</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">t_array_e</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">t_array</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">arg_array</span> <span class="o">=</span> <span class="n">k</span> <span class="o">*</span> <span class="n">t_array_e</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="n">perimeter</span>
+
+        <span class="n">cos_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">arg_array</span><span class="p">)</span>
+        <span class="n">sin_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">arg_array</span><span class="p">)</span>
+
+        <span class="n">a_k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>  <span class="p">([</span><span class="n">A0</span><span class="p">],</span>
+                              <span class="n">constants</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">delta_x</span><span class="o">/</span><span class="n">delta_t</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">cos_array</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                                                <span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>  <span class="p">)</span>
+        <span class="n">b_k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>  <span class="p">([</span><span class="mf">0.0</span><span class="p">],</span>
+                              <span class="n">constants</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">delta_x</span><span class="o">/</span><span class="n">delta_t</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">sin_array</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                               <span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)))</span>
+
+        <span class="n">c_k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(([</span><span class="n">C0</span><span class="p">],</span><span class="n">constants</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">delta_y</span><span class="o">/</span><span class="n">delta_t</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">cos_array</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                                                     <span class="p">,</span>
+                                               <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)))</span>
+        <span class="n">d_k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(([</span><span class="mf">0.0</span><span class="p">],</span><span class="n">constants</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">delta_y</span><span class="o">/</span><span class="n">delta_t</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">sin_array</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                                                     <span class="p">,</span>
+                                               <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span> <span class="o">=</span>  <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="n">a_k</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span>
+            <span class="n">b_k</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span>
+            <span class="n">c_k</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span>
+            <span class="n">d_k</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span>
+        <span class="p">],</span>
+        <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+<div class="viewcode-block" id="FourierFitter.sample_pts"><a class="viewcode-back" href="../utils.html#utils.FourierFitter.sample_pts">[docs]</a>    <span class="k">def</span> <span class="nf">sample_pts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">t</span><span class="p">):</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coeffs</span><span class="p">[:,</span><span class="mi">3</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">sample_fourier</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">c</span><span class="p">,</span><span class="n">d</span><span class="p">)</span></div></div>
+
+
+
+<div class="viewcode-block" id="sample_fourier"><a class="viewcode-back" href="../utils.html#utils.sample_fourier">[docs]</a><span class="k">def</span> <span class="nf">sample_fourier</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">c</span><span class="p">,</span><span class="n">d</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">==</span><span class="mi">2</span><span class="p">:</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">B</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">K</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">k_seq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">K</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">K</span><span class="p">))</span>
+    <span class="n">k_t_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">k_seq</span><span class="p">)</span>
+
+    <span class="n">cos_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">k_t_arr</span><span class="p">)</span>
+    <span class="n">sin_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">k_t_arr</span><span class="p">)</span>
+
+    <span class="n">x_terms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">cos_arr</span><span class="p">,</span><span class="n">a</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">sin_arr</span><span class="p">,</span><span class="n">b</span><span class="p">)</span>
+    <span class="n">y_terms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">cos_arr</span><span class="p">,</span><span class="n">c</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">sin_arr</span><span class="p">,</span><span class="n">d</span><span class="p">)</span>
+
+    <span class="n">tf_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">x_terms</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span><span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">tf_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">y_terms</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span><span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">sampled_pts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">tf_x</span><span class="p">,</span><span class="n">tf_y</span><span class="p">),</span><span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+
+    <span class="k">return</span> <span class="n">sampled_pts</span></div>
+
+
+
+
+<span class="k">def</span> <span class="nf">_make_distance_transform</span><span class="p">(</span><span class="n">points</span><span class="p">,</span><span class="n">size</span><span class="p">,</span><span class="n">ncpus</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Generates a distance array of shape size where len(size)=3 where the distance array is calculated from the points takes in a set of points where np.max(points,axis=0) &lt; size</span>
+
+<span class="sd">    :param points: [N,3] np array of points representing the set of points from which the distance transform is being calculated</span>
+<span class="sd">                   points need to lie within [0,size[0]]\times[0,size[1]]\times[0,size[2]]</span>
+<span class="sd">    :param size:   tuple, array of length 3</span>
+<span class="sd">    :return: array of sshape size whose values represent the minimum distance from the set of points</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1">#making a mask to be used by edt.edt</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">size</span><span class="o">.</span><span class="n">ravel</span><span class="p">())</span>
+    <span class="c1">#&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">pt</span> <span class="ow">in</span> <span class="n">points</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">):</span>
+        <span class="c1">#print(pt)</span>
+        <span class="n">mask</span><span class="p">[</span><span class="n">pt</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">pt</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">pt</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="n">mask</span>      <span class="o">=</span> <span class="n">mask</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+
+    <span class="n">ncpus</span><span class="o">=</span><span class="mi">4</span>
+    <span class="n">dt</span> <span class="o">=</span> <span class="n">edt</span><span class="o">.</span><span class="n">edt</span><span class="p">(</span><span class="n">data</span><span class="o">=~</span><span class="n">mask</span><span class="p">,</span><span class="n">anisotropy</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">black_border</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">order</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">,</span><span class="n">parallel</span><span class="o">=</span><span class="n">ncpus</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">dt</span>
+
+
+<span class="k">def</span> <span class="nf">_embed_points_in_array</span><span class="p">(</span><span class="n">points1</span><span class="p">,</span><span class="n">points2</span><span class="p">,</span><span class="n">padding</span><span class="o">=</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span><span class="mi">100</span><span class="p">)):</span>
+    <span class="sd">&quot;&quot;&quot;Translates points1 and points2 so that they live in a square domain [0,size[0]]\times[0,size[1]]\times[0,size[2]]</span>
+
+<span class="sd">    :param points1: np.array [N1,3]</span>
+<span class="sd">    :param points2: np.array [N2,3]</span>
+<span class="sd">    :param padding: padding to be applied so that size-np.max([points1,points2],axis=0)&gt;padding[0] and np.max([points1,</span>
+<span class="sd">                    points2],axis=0)-0&gt;padding[1]</span>
+<span class="sd">                    padding to be added on either side of embedding array</span>
+<span class="sd">    :return: points1_proc np.array [N1,3] points1 translated</span>
+<span class="sd">            ,points2_proc np.array [N1,3] points2 translated</span>
+<span class="sd">            ,size tuple shape of array that would contain the above 2 points</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">points1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="n">points2</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">padding</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
+    <span class="n">padding_plus</span>  <span class="o">=</span> <span class="n">padding</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">padding_minus</span> <span class="o">=</span> <span class="n">padding</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">points1_cent</span>  <span class="o">=</span> <span class="n">points1</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">points1</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">points2_cent</span>  <span class="o">=</span> <span class="n">points2</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">points2</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">merged_pts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">points1_cent</span><span class="p">,</span><span class="n">points2_cent</span><span class="p">],</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">max_array</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">merged_pts</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">+</span><span class="n">padding_plus</span> <span class="c1">#add some padding</span>
+    <span class="n">min_array</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">merged_pts</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">-</span><span class="n">padding_minus</span>
+    <span class="n">size</span>       <span class="o">=</span> <span class="n">max_array</span><span class="o">-</span><span class="n">min_array</span>
+    <span class="n">size</span>       <span class="o">=</span> <span class="n">size</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="n">points1_proc</span> <span class="o">=</span> <span class="n">points1_cent</span><span class="o">+</span><span class="n">size</span><span class="o">//</span><span class="mi">2</span>
+    <span class="n">points2_proc</span>   <span class="o">=</span> <span class="n">points2_cent</span><span class="o">+</span><span class="n">size</span><span class="o">//</span><span class="mi">2</span>
+
+    <span class="k">return</span> <span class="n">points1_proc</span><span class="p">,</span><span class="n">points2_proc</span><span class="p">,</span><span class="n">size</span>
+
+
+<div class="viewcode-block" id="eval_distance"><a class="viewcode-back" href="../utils.html#utils.eval_distance">[docs]</a><span class="k">def</span> <span class="nf">eval_distance</span><span class="p">(</span><span class="n">points</span><span class="p">,</span><span class="n">dist</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;finds the value of the scalar field dist with support [0,dist.shape[0]]\times[0,dist.shape[1]]\times[0,dist.shape[1]]</span>
+
+<span class="sd">    :param points: np.array [N,3] list of points wwhere the scalar field given by dist needs to be evaluated</span>
+<span class="sd">    :param dist:   scalar array with support [0,dist.shape[0]]\times[0,dist.shape[1]]\times[0,</span>
+<span class="sd">                   dist.shape[1]] np.array size [Nx,Ny,Nz]</span>
+<span class="sd">    :return: array of values [N]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">==</span><span class="mi">2</span>
+    <span class="k">if</span> <span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">!=</span><span class="mi">3</span><span class="p">:</span>
+        <span class="n">points</span><span class="o">=</span><span class="n">points</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
+    <span class="n">xn</span> <span class="o">=</span> <span class="n">points</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span><span class="c1">#.astype(np.int)</span>
+    <span class="n">yn</span> <span class="o">=</span> <span class="n">points</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span><span class="c1">#.astype(np.int)</span>
+    <span class="n">zn</span> <span class="o">=</span> <span class="n">points</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span><span class="c1">#.astype(np.int)</span>
+
+    <span class="n">dist_vals</span> <span class="o">=</span> <span class="n">ndi</span><span class="o">.</span><span class="n">interpolation</span><span class="o">.</span><span class="n">map_coordinates</span><span class="p">(</span><span class="n">dist</span><span class="p">,</span> <span class="p">[</span><span class="n">yn</span><span class="p">,</span> <span class="n">xn</span><span class="p">,</span> <span class="n">zn</span><span class="p">],</span> <span class="n">order</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">dist_vals</span></div>
+
+
+<div class="viewcode-block" id="jax_eval_distance"><a class="viewcode-back" href="../utils.html#utils.jax_eval_distance">[docs]</a><span class="k">def</span> <span class="nf">jax_eval_distance</span><span class="p">(</span><span class="n">points</span><span class="p">,</span><span class="n">dist</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;finds the value of the scalar field dist with support [0,dist.shape[0]]\times[0,dist.shape[1]]\times[0,dist.shape[1]]</span>
+
+<span class="sd">    :param points: np.array [N,3] list of points wwhere the scalar field given by dist needs to be evaluated</span>
+<span class="sd">    :param dist:   scalar array with support [0,dist.shape[0]]\times[0,dist.shape[1]]\times[0,</span>
+<span class="sd">                   dist.shape[1]] np.array size [Nx,Ny,Nz]</span>
+<span class="sd">    :return: array of values [N]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
+    <span class="k">if</span> <span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="n">points</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
+    <span class="n">xn</span> <span class="o">=</span> <span class="n">points</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span><span class="c1">#.astype(np.int)</span>
+    <span class="n">yn</span> <span class="o">=</span> <span class="n">points</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span><span class="c1">#.astype(np.int)</span>
+    <span class="n">zn</span> <span class="o">=</span> <span class="n">points</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span><span class="c1">#.astype(np.int)</span>
+    <span class="c1">#print(f&#39;z shape is {zn.shape}&#39;)</span>
+    <span class="n">dist_vals</span> <span class="o">=</span> <span class="n">jndi</span><span class="o">.</span><span class="n">map_coordinates</span><span class="p">(</span><span class="n">dist</span><span class="p">,</span> <span class="p">[</span><span class="n">yn</span><span class="p">,</span> <span class="n">xn</span><span class="p">,</span> <span class="n">zn</span><span class="p">],</span> <span class="n">order</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">dist_vals</span></div>
+
+
+<div class="viewcode-block" id="jax_yaw_matrix"><a class="viewcode-back" href="../utils.html#utils.jax_yaw_matrix">[docs]</a><span class="k">def</span> <span class="nf">jax_yaw_matrix</span><span class="p">(</span><span class="n">angle</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the yaw matrix with angle (rotation around z-axis) see https://en.wikipedia.org/wiki /Rotation_matrix in_three_dimensions</span>
+
+<span class="sd">    :param angle:</span>
+<span class="sd">    :return:</span>
+<span class="sd">    #https: // en.wikipedia.org / wiki / Rotation_matrix  #In_three_dimensions</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">jnp</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span> <span class="p">,</span> <span class="o">-</span><span class="n">jnp</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">),</span> <span class="mi">0</span><span class="p">],</span>
+                     <span class="p">[</span><span class="n">jnp</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span> <span class="p">,</span>  <span class="n">jnp</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">),</span> <span class="mi">0</span><span class="p">],</span>
+                     <span class="p">[</span><span class="mi">0</span>               <span class="p">,</span> <span class="mi">0</span><span class="p">,</span>               <span class="mi">1</span><span class="p">]</span>
+                     <span class="p">],</span><span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+<div class="viewcode-block" id="jax_pitch_matrix"><a class="viewcode-back" href="../utils.html#utils.jax_pitch_matrix">[docs]</a><span class="k">def</span> <span class="nf">jax_pitch_matrix</span><span class="p">(</span><span class="n">angle</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the pitch matrix with angle (rotation around y-axis) see https://en.wikipedia.org/wiki /Rotation_matrix in_three_dimensions</span>
+
+<span class="sd">    :param angle:</span>
+<span class="sd">    :return:</span>
+<span class="sd">    #https: // en.wikipedia.org / wiki / Rotation_matrix  #In_three_dimensions</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">jnp</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span> <span class="p">,</span> <span class="mi">0</span> <span class="p">,</span> <span class="n">jnp</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">)],</span>
+                     <span class="p">[</span><span class="mi">0</span>              <span class="p">,</span> <span class="mi">1</span> <span class="p">,</span> <span class="mi">0</span>             <span class="p">],</span>
+                     <span class="p">[</span><span class="o">-</span><span class="n">jnp</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">),</span> <span class="mi">0</span> <span class="p">,</span> <span class="n">jnp</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">)]</span>
+                     <span class="p">],</span><span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+
+<div class="viewcode-block" id="jax_roll_matrix"><a class="viewcode-back" href="../utils.html#utils.jax_roll_matrix">[docs]</a><span class="k">def</span> <span class="nf">jax_roll_matrix</span><span class="p">(</span><span class="n">angle</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the roll matrix with angle (rotation around x-axis) see https://en.wikipedia.org/wiki /Rotation_matrix in_three_dimensions</span>
+
+<span class="sd">    :param angle:</span>
+<span class="sd">    :return:</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span>             <span class="mi">0</span> <span class="p">,</span>               <span class="mi">0</span><span class="p">],</span>
+                     <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">jnp</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span> <span class="p">,</span> <span class="o">-</span><span class="n">jnp</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">)],</span>
+                     <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">jnp</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span> <span class="p">,</span>  <span class="n">jnp</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">)]</span>
+                     <span class="p">],</span><span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+<div class="viewcode-block" id="jax_rotation_matrix3d"><a class="viewcode-back" href="../utils.html#utils.jax_rotation_matrix3d">[docs]</a><span class="k">def</span> <span class="nf">jax_rotation_matrix3d</span><span class="p">(</span><span class="n">yaw_angle</span><span class="p">,</span><span class="n">pitch_angle</span><span class="p">,</span><span class="n">roll_angle</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Build a 3d rotation matrix see https://en.wikipedia.org/wiki /Rotation_matrix in_three_dimensions</span>
+
+<span class="sd">    :param yaw_angle: z-axis rotation angle:param yaw_angle:</span>
+<span class="sd">    :type yaw_angle: float scalar</span>
+<span class="sd">    :param pitch_angle: y-axis rotation angle</span>
+<span class="sd">    :type pitch_angle: float scalar</span>
+<span class="sd">    :param roll_angle: z-axis rotation angle</span>
+<span class="sd">    :type roll_angle: float scalar</span>
+<span class="sd">    :return: 3d rotation matrix</span>
+<span class="sd">    :rtype: jax array shape (3,3)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">yaw_mat</span>   <span class="o">=</span> <span class="n">jax_yaw_matrix</span><span class="p">(</span><span class="n">yaw_angle</span><span class="p">)</span>
+    <span class="n">pitch_mat</span> <span class="o">=</span> <span class="n">jax_pitch_matrix</span><span class="p">(</span><span class="n">pitch_angle</span><span class="p">)</span>
+    <span class="n">roll_mat</span>  <span class="o">=</span> <span class="n">jax_roll_matrix</span><span class="p">(</span><span class="n">roll_angle</span><span class="p">)</span>
+
+    <span class="n">out</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">pitch_mat</span><span class="p">,</span><span class="n">roll_mat</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">yaw_mat</span><span class="p">,</span><span class="n">out</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+
+<div class="viewcode-block" id="affine_cost"><a class="viewcode-back" href="../utils.html#utils.affine_cost">[docs]</a><span class="k">def</span> <span class="nf">affine_cost</span><span class="p">(</span><span class="n">affine_params</span><span class="p">,</span><span class="n">points</span><span class="p">,</span><span class="n">dist</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    :param affine_params: affine parameters</span>
+<span class="sd">                          yaw_angle   = affine_params[0]</span>
+<span class="sd">                          pitch_angle = affine_params[1]</span>
+<span class="sd">                          roll_angle  = affine_params[2]</span>
+<span class="sd">                          translation = affine_params[3:]</span>
+<span class="sd">    :type affine_params: array</span>
+<span class="sd">    :param points:</span>
+<span class="sd">    :type points:</span>
+<span class="sd">    :param dist:</span>
+<span class="sd">    :type dist:</span>
+<span class="sd">    :return:</span>
+<span class="sd">    :rtype:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">affine_params</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">6</span><span class="p">,)</span>
+    <span class="n">yaw_angle</span>   <span class="o">=</span> <span class="n">affine_params</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">pitch_angle</span> <span class="o">=</span> <span class="n">affine_params</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">roll_angle</span>  <span class="o">=</span> <span class="n">affine_params</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">translation</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">affine_params</span><span class="p">[</span><span class="mi">3</span><span class="p">:],</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">!=</span><span class="mi">3</span><span class="p">:</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="n">points</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
+
+
+    <span class="k">return</span> <span class="n">_affine_cost</span><span class="p">(</span><span class="n">yaw_angle</span><span class="p">,</span><span class="n">pitch_angle</span><span class="p">,</span><span class="n">roll_angle</span><span class="p">,</span><span class="n">translation</span><span class="p">,</span><span class="n">points</span><span class="p">,</span><span class="n">dist</span><span class="p">)</span></div>
+
+<span class="k">def</span> <span class="nf">_affine_cost</span><span class="p">(</span><span class="n">yaw_angle</span><span class="p">,</span><span class="n">pitch_angle</span><span class="p">,</span><span class="n">roll_angle</span><span class="p">,</span><span class="n">translation</span><span class="p">,</span><span class="n">points</span><span class="p">,</span><span class="n">dist</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;returns the sum of the distance transform evaluated at the affine transformed points with rotation matrix</span>
+<span class="sd">    given by yaw_angle,pitch_angle,roll_angle and translation given by translation</span>
+
+<span class="sd">    :param yaw_angle: scalar  float</span>
+<span class="sd">    :param pitch_angle: scalar float</span>
+<span class="sd">    :param roll_angle:  scalar float</span>
+<span class="sd">    :param translation:  array shape [3]</span>
+<span class="sd">    :param dist: distance transform on which to evaluate scalar</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="mi">3</span>
+    <span class="k">assert</span> <span class="n">translation</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">rot_matrix</span>  <span class="o">=</span> <span class="n">jax_rotation_matrix3d</span><span class="p">(</span><span class="n">yaw_angle</span><span class="p">,</span><span class="n">pitch_angle</span><span class="p">,</span><span class="n">roll_angle</span><span class="p">)</span>
+
+    <span class="n">mean_points</span>  <span class="o">=</span>  <span class="n">jnp</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">points</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">trans_points</span> <span class="o">=</span>  <span class="n">jnp</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">rot_matrix</span><span class="p">,</span><span class="n">points</span><span class="o">-</span><span class="n">mean_points</span><span class="p">),</span><span class="n">translation</span><span class="p">)</span>
+    <span class="c1">#print(f&#39;transformed points have shape {trans_points.shape}&#39;)</span>
+    <span class="n">dist_vals</span>    <span class="o">=</span> <span class="n">jax_eval_distance</span><span class="p">(</span><span class="n">trans_points</span><span class="p">,</span><span class="n">dist</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">jnp</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dist_vals</span><span class="p">),</span><span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">))</span>
+
+
+
+<div class="viewcode-block" id="align_Planes_bfgs"><a class="viewcode-back" href="../utils.html#utils.align_Planes_bfgs">[docs]</a><span class="k">def</span> <span class="nf">align_Planes_bfgs</span><span class="p">(</span><span class="n">plane1</span><span class="p">,</span> <span class="n">plane2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;rotates two planes so that they are parallel to each other. Uses bfgs to find optimal yaw, pitch and roll angle that minimizes the distance between the normal of plane1 and the rotated normal of plane2</span>
+
+
+<span class="sd">    :param plane1: reference plane</span>
+<span class="sd">    :type plane1: skspatial.objects.plane.Plane</span>
+<span class="sd">    :param plane2: skspatial.objects.plane.Plane</span>
+<span class="sd">    :type plane2: plane to be rotated</span>
+<span class="sd">    :return: rotation matrix mapping plane2 onto plane1</span>
+<span class="sd">    :rtype: jnp.array</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">normal1</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">plane1</span><span class="o">.</span><span class="n">normal</span><span class="p">,</span><span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="n">normal2</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">plane2</span><span class="o">.</span><span class="n">normal</span><span class="p">,</span><span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+
+    <span class="n">params</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">cost_function</span><span class="p">(</span><span class="n">params</span><span class="p">,</span><span class="n">normal1</span><span class="p">,</span><span class="n">normal2</span><span class="p">):</span>
+        <span class="n">rot_matrix</span> <span class="o">=</span> <span class="n">jax_rotation_matrix3d</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">params</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">params</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">cost</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">normal1</span><span class="o">-</span><span class="n">jnp</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">rot_matrix</span><span class="p">,</span><span class="n">normal2</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">cost</span>
+
+
+    <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
+    <span class="c1"># loss_fn = partial(cost_function,normal1=normal1,normal2=normal2)</span>
+    <span class="n">loss_fn</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">cost_function</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">normal1</span><span class="p">,</span> <span class="n">normal2</span><span class="p">)</span>
+
+
+    <span class="n">res</span> <span class="o">=</span> <span class="n">optimize</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span><span class="n">loss_fn</span><span class="p">,</span><span class="n">params</span><span class="p">,</span><span class="n">method</span><span class="o">=</span><span class="s1">&#39;BFGS&#39;</span><span class="p">,</span><span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;maxiter&#39;</span><span class="p">:</span><span class="mi">100</span><span class="p">})</span>
+
+    <span class="n">rot_matrix</span> <span class="o">=</span> <span class="n">jax_rotation_matrix3d</span><span class="p">(</span><span class="o">*</span><span class="n">res</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">rot_matrix</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2022, Adwaye Rambojun.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,709 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="python" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>data_utils module &mdash; hip_shape 0.0.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> hip_shape
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">data_utils module</a></li>
+</ul>
+</div>
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">hip_shape</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>data_utils module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/data_utils.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="module-data_utils">
+<span id="data-utils-module"></span><h1>data_utils module<a class="headerlink" href="#module-data_utils" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="data_utils.HipData">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_utils.</span></span><span class="sig-name descname"><span class="pre">HipData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pickle_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decimator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_utils.html#HipData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_utils.HipData" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Data class for hip surfaces</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pickle_path</strong> (<em>str</em>) -- path to pickle file. Needs to be the output of data_cleaning._to_pickle</p></li>
+<li><p><strong>decimator</strong> (<a class="reference internal" href="#data_utils.MeshDecimator" title="data_utils.MeshDecimator"><em>MeshDecimator</em></a><em> or </em><em>None</em>) -- object that provided an interface to downsample the number of faces in self.data['surface]['RPEL']
+and self.data['surface]['LPEL']</p></li>
+</ul>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">decimator</span> <span class="o">=</span> <span class="n">MeshLibDecimator</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;data/Segmentation_and_landmarks_processed/TOH - Controls/C10.p&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">hip_data</span> <span class="o">=</span> <span class="n">HipData</span><span class="p">(</span><span class="n">pickle_path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span><span class="n">decimator</span><span class="o">=</span><span class="n">decimator</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><a class="reference internal" href="#data_utils.HipData.APP_coords" title="data_utils.HipData.APP_coords"><code class="xref py py-obj docutils literal notranslate"><span class="pre">APP_coords</span></code></a></dt><dd><p>returns the app plane coodinates</p>
+</dd>
+<dt><a class="reference internal" href="#data_utils.HipData.LPEL" title="data_utils.HipData.LPEL"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LPEL</span></code></a></dt><dd><p>returns the left pelvis point cloud. if self.rot_mat is not None, the points are rotated.</p>
+</dd>
+<dt><a class="reference internal" href="#data_utils.HipData.RPEL" title="data_utils.HipData.RPEL"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RPEL</span></code></a></dt><dd><p>returns the right pelvis point cloud. if self.rot_mat is not None, the points are rotated.</p>
+</dd>
+<dt><a class="reference internal" href="#data_utils.HipData.left_socket" title="data_utils.HipData.left_socket"><code class="xref py py-obj docutils literal notranslate"><span class="pre">left_socket</span></code></a></dt><dd><p>returns the left socket plane crest points. if self.rot_mat is not None, the points are rotated.</p>
+</dd>
+<dt><a class="reference internal" href="#data_utils.HipData.right_socket" title="data_utils.HipData.right_socket"><code class="xref py py-obj docutils literal notranslate"><span class="pre">right_socket</span></code></a></dt><dd><p>returns the right socket plane crest points. if self.rot_mat is not None, the points are rotated.</p>
+</dd>
+<dt><a class="reference internal" href="#data_utils.HipData.rot_mat" title="data_utils.HipData.rot_mat"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rot_mat</span></code></a></dt><dd><p>Return the rotation matrix that makes the data rotation invariant.</p>
+</dd>
+<dt><a class="reference internal" href="#data_utils.HipData.trans_vect" title="data_utils.HipData.trans_vect"><code class="xref py py-obj docutils literal notranslate"><span class="pre">trans_vect</span></code></a></dt><dd><p>Returns the translation vector required to make the data translation invariant</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#data_utils.HipData.decimate" title="data_utils.HipData.decimate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">decimate</span></code></a>(max_num_faces[, save_path, ...])</p></td>
+<td><p>Calls meshlib to reduce the number of faces in the RPel and LPel surfaces.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#data_utils.HipData.get_plotly_graph" title="data_utils.HipData.get_plotly_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_plotly_graph</span></code></a>([color])</p></td>
+<td><p>Returns the plotly 3d graph associated with each of the left and right pelvis</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#data_utils.HipData.rotate" title="data_utils.HipData.rotate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rotate</span></code></a>(points)</p></td>
+<td><p>Rotates a set of points by using self.rot_mat.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#data_utils.HipData.save_data" title="data_utils.HipData.save_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_data</span></code></a>(location)</p></td>
+<td><p>Saves self.data as a pickle file.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#data_utils.HipData.translate" title="data_utils.HipData.translate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">translate</span></code></a>(points)</p></td>
+<td><p>Rotates a set of points by using self.trans_vect.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py property">
+<dt class="sig sig-object py" id="data_utils.HipData.APP_coords">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">APP_coords</span></span><a class="headerlink" href="#data_utils.HipData.APP_coords" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the app plane coodinates</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>array shape (4,3) containing the APP coordinates</p>
+</dd>
+</dl>
+<p>:rtype:np.array</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="data_utils.HipData.LPEL">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">LPEL</span></span><a class="headerlink" href="#data_utils.HipData.LPEL" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the left pelvis point cloud. if self.rot_mat is not None, the points are rotated.
+Similarly if self.trans_vect is not None, the points are translated</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>list if points,faces where
+<strong>points</strong>: np.array shape [N1,3] of vertices.
+<strong>faces</strong> : np.array shape [N2,3] of simplices where vertices[faces[:,i]] would be the coordinates of the i-th vertex in each triangle.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>list(np.array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="data_utils.HipData.RPEL">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RPEL</span></span><a class="headerlink" href="#data_utils.HipData.RPEL" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the right pelvis point cloud. if self.rot_mat is not None, the points are rotated.
+Similarly if self.trans_vect is not None, the points are translated</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>list if points,faces where
+<strong>points</strong>: np.array shape [N1,3] of vertices.
+<strong>faces</strong> : np.array shape [N2,3] of simplices where vertices[faces[:,i]] would be the coordinates of the i-th vertex in each triangle.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>np.array</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list(np.array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_utils.HipData.decimate">
+<span class="sig-name descname"><span class="pre">decimate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_num_faces</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_it</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/data_utils.html#HipData.decimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_utils.HipData.decimate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calls meshlib to reduce the number of faces in the RPel and LPel surfaces.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>max_num_faces</strong> (<em>int</em>) -- maximum number of faces</p></li>
+<li><p><strong>save_path</strong> (<em>str</em><em> or </em><em>None</em>) -- default to None, in which case, the downsampled mesh is not saved. If a path is provided,
+then the downsampled mesh is saved for each pelves. self.data is also updated with this info</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_utils.HipData.get_plotly_graph">
+<span class="sig-name descname"><span class="pre">get_plotly_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'lightpink'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="reference internal" href="_modules/data_utils.html#HipData.get_plotly_graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_utils.HipData.get_plotly_graph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the plotly 3d graph associated with each of the left and right pelvis</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>[left_mesh_plot,right_mesh_plot] left and right pelvis pot objects</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>tuple(plotly.graph_objects.Mesh3d,plotly.graph_objects.Mesh3d)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="data_utils.HipData.left_socket">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">left_socket</span></span><a class="headerlink" href="#data_utils.HipData.left_socket" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the left socket plane crest points. if self.rot_mat is not None, the points are rotated.
+Similarly if self.trans_vect is not None, the points are translated</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>points correponding to the socket opening plane shape (N,3)</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="data_utils.HipData.right_socket">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">right_socket</span></span><a class="headerlink" href="#data_utils.HipData.right_socket" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the right socket plane crest points. if self.rot_mat is not None, the points are rotated.
+Similarly if self.trans_vect is not None, the points are translated</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>points correponding to the socket opening plane shape (N,3)</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="data_utils.HipData.rot_mat">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rot_mat</span></span><a class="headerlink" href="#data_utils.HipData.rot_mat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the rotation matrix that makes the data rotation invariant. Will usually align to a pre decided template. Returns None if not present</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>rotation matrix np.array shape (3,3) or None is no rotation invariance has been imposed</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>np.array or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_utils.HipData.rotate">
+<span class="sig-name descname"><span class="pre">rotate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.array</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.array</span></span></span><a class="reference internal" href="_modules/data_utils.html#HipData.rotate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_utils.HipData.rotate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rotates a set of points by using self.rot_mat. if self.rot_mat is None, returns the points as is</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>points</strong> (<em>array shape</em><em> (</em><em>3</em><em>,</em><em>N</em><em>)</em>) -- points to be rotated</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>rotated points</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>array shape (N,3)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_utils.HipData.save_data">
+<span class="sig-name descname"><span class="pre">save_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">location</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/data_utils.html#HipData.save_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_utils.HipData.save_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves self.data as a pickle file. The saved file name is the same as the original filename. The pickle file is saved in location/self.pickle_path</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>location</strong> (<em>str</em>) -- path pointing to a folder where the pickle file should saved</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="data_utils.HipData.trans_vect">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">trans_vect</span></span><a class="headerlink" href="#data_utils.HipData.trans_vect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the translation vector required to make the data translation invariant</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>vector shape (1,3) or None if no translation invariance has been imposed</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>np.array or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_utils.HipData.translate">
+<span class="sig-name descname"><span class="pre">translate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.array</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.array</span></span></span><a class="reference internal" href="_modules/data_utils.html#HipData.translate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_utils.HipData.translate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rotates a set of points by using self.trans_vect. if self.trans_vect is None, returns the points as is</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>points</strong> (<em>array shape</em><em> (</em><em>N</em><em>,</em><em>3</em><em>)</em>) -- points to be rotated</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>translated points</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>array shape (N,3)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="data_utils.MeshDecimator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_utils.</span></span><span class="sig-name descname"><span class="pre">MeshDecimator</span></span><a class="reference internal" href="_modules/data_utils.html#MeshDecimator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_utils.MeshDecimator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Base Decimator class that reduces the number of vertices in a triangulated surface. Used in conjunction with HipData.</p>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#data_utils.MeshDecimator.decimate" title="data_utils.MeshDecimator.decimate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">decimate</span></code></a>(hipdata, **kwargs)</p></td>
+<td><p>reduces the number of faces in the hipdaya.RPEL and hipdata.LPEL.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="data_utils.MeshDecimator.decimate">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">decimate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hipdata</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_utils.html#MeshDecimator.decimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_utils.MeshDecimator.decimate" title="Permalink to this definition">¶</a></dt>
+<dd><p>reduces the number of faces in the hipdaya.RPEL and hipdata.LPEL. Will modify attributes of hipdata
+in particular will modify hipdata.data['surface']['LPel']['points'] and hipdata.data['surface']['LPel'][
+'faces'].</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>hipdata</strong> (<a class="reference internal" href="#data_utils.HipData" title="data_utils.HipData"><em>HipData</em></a>) -- </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="data_utils.MeshLibDecimator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_utils.</span></span><span class="sig-name descname"><span class="pre">MeshLibDecimator</span></span><a class="reference internal" href="_modules/data_utils.html#MeshLibDecimator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_utils.MeshLibDecimator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#data_utils.MeshDecimator" title="data_utils.MeshDecimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">data_utils.MeshDecimator</span></code></a></p>
+<p>Decimator class that uses meshlib as a backend.</p>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#data_utils.MeshLibDecimator.decimate" title="data_utils.MeshLibDecimator.decimate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">decimate</span></code></a>(hipdata, max_num_faces[, ...])</p></td>
+<td><p>Calls meshlib to reduce the number of faces in the RPel and LPel surfaces.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="data_utils.MeshLibDecimator.decimate">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">decimate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hipdata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#data_utils.HipData" title="data_utils.HipData"><span class="pre">data_utils.HipData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_num_faces</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_it</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_utils.html#MeshLibDecimator.decimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_utils.MeshLibDecimator.decimate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calls meshlib to reduce the number of faces in the RPel and LPel surfaces. Increases the edge size
+parameter by step_size in a loop until the number of faces in the resulting mesh object is smaller than
+max_num_faces or until the number of iterations is bigger than max_it. Will modify attributes of hipdata
+in particular will modify hipdata.data['surface']['LPel']['points'] and hipdata.data['surface']['LPel'][
+'faces']. Also have the option of saving the new mesh in a specified location and replacing the value of
+hipdata.data['surface']['LPel']['mesh_loc'] with the new save location of the downsampled mesh</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hipdata</strong> (<a class="reference internal" href="#data_utils.HipData" title="data_utils.HipData"><em>HipData</em></a>) -- data on which operation is to be perfomed</p></li>
+<li><p><strong>max_num_faces</strong> (<em>int</em>) -- maximum number of faces</p></li>
+<li><p><strong>save_path</strong> (<em>str</em>) -- default to None, in which case, the downsampled mesh is not saved. If a path is provided,
+then the downsampled mesh is saved for each pelves. self.data is also updated with this info</p></li>
+<li><p><strong>step_size</strong> (<em>str</em>) -- increments by which the edge length parameter needs to be increased in each loop</p></li>
+<li><p><strong>max_it</strong> (<em>int</em>) -- maximumg number of times the max_edge_elen argument of mr.DecimateSettings can be increased</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="data_utils.downsample_data">
+<span class="sig-prename descclassname"><span class="pre">data_utils.</span></span><span class="sig-name descname"><span class="pre">downsample_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction_factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_utils.html#downsample_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_utils.downsample_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decimates hip meshes stored in pickle files stored in paths given by elements of folders. The downsampled meshes are stored in new folders whose name are just the original folder appended with the reduction factor</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>folders</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) -- list of folders where each element should contain a pickle file of the type output by
+data_cleaning._to_pickle</p></li>
+<li><p><strong>reduction_factor</strong> (<em>int</em>) -- amount by which the number of faces should be reduced. If initial mesh has N points
+then the final mesh will have &lt;N/10 points</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="data_utils.loadSTL">
+<span class="sig-prename descclassname"><span class="pre">data_utils.</span></span><span class="sig-name descname"><span class="pre">loadSTL</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_utils.html#loadSTL"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_utils.loadSTL" title="Permalink to this definition">¶</a></dt>
+<dd><p>loads the vetices and faces from an stl file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>filename</strong> (<em>str</em>) -- path to stl file</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>points, faces where points[faces[:,i]] are the i-th coordinate of the triangles.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list(np.array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="data_utils.points2mesh3d">
+<span class="sig-prename descclassname"><span class="pre">data_utils.</span></span><span class="sig-name descname"><span class="pre">points2mesh3d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_utils.html#points2mesh3d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_utils.points2mesh3d" title="Permalink to this definition">¶</a></dt>
+<dd><p>Turns a point cloud surface into a format that is plottable by plotly, the input should be the points
+attribute to a numpy.stl loaded mesh file. Alternatively, points need to be loaded from the pickle output of
+DataCleaning._to_pickle</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>points</strong> (<em>array</em>) -- array shape [npoints*3,3]. points attribute of a mesh object or</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>vertices,I,J,K</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="data_utils.ralign_2_hips">
+<span class="sig-prename descclassname"><span class="pre">data_utils.</span></span><span class="sig-name descname"><span class="pre">ralign_2_hips</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hip1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#data_utils.HipData" title="data_utils.HipData"><span class="pre">data_utils.HipData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">hip2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#data_utils.HipData" title="data_utils.HipData"><span class="pre">data_utils.HipData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">by</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'RPel'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="reference internal" href="_modules/data_utils.html#ralign_2_hips"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_utils.ralign_2_hips" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs rigid alignment of two hips (no scale) by aligning the APP of the 2 hips</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hip1</strong> (<a class="reference internal" href="#data_utils.HipData" title="data_utils.HipData"><em>HipData</em></a>) -- template Hip, this one is kept in inplace</p></li>
+<li><p><strong>hip2</strong> (<a class="reference internal" href="#data_utils.HipData" title="data_utils.HipData"><em>HipData</em></a>) -- hip to be transformed</p></li>
+<li><p><strong>by</strong> (<em>str</em>) -- options are 'RPel' or 'LPel' depending on whether the right or left APP are alligned</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>list hip1,hip2 of aligned HipData</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list(<a class="reference internal" href="#data_utils.HipData" title="data_utils.HipData">HipData</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="data_utils.rotation_between_vectors">
+<span class="sig-prename descclassname"><span class="pre">data_utils.</span></span><span class="sig-name descname"><span class="pre">rotation_between_vectors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">normal1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normal2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_utils.html#rotation_between_vectors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_utils.rotation_between_vectors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the rotation matrix that maps vector normal2 onto vector normal1</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>normal1</strong> (<em>jnp.array</em>) -- 3d vector shape (3,)</p></li>
+<li><p><strong>normal2</strong> (<em>jnp.array</em>) -- 3d vector shape (3,)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>rotation matrix mapping normal2 onto normal1 shape (3,3)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>jnp.array</p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">normal1</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">normal1</span> <span class="o">/=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">normal1</span><span class="p">,</span><span class="n">normal1</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">normal2</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">normal2</span> <span class="o">/=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">normal2</span><span class="p">,</span><span class="n">normal2</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rot_mat</span> <span class="o">=</span> <span class="n">rotation_between_vectors</span><span class="p">(</span><span class="n">normal1</span><span class="p">,</span><span class="n">normal2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">normal2_trans</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">rot_mat</span><span class="p">,</span><span class="n">normal2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">normal1</span><span class="o">-</span><span class="n">normal2_trans</span><span class="p">)))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="data_utils.stl2mesh3d">
+<span class="sig-prename descclassname"><span class="pre">data_utils.</span></span><span class="sig-name descname"><span class="pre">stl2mesh3d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stl_mesh</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_utils.html#stl2mesh3d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_utils.stl2mesh3d" title="Permalink to this definition">¶</a></dt>
+<dd><p>stl_mesh is read by nympy-stl from a stl file; it is  an array of faces/triangles (i.e. three 3d points) this function extracts the unique vertices and the lists I, J, K to define a Plotly mesh3d</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>stl_mesh</strong> -- </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="data_utils.umeyama">
+<span class="sig-prename descclassname"><span class="pre">data_utils.</span></span><span class="sig-name descname"><span class="pre">umeyama</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">P</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Q</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/data_utils.html#umeyama"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#data_utils.umeyama" title="Permalink to this definition">¶</a></dt>
+<dd><ul class="simple">
+<li><p><a class="reference external" href="http://stackoverflow.com/a/32244818/263061">http://stackoverflow.com/a/32244818/263061</a> (solution with scale)
+- &quot;Least-Squares Rigid Motion Using SVD&quot; (no scale but easy proofs and explains how weights could be added)</p></li>
+</ul>
+<p>Rigidly (+scale) aligns two point clouds with know point-to-point correspondences
+with least-squares error.
+Returns (scale factor c, rotation matrix R, translation vector t) such that</p>
+<blockquote>
+<div><p>Q = P*cR + t</p>
+</div></blockquote>
+<dl class="simple">
+<dt>if they align perfectly, or such that</dt><dd><p>SUM over point i ( | P_i*cR + t - Q_i <a href="#id1"><span class="problematic" id="id2">|</span></a>^2 )</p>
+</dd>
+</dl>
+<p>is minimised if they don't align perfectly.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>P</strong> (<em>np.array</em>) -- point cloud shape (N1,3)</p></li>
+<li><p><strong>Q</strong> (<em>np.array</em>) -- point cloud shape (N2,3)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>list c,R,t where c is the scale transformation shape (1), R is the (3,3) rotation matrix and t is the (</p>
+</dd>
+</dl>
+<p>1,3) translation vector.
+:rtype: list(np.array)</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2022, Adwaye Rambojun.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

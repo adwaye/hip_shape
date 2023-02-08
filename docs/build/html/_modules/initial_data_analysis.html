@@ -1,0 +1,581 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="python" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>initial_data_analysis &mdash; hip_shape 0.0.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> hip_shape
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">hip_shape</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html">Module code</a> &raquo;</li>
+        
+      <li>initial_data_analysis</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for initial_data_analysis</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;initial data analysis on the meshes. Does not contain any useful methods for the project, except the ability to</span>
+<span class="sd">view point clouds in a tensorboard session. &quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">stl</span> <span class="kn">import</span> <span class="n">mesh</span>
+<span class="kn">from</span> <span class="nn">mpl_toolkits</span> <span class="kn">import</span> <span class="n">mplot3d</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span>
+<span class="kn">import</span> <span class="nn">tensorflow.compat.v1</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="n">tf</span><span class="o">.</span><span class="n">compat</span><span class="o">.</span><span class="n">v1</span><span class="o">.</span><span class="n">disable_v2_behavior</span><span class="p">()</span>
+<span class="kn">from</span> <span class="nn">tensorboard.plugins.mesh</span> <span class="kn">import</span> <span class="n">summary</span> <span class="k">as</span> <span class="n">mesh_summary</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">trimesh</span>
+
+<span class="kn">from</span> <span class="nn">medpy.io</span> <span class="kn">import</span> <span class="n">load</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">read_landmarks</span> <span class="kn">import</span> <span class="o">*</span>
+
+
+
+
+<div class="viewcode-block" id="mesh_tf_demo"><a class="viewcode-back" href="../initial_data_analysis.html#initial_data_analysis.mesh_tf_demo">[docs]</a><span class="k">def</span> <span class="nf">mesh_tf_demo</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;demo script on how to use tensorboard to visualise point clouds.</span>
+
+<span class="sd">    :return:</span>
+<span class="sd">    :rtype:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">sample_mesh</span> <span class="o">=</span> <span class="s1">&#39;https://storage.googleapis.com/tensorflow-graphics/tensorboard/test_data/ShortDance07_a175_00001.ply&#39;</span>
+
+    <span class="c1"># Read all sample PLY files.</span>
+    <span class="n">mesh</span> <span class="o">=</span> <span class="n">trimesh</span><span class="o">.</span><span class="n">load_remote</span><span class="p">(</span><span class="n">sample_mesh</span><span class="p">)</span>
+    <span class="n">vertices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">vertices</span><span class="p">)</span>
+    <span class="c1"># Currently only supports RGB colors.</span>
+    <span class="n">colors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">visual</span><span class="o">.</span><span class="n">vertex_colors</span><span class="p">[:,:</span><span class="mi">3</span><span class="p">])</span>
+    <span class="n">faces</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces</span><span class="p">)</span>
+
+    <span class="c1"># Add batch dimension, so our data will be of shape BxNxC.</span>
+    <span class="n">vertices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">vertices</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">colors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">colors</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">faces</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">faces</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">log_dir</span> <span class="o">=</span> <span class="s1">&#39;./view&#39;</span>
+    <span class="n">vertices_tensor</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span><span class="n">vertices</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">faces_tensor</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span><span class="n">faces</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">colors_tensor</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span><span class="n">colors</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="n">meshes_summary</span> <span class="o">=</span> <span class="n">mesh_summary</span><span class="o">.</span><span class="n">op</span><span class="p">(</span>
+        <span class="s1">&#39;mesh_color_tensor&#39;</span><span class="p">,</span><span class="n">vertices</span><span class="o">=</span><span class="n">vertices_tensor</span><span class="p">,</span><span class="n">faces</span><span class="o">=</span><span class="n">faces_tensor</span><span class="p">,</span>
+        <span class="n">colors</span><span class="o">=</span><span class="n">colors_tensor</span><span class="p">)</span>
+
+    <span class="c1"># Create summary writer and session.</span>
+    <span class="n">writer</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">FileWriter</span><span class="p">(</span><span class="n">log_dir</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span> <span class="k">as</span> <span class="n">sess</span><span class="p">:</span>
+        <span class="n">summaries</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="n">meshes_summary</span><span class="p">],</span><span class="n">feed_dict</span><span class="o">=</span><span class="p">{</span>
+            <span class="n">vertices_tensor</span><span class="p">:</span><span class="n">vertices</span><span class="p">,</span>
+            <span class="n">faces_tensor</span><span class="p">:</span><span class="n">faces</span><span class="p">,</span>
+            <span class="n">colors_tensor</span><span class="p">:</span><span class="n">colors</span><span class="p">,</span>
+        <span class="p">})</span>
+        <span class="c1"># Save summaries.</span>
+        <span class="k">for</span> <span class="n">summary</span> <span class="ow">in</span> <span class="n">summaries</span><span class="p">:</span>
+            <span class="n">writer</span><span class="o">.</span><span class="n">add_summary</span><span class="p">(</span><span class="n">summary</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="show_3d_slicing"><a class="viewcode-back" href="../initial_data_analysis.html#initial_data_analysis.show_3d_slicing">[docs]</a><span class="k">def</span> <span class="nf">show_3d_slicing</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;simple demo on viewing 3d slices</span>
+
+<span class="sd">    :return:</span>
+<span class="sd">    :rtype:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data_loc</span> <span class="o">=</span> <span class="s1">&#39;./data/Andrew_Richie_pelvis_shape/&#39;</span>
+
+    <span class="c1"># image_data, image_header = load(os.path.join(data_loc,&#39;Labels_segments.mha&#39;))</span>
+    <span class="n">image_data</span><span class="p">,</span> <span class="n">image_header</span> <span class="o">=</span> <span class="n">load</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_loc</span><span class="p">,</span><span class="s1">&#39;wholepelvis_stack.mha&#39;</span><span class="p">))</span>
+
+    <span class="n">Dpth</span> <span class="o">=</span> <span class="n">image_data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">fig</span><span class="p">,</span><span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Dpth</span><span class="p">):</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">image_data</span><span class="p">[:,:,</span><span class="n">d</span><span class="p">])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Slice </span><span class="si">{:}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">d</span><span class="p">))</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">pause</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span></div>
+
+
+
+
+<span class="c1"># Create a new plot</span>
+
+<span class="c1"># point_cloud = tf.constant([[[0.19, 0.78, 0.02], ...]], shape=[1, 1064, 3])</span>
+<div class="viewcode-block" id="tf_make_tb_mesh"><a class="viewcode-back" href="../initial_data_analysis.html#initial_data_analysis.tf_make_tb_mesh">[docs]</a><span class="k">def</span> <span class="nf">tf_make_tb_mesh</span><span class="p">(</span><span class="n">data_loc</span> <span class="o">=</span> <span class="s1">&#39;./data/Andrew_Richie_pelvis_shape&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;reads all stl files in a folder and concatantes them into a point cloud that is then saved as a tensorboard object</span>
+
+<span class="sd">    :param data_loc: location of the .stl files</span>
+<span class="sd">    :type data_loc:  string</span>
+<span class="sd">    :return:</span>
+<span class="sd">    :rtype:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># pelvis_mesh = mesh.Mesh.from_file(os.path.join(data_loc,&#39;pelvis.stl&#39;))</span>
+    <span class="c1"># rf_mesh     = mesh.Mesh.from_file(os.path.join(data_loc,&#39;RightFemur.stl&#39;))</span>
+    <span class="c1"># lf_mesh     = mesh.Mesh.from_file(os.path.join(data_loc,&#39;LeftFemur.stl&#39;))</span>
+
+    <span class="n">files</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_loc</span><span class="p">,</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">data_loc</span><span class="p">)</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="s1">&#39;stl&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">files</span><span class="p">)</span><span class="o">!=</span><span class="mi">0</span><span class="p">:</span>
+
+        <span class="n">k</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+                <span class="n">point_cloud</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">Mesh</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">v0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">point_cloud</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">point_cloud</span><span class="p">,</span><span class="n">mesh</span><span class="o">.</span><span class="n">Mesh</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">v0</span><span class="p">),</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">k</span><span class="o">+=</span><span class="mi">1</span>
+    <span class="c1"># point_cloud = np.concatenate((pelvis_mesh.v0,rf_mesh.v0,lf_mesh.v0),axis=0)</span>
+
+        <span class="n">N</span> <span class="o">=</span> <span class="n">point_cloud</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">D</span> <span class="o">=</span> <span class="n">point_cloud</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">point_cloud</span><span class="o">=</span><span class="n">point_cloud</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="n">N</span><span class="p">,</span><span class="n">D</span><span class="p">))</span>
+
+    <span class="c1"># point_colors = tf.constant([[[128, 104, 227], ...]], shape=[1, 1064, 3])</span>
+
+    <span class="c1"># summary = mesh_summary.op(&#39;point_cloud&#39;, vertices=point_cloud, colors=point_colors)</span>
+
+
+    <span class="c1"># # Add batch dimension, so our data will be of shape BxNxC.</span>
+    <span class="c1"># vertices = np.expand_dims(vertices, 0)</span>
+    <span class="c1"># colors = np.expand_dims(colors, 0)</span>
+    <span class="c1"># faces = np.expand_dims(faces, 0)</span>
+
+
+        <span class="n">tf_point_cloud</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">point_cloud</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="c1"># vertices_tensor = tf.placeholder(tf.float32, vertices.shape)</span>
+        <span class="c1"># faces_tensor = tf.placeholder(tf.int32, faces.shape)</span>
+        <span class="c1">#colors_tensor = tf.placeholder(tf.int32, colors.shape)</span>
+
+        <span class="n">meshes_summary</span> <span class="o">=</span> <span class="n">mesh_summary</span><span class="o">.</span><span class="n">op</span><span class="p">(</span>
+            <span class="s1">&#39;mesh_color_tensor&#39;</span><span class="p">,</span> <span class="n">vertices</span><span class="o">=</span><span class="n">tf_point_cloud</span><span class="p">)</span><span class="c1">#,faces=tf_faces)</span>
+
+        <span class="c1"># Create summary writer and session.</span>
+        <span class="n">sub_name</span>   <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">data_loc</span><span class="p">)</span>
+
+        <span class="n">study_name</span> <span class="o">=</span> <span class="n">data_loc</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">log_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;./view&#39;</span><span class="p">,</span><span class="n">study_name</span><span class="p">)</span>
+        <span class="n">log_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">log_dir</span><span class="p">,</span><span class="n">sub_name</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">log_dir</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">log_dir</span><span class="p">):</span>  <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">log_dir</span><span class="p">)</span>
+        <span class="n">writer</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">FileWriter</span><span class="p">(</span><span class="n">log_dir</span><span class="p">)</span>
+
+
+        <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span> <span class="k">as</span> <span class="n">sess</span><span class="p">:</span>
+            <span class="n">summaries</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="n">meshes_summary</span><span class="p">],</span> <span class="n">feed_dict</span><span class="o">=</span><span class="p">{</span>
+            <span class="n">tf_point_cloud</span><span class="p">:</span> <span class="n">point_cloud</span>
+            <span class="p">})</span>
+        <span class="c1"># Save summaries.</span>
+            <span class="k">for</span> <span class="n">summary</span> <span class="ow">in</span> <span class="n">summaries</span><span class="p">:</span>
+                <span class="n">writer</span><span class="o">.</span><span class="n">add_summary</span><span class="p">(</span><span class="n">summary</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;no stl files found in &#39;</span><span class="o">+</span> <span class="n">data_loc</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="tf_make_tb_mesh_with_landmarks"><a class="viewcode-back" href="../initial_data_analysis.html#initial_data_analysis.tf_make_tb_mesh_with_landmarks">[docs]</a><span class="k">def</span> <span class="nf">tf_make_tb_mesh_with_landmarks</span><span class="p">(</span><span class="n">data_loc</span> <span class="o">=</span> <span class="s1">&#39;./data/Segmentation_and_landmarks_raw/UCLH - Controls/68567126&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;reads all stl files in a folder and concatantes them into a point cloud that is then saved as a tensorboard object</span>
+
+<span class="sd">    :param data_loc: location of the .stl files</span>
+<span class="sd">    :type data_loc:  string</span>
+<span class="sd">    :return:</span>
+<span class="sd">    :rtype:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># pelvis_mesh = mesh.Mesh.from_file(os.path.join(data_loc,&#39;pelvis.stl&#39;))</span>
+    <span class="c1"># rf_mesh     = mesh.Mesh.from_file(os.path.join(data_loc,&#39;RightFemur.stl&#39;))</span>
+    <span class="c1"># lf_mesh     = mesh.Mesh.from_file(os.path.join(data_loc,&#39;LeftFemur.stl&#39;))</span>
+    <span class="n">files</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">subfolder</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;Left&#39;</span><span class="p">,</span><span class="s1">&#39;Right&#39;</span><span class="p">]:</span>
+        <span class="n">loc</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_loc</span><span class="p">,</span><span class="n">subfolder</span><span class="p">)</span>
+
+        <span class="n">files</span> <span class="o">+=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">loc</span><span class="p">,</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">loc</span><span class="p">)</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="s1">&#39;stl&#39;</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">files</span><span class="p">)</span><span class="o">!=</span><span class="mi">0</span><span class="p">:</span>
+
+        <span class="n">color_pal</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">255</span><span class="p">,</span><span class="mi">184</span><span class="p">,</span><span class="mi">108</span><span class="p">],[</span><span class="mi">189</span><span class="p">,</span><span class="mi">147</span><span class="p">,</span><span class="mi">249</span><span class="p">],[</span><span class="mi">40</span><span class="p">,</span> <span class="mi">42</span><span class="p">,</span> <span class="mi">54</span><span class="p">]]</span>
+
+        <span class="n">k</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+                <span class="n">point_cloud</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">Mesh</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">v0</span>
+                <span class="n">color</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">([</span><span class="n">color_pal</span><span class="p">[</span><span class="n">k</span><span class="p">]],</span><span class="n">repeats</span><span class="o">=</span><span class="n">point_cloud</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">point_cloud</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">point_cloud</span><span class="p">,</span><span class="n">mesh</span><span class="o">.</span><span class="n">Mesh</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">v0</span><span class="p">),</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">color</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">color</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">([</span><span class="n">color_pal</span><span class="p">[</span><span class="n">k</span><span class="p">]],</span><span class="n">repeats</span><span class="o">=</span><span class="n">point_cloud</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)),</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+            <span class="n">k</span><span class="o">+=</span><span class="mi">1</span>
+    <span class="c1"># point_cloud = np.concatenate((pelvis_mesh.v0,rf_mesh.v0,lf_mesh.v0),axis=0)</span>
+
+
+
+        <span class="n">xlsx_file</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">data_loc</span><span class="p">)</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;xlsx&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">xlsx_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_loc</span><span class="p">,</span><span class="n">xlsx_file</span><span class="p">)</span>
+
+        <span class="n">workbook</span> <span class="o">=</span> <span class="n">openpyxl</span><span class="o">.</span><span class="n">load_workbook</span><span class="p">(</span><span class="n">xlsx_path</span><span class="p">,</span><span class="n">data_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Define variable to read the active sheet:</span>
+        <span class="n">worksheet</span> <span class="o">=</span> <span class="n">workbook</span><span class="o">.</span><span class="n">active</span>
+
+        <span class="n">my_dict</span> <span class="o">=</span> <span class="n">find_structure_coordinate_socket</span><span class="p">(</span><span class="n">worksheet</span><span class="p">)</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;Right Ant Lat&#39;</span><span class="p">,</span><span class="s1">&#39;Right Post Lat&#39;</span><span class="p">,</span><span class="s1">&#39;Left Ant Lat&#39;</span><span class="p">,</span><span class="s1">&#39;Left Post Lat&#39;</span><span class="p">]:</span>
+            <span class="n">_coords</span> <span class="o">=</span> <span class="n">find_coordinates_from_worksheet</span><span class="p">(</span><span class="n">worksheet</span><span class="o">=</span><span class="n">worksheet</span><span class="p">,</span><span class="n">my_dict</span><span class="o">=</span><span class="n">my_dict</span><span class="p">,</span><span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+                <span class="n">coords</span> <span class="o">=</span> <span class="n">_coords</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">coords</span><span class="p">,</span><span class="n">_coords</span><span class="p">),</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">_coords</span><span class="p">)</span>
+
+        <span class="n">color</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">color</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">([</span><span class="n">color_pal</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]],</span><span class="n">repeats</span><span class="o">=</span><span class="n">coords</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)),</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">point_cloud</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">point_cloud</span><span class="p">,</span><span class="n">coords</span><span class="p">),</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="n">N</span> <span class="o">=</span> <span class="n">point_cloud</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">D</span> <span class="o">=</span> <span class="n">point_cloud</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">point_cloud</span> <span class="o">=</span> <span class="n">point_cloud</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="n">N</span><span class="p">,</span><span class="n">D</span><span class="p">))</span>
+
+
+    <span class="c1"># # Add batch dimension, so our data will be of shape BxNxC.</span>
+    <span class="c1"># vertices = np.expand_dims(vertices, 0)</span>
+    <span class="c1"># colors = np.expand_dims(colors, 0)</span>
+    <span class="c1"># faces = np.expand_dims(faces, 0)</span>
+
+
+        <span class="n">tf_point_cloud</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">point_cloud</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="c1"># vertices_tensor = tf.placeholder(tf.float32, vertices.shape)</span>
+        <span class="c1"># faces_tensor = tf.placeholder(tf.int32, faces.shape)</span>
+        <span class="n">colors_tensor</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">color</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+        <span class="n">meshes_summary</span> <span class="o">=</span> <span class="n">mesh_summary</span><span class="o">.</span><span class="n">op</span><span class="p">(</span>
+            <span class="s1">&#39;mesh_color_tensor&#39;</span><span class="p">,</span> <span class="n">vertices</span><span class="o">=</span><span class="n">tf_point_cloud</span><span class="p">)</span><span class="c1">#,faces=tf_faces)</span>
+
+        <span class="c1"># Create summary writer and session.</span>
+        <span class="n">sub_name</span>   <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">data_loc</span><span class="p">)</span>
+
+        <span class="n">study_name</span> <span class="o">=</span> <span class="n">data_loc</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">log_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;./view&#39;</span><span class="p">,</span><span class="n">study_name</span><span class="p">)</span>
+        <span class="n">log_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">log_dir</span><span class="p">,</span><span class="n">sub_name</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">log_dir</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">log_dir</span><span class="p">):</span>  <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">log_dir</span><span class="p">)</span>
+        <span class="n">writer</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">FileWriter</span><span class="p">(</span><span class="n">log_dir</span><span class="p">)</span>
+
+
+        <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span> <span class="k">as</span> <span class="n">sess</span><span class="p">:</span>
+            <span class="n">summaries</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="n">meshes_summary</span><span class="p">],</span> <span class="n">feed_dict</span><span class="o">=</span><span class="p">{</span>
+            <span class="n">tf_point_cloud</span><span class="p">:</span> <span class="n">point_cloud</span><span class="p">,</span>
+            <span class="n">colors_tensor</span> <span class="p">:</span> <span class="n">color</span>
+            <span class="p">})</span>
+        <span class="c1"># Save summaries.</span>
+            <span class="k">for</span> <span class="n">summary</span> <span class="ow">in</span> <span class="n">summaries</span><span class="p">:</span>
+                <span class="n">writer</span><span class="o">.</span><span class="n">add_summary</span><span class="p">(</span><span class="n">summary</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;no stl files found in &#39;</span><span class="o">+</span> <span class="n">data_loc</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="tf_make_tb_mesh_left_right"><a class="viewcode-back" href="../initial_data_analysis.html#initial_data_analysis.tf_make_tb_mesh_left_right">[docs]</a><span class="k">def</span> <span class="nf">tf_make_tb_mesh_left_right</span><span class="p">(</span><span class="n">data_loc</span> <span class="o">=</span> <span class="s1">&#39;./data/Andrew_Richie_pelvis_shape&#39;</span><span class="p">,</span><span class="n">show_faces</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;reads the study folders containng the right and left pelvis and stores them as a tensorboard mesh obejct</span>
+
+<span class="sd">    :param data_loc: location of the right and left stl files: should contain folders with names Right and Left</span>
+<span class="sd">    contaning one stl file for the right and left pelvis respectively</span>
+<span class="sd">    :type data_loc: string</span>
+<span class="sd">    :return:</span>
+<span class="sd">    :rtype:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">tf_color</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span><span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="kc">None</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span>
+    <span class="n">tf_vertices</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,[</span><span class="mi">1</span><span class="p">,</span><span class="kc">None</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span>
+    <span class="n">tf_faces</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,[</span><span class="mi">1</span><span class="p">,</span><span class="kc">None</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span>
+
+    <span class="n">meshes_summary</span> <span class="o">=</span> <span class="n">mesh_summary</span><span class="o">.</span><span class="n">op</span><span class="p">(</span>
+        <span class="s1">&#39;mesh_color_tensor&#39;</span><span class="p">,</span><span class="n">vertices</span><span class="o">=</span><span class="n">tf_vertices</span><span class="p">,</span><span class="n">colors</span><span class="o">=</span><span class="n">tf_color</span><span class="p">)</span>
+        <span class="c1">#faces=tf_faces)  #,faces=tf_faces)</span>
+
+    <span class="c1"># Create summary writer and session.</span>
+    <span class="n">sub_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">data_loc</span><span class="p">)</span>
+
+    <span class="n">study_name</span> <span class="o">=</span> <span class="n">data_loc</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">log_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;./viewboth&#39;</span><span class="p">,</span><span class="n">study_name</span><span class="p">)</span>
+    <span class="c1">#print(log_dir)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">log_dir</span><span class="p">):</span>  <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">log_dir</span><span class="p">)</span>
+    <span class="n">writer</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">FileWriter</span><span class="p">(</span><span class="n">log_dir</span><span class="p">)</span>
+
+    <span class="n">rf_loc</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_loc</span><span class="p">,</span><span class="s1">&#39;Right&#39;</span><span class="p">)</span>
+    <span class="n">lf_loc</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_loc</span><span class="p">,</span><span class="s1">&#39;Left&#39;</span><span class="p">)</span>
+    <span class="n">locs</span>   <span class="o">=</span> <span class="p">[</span><span class="n">rf_loc</span><span class="p">,</span><span class="n">lf_loc</span><span class="p">]</span>
+    <span class="n">color_pal</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">255</span><span class="p">,</span> <span class="mi">184</span><span class="p">,</span> <span class="mi">108</span><span class="p">],[</span><span class="mi">189</span><span class="p">,</span> <span class="mi">147</span><span class="p">,</span> <span class="mi">249</span><span class="p">]]</span>
+
+    <span class="n">files</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">rf_loc</span><span class="p">,</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">rf_loc</span><span class="p">)</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="s1">&#39;stl&#39;</span><span class="p">]</span>
+    <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span> <span class="k">as</span> <span class="n">sess</span><span class="p">:</span>
+        <span class="n">loc_index</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">loc</span> <span class="ow">in</span> <span class="n">locs</span> <span class="p">:</span>
+            <span class="n">files</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">loc</span><span class="p">,</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">loc</span><span class="p">)</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="s1">&#39;stl&#39;</span><span class="p">]</span>
+            <span class="n">k</span><span class="o">=</span><span class="mi">0</span>
+            <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">loc_index</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">myobj</span> <span class="o">=</span> <span class="n">trimesh</span><span class="o">.</span><span class="n">load_mesh</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">enable_post_processing</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">solid</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                    <span class="c1">#point_cloud = mesh.Mesh.from_file(f).v0</span>
+                    <span class="n">vertices</span> <span class="o">=</span> <span class="n">myobj</span><span class="o">.</span><span class="n">vertices</span>
+                    <span class="n">faces</span> <span class="o">=</span> <span class="n">myobj</span><span class="o">.</span><span class="n">faces</span>
+                    <span class="n">color</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">([</span><span class="n">color_pal</span><span class="p">[</span><span class="n">loc_index</span><span class="p">]],</span><span class="n">repeats</span><span class="o">=</span><span class="n">vertices</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">myobj</span> <span class="o">=</span> <span class="n">trimesh</span><span class="o">.</span><span class="n">load_mesh</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">enable_post_processing</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">solid</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                    <span class="n">vertices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">vertices</span><span class="p">,</span><span class="n">myobj</span><span class="o">.</span><span class="n">vertices</span><span class="p">),</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                    <span class="n">faces</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">faces</span><span class="p">,</span><span class="n">myobj</span><span class="o">.</span><span class="n">faces</span><span class="p">),</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                    <span class="n">color</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">color</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">([</span><span class="n">color_pal</span><span class="p">[</span><span class="n">loc_index</span><span class="p">]],</span><span class="n">repeats</span><span class="o">=</span><span class="n">myobj</span><span class="o">.</span><span class="n">vertices</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)),</span>
+                                           <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">k</span><span class="o">+=</span><span class="mi">1</span>
+            <span class="n">loc_index</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="n">N</span> <span class="o">=</span> <span class="n">vertices</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">D</span> <span class="o">=</span> <span class="n">vertices</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">vertices</span><span class="o">=</span><span class="n">vertices</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="n">N</span><span class="p">,</span><span class="n">D</span><span class="p">))</span>
+        <span class="n">color</span> <span class="o">=</span> <span class="n">color</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="n">N</span><span class="p">,</span><span class="n">D</span><span class="p">))</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="n">faces</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">D</span> <span class="o">=</span> <span class="n">faces</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">faces</span> <span class="o">=</span> <span class="n">faces</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="n">N</span><span class="p">,</span><span class="n">D</span><span class="p">))</span>
+
+
+        <span class="n">summaries</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="n">meshes_summary</span><span class="p">],</span> <span class="n">feed_dict</span><span class="o">=</span><span class="p">{</span>
+        <span class="n">tf_vertices</span><span class="p">:</span> <span class="n">vertices</span><span class="p">,</span>
+        <span class="c1">#tf_faces   : faces,</span>
+        <span class="n">tf_color</span>   <span class="p">:</span> <span class="n">color</span>
+        <span class="p">})</span>
+    <span class="c1"># Save summaries.</span>
+        <span class="k">for</span> <span class="n">summary</span> <span class="ow">in</span> <span class="n">summaries</span><span class="p">:</span>
+            <span class="n">writer</span><span class="o">.</span><span class="n">add_summary</span><span class="p">(</span><span class="n">summary</span><span class="p">)</span></div>
+
+
+
+    <span class="c1">#     k = 0</span>
+    <span class="c1">#     for f in files:</span>
+    <span class="c1">#         if k ==0:</span>
+    <span class="c1">#             myobj = trimesh.load_mesh(f,enable_post_processing=True,solid=True)</span>
+    <span class="c1">#             #point_cloud = mesh.Mesh.from_file(f).v0</span>
+    <span class="c1">#             vertices = myobj.vertices</span>
+    <span class="c1">#             faces    = myobj.faces</span>
+    <span class="c1">#         else:</span>
+    <span class="c1">#             myobj = trimesh.load_mesh(f,enable_post_processing=True,solid=True)</span>
+    <span class="c1">#             vertices = np.concatenate((vertices,myobj.vertices),axis=0)</span>
+    <span class="c1">#             faces = np.concatenate((faces,myobj.faces),axis=0)</span>
+    <span class="c1">#         color = tf.repeat([[40,42,54]],repeats = vertices.shape[0],axis=0)</span>
+    <span class="c1">#         k+=1</span>
+    <span class="c1">#</span>
+    <span class="c1"># files = [os.path.join(lf_loc,f) for f in os.listdir(lf_loc) if f.split(&#39;.&#39;)[-1] == &#39;stl&#39;]</span>
+    <span class="c1"># if len(files) != 0:</span>
+    <span class="c1">#</span>
+    <span class="c1">#     k = 0</span>
+        <span class="c1"># for f in files:</span>
+        <span class="c1">#     myobj = trimesh.load_mesh(f,enable_post_processing=True,solid=True)</span>
+        <span class="c1">#     vertices = np.concatenate((vertices,myobj.vertices),axis=0)</span>
+        <span class="c1">#     faces = np.concatenate((faces,myobj.faces),axis=0)</span>
+        <span class="c1">#     color_lf = tf.repeat([[255,85,85]],repeats = myobj.vertices.shape[0],axis=0)</span>
+        <span class="c1">#</span>
+        <span class="c1">#     k += 1</span>
+    <span class="c1"># point_cloud = np.concatenate((pelvis_mesh.v0,rf_mesh.v0,lf_mesh.v0),axis=0)</span>
+
+
+        <span class="c1"># tf_faces = tf.constant(faces)</span>
+
+
+
+
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span><span class="o">==</span><span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="c1">#get stl from</span>
+    <span class="c1">#show_3d_slicing()</span>
+    <span class="c1"># data_loc = &quot;./data/UCLH-Controls/97255839/Right&quot;</span>
+    <span class="c1"># os.listdir(data_loc)</span>
+    <span class="c1"># tf_make_tb_mesh(data_loc=data_loc)</span>
+    <span class="c1"># data_loc  = &quot;./data/UCLH-Controls/97255839&quot;</span>
+    <span class="c1"># top_loc   = &quot;./data/UCLH-Controls/&quot;</span>
+    <span class="c1"># data_locs = [os.path.join(top_loc,f) for f in os.listdir(top_loc) if os.path.isdir(os.path.join(top_loc,f))]</span>
+    <span class="c1"># for data_loc in data_locs:</span>
+    <span class="c1">#     tf_make_tb_mesh_left_right(data_loc=data_loc)</span>
+    <span class="c1"># file = &quot;data/UCLH-Controls/99782485/Right/99782485_RPEL.stl&quot;</span>
+    <span class="c1"># vertices = mesh.Mesh.from_file(file)</span>
+    <span class="c1"># import trimesh</span>
+    <span class="c1">#</span>
+    <span class="c1"># myobj = trimesh.load_mesh(file, enable_post_processing=True, solid=True) # Import Objects</span>
+    <span class="c1">#myobj.show()</span>
+    <span class="n">tf_make_tb_mesh_with_landmarks</span><span class="p">()</span>
+    <span class="c1">#print(myobj.faces)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2022, Adwaye Rambojun.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

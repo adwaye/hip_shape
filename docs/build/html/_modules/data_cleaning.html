@@ -1,0 +1,468 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="python" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>data_cleaning &mdash; hip_shape 0.0.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> hip_shape
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">hip_shape</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html">Module code</a> &raquo;</li>
+        
+      <li>data_cleaning</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for data_cleaning</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Script to turn the raw data into pickle files for easier loading</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os.path</span>
+
+<span class="kn">from</span> <span class="nn">read_landmarks</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">from</span> <span class="nn">mayavi</span> <span class="kn">import</span> <span class="n">mlab</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">numpy.linalg</span>
+<span class="kn">from</span> <span class="nn">data_utils</span> <span class="kn">import</span> <span class="n">umeyama</span><span class="p">,</span><span class="n">loadSTL</span>
+
+<span class="c1"># from argparse import ArgumentParser</span>
+<span class="c1"># parser = ArgumentParser()</span>
+<span class="c1"># parser.add_argument(&quot;-f&quot;, &quot;--file&quot;, dest=&quot;filename&quot;,</span>
+<span class="c1">#                     help=&quot;write report to FILE&quot;, metavar=&quot;FILE&quot;)</span>
+<span class="c1"># parser.add_argument(&quot;-q&quot;, &quot;--quiet&quot;,</span>
+<span class="c1">#                     action=&quot;store_false&quot;, dest=&quot;verbose&quot;, default=True,</span>
+<span class="c1">#                     help=&quot;don&#39;t print status messages to stdout&quot;)</span>
+<span class="c1">#</span>
+<span class="c1"># args = parser.parse_args()</span>
+
+
+<span class="n">dt_string</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2">.%m.%Y_%H:%M:%S&quot;</span><span class="p">)</span>
+
+<span class="n">source_loc</span>           <span class="o">=</span> <span class="s1">&#39;./data/Segmentation_and_landmarks_raw/&#39;</span>
+<span class="n">target_loc</span>           <span class="o">=</span> <span class="s1">&#39;./data/Segmentation_and_landmarks_processed/&#39;</span>
+<span class="n">APP_aligned_loc</span>      <span class="o">=</span> <span class="s1">&#39;./data/Segmentation_and_landmarks_APP_aligned/&#39;</span>
+<span class="n">Socket_aligned_trans</span> <span class="o">=</span> <span class="s1">&#39;./data/Segmentation_and_landmarks_socket_aligned/&#39;</span>
+
+<span class="n">paths</span>     <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;UCLH - Controls&#39;</span><span class="p">,</span><span class="s1">&#39;TOH - Controls&#39;</span><span class="p">,</span><span class="s1">&#39;TOH - FAI&#39;</span><span class="p">,</span><span class="s1">&#39;TOH - DDH&#39;</span><span class="p">]</span>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="viewcode-block" id="to_pickle"><a class="viewcode-back" href="../data_cleaning.html#data_cleaning.to_pickle">[docs]</a><span class="k">def</span> <span class="nf">to_pickle</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Reads the raw files from ottawa and puts all the relevant data into a dictionary before saving said dictionary to a pickle file. The locations of the raw data to be converted as well as the target destination are global variables in the script. The dictionary out_dict for each data point has the following keys:</span>
+<span class="sd">     #. **out_dict[&#39;surface&#39;]**: is a dictionary that saves the Pelvis surfaces and has keys &#39;RPel&#39; and &#39;LPel&#39; for the right pelvis and left pelvis respectively. out_dict[&#39;surface&#39;][&#39;RPel&#39;]  and out_dict[&#39;surface&#39;][&#39;RPel&#39;] are a dictionaries with keys.</span>
+<span class="sd">          * &#39;points&#39; : np.array shape [N1,3] of vertices.</span>
+<span class="sd">          * &#39;faces&#39;  : np.array shape [N2,3] of simplices where vertices[faces[:,i]] would be the coordinates of the i-th vertex in each triangle.</span>
+<span class="sd">          * &#39;mesh_loc&#39;: the location of the raw mesh .stl file</span>
+<span class="sd">     #. **out_dict[&#39;landmarks&#39;]**: is a dictionary containing the ladnmarks placed on the hips with keys</span>
+<span class="sd">            * &#39;RASIS&#39; : np.array shape (,3) location of the right anterior illiac spine on the triangular mesh definining the anterior pelvic plane</span>
+<span class="sd">            * &#39;LASIS&#39; : np.array shape (,3) location of the left anterior illiac spine on the triangular mesh definining the anterior pelvic plane</span>
+<span class="sd">            * &#39;RTUB&#39;  : np.array shape (,3) location of the right acetabulum on the triangular mesh definining the anterior pelvic plane</span>
+<span class="sd">            * &#39;LTUB&#39;  : np.array shape (,3) location of the left acetabulum on the triangular mesh definining the anterior</span>
+<span class="sd">            * &#39;Right Ant Lat&#39; : np.array shape (n1,3) right anterior socket crest</span>
+<span class="sd">            * &#39;Right Post Lat&#39;: np.array shape (n2,3) right posterior socket crest</span>
+<span class="sd">            * &#39;Left Ant Lat&#39;  : np.array shape (n3,3) left anterior socket crest</span>
+<span class="sd">            * &#39;Left Post Lat&#39; : np.array shape (n4,3) left posterior socket crest</span>
+
+<span class="sd">    :return:</span>
+<span class="sd">    :rtype:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">log_loc</span>  <span class="o">=</span> <span class="s1">&#39;./log&#39;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">log_loc</span><span class="p">):</span><span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">log_loc</span><span class="p">)</span>
+    <span class="n">log_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">log_loc</span><span class="p">,</span><span class="s1">&#39;stl_file_outside_sub_&#39;</span><span class="o">+</span><span class="n">dt_string</span><span class="o">+</span><span class="s1">&#39;.txt&#39;</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">log_file</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="n">missing_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">log_loc</span><span class="p">,</span><span class="s1">&#39;missing_data&#39;</span> <span class="o">+</span> <span class="n">dt_string</span> <span class="o">+</span> <span class="s1">&#39;.txt&#39;</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">missing_file</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">g</span><span class="p">:</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">:</span>
+        <span class="n">out_dict</span>     <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">surface_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">landmark_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">source_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">source_loc</span><span class="p">,</span><span class="n">p</span><span class="p">)</span>
+        <span class="n">target_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">target_loc</span><span class="p">,</span><span class="n">p</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">target_path</span><span class="p">):</span> <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">target_path</span><span class="p">)</span>
+
+        <span class="n">studies</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">source_path</span><span class="p">))</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">source_path</span><span class="p">,</span><span class="n">f</span><span class="p">))]</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">studies</span><span class="p">:</span>
+
+            <span class="n">source_study_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">source_path</span><span class="p">,</span><span class="n">s</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;========================================================================================&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Extracting socket landmarks for &quot;</span> <span class="o">+</span> <span class="n">source_study_path</span><span class="p">)</span>
+            <span class="n">xlsx_file_list</span>    <span class="o">=</span> <span class="nb">sorted</span><span class="p">([</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">source_study_path</span><span class="p">)</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;xlsx&quot;</span><span class="p">])</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">xlsx_file_list</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+                <span class="n">temp_list</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">temp_folders</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">source_study_path</span><span class="p">)</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                    <span class="n">source_study_path</span><span class="p">,</span><span class="n">f</span><span class="p">))]</span>
+                <span class="n">kk</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">temp_list</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+                    <span class="n">temp_list</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">([</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                    <span class="n">source_study_path</span><span class="p">,</span><span class="n">temp_folders</span><span class="p">[</span><span class="n">kk</span><span class="p">]))</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;xlsx&quot;</span><span class="p">])</span>
+                    <span class="n">kk</span> <span class="o">+=</span><span class="mi">1</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">temp_list</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span><span class="n">xlsx_file_list</span><span class="o">=</span><span class="n">temp_list</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="n">xlsx_file</span>         <span class="o">=</span> <span class="n">xlsx_file_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">xlsx_path</span>         <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                    <span class="n">source_study_path</span><span class="p">,</span><span class="n">temp_folders</span><span class="p">[</span><span class="n">kk</span><span class="p">]),</span><span class="n">xlsx_file</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">xlsx_file</span>         <span class="o">=</span> <span class="n">xlsx_file_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">xlsx_path</span>         <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">source_study_path</span><span class="p">,</span><span class="n">xlsx_file</span><span class="p">)</span>
+            <span class="n">workbook</span>          <span class="o">=</span> <span class="n">openpyxl</span><span class="o">.</span><span class="n">load_workbook</span><span class="p">(</span><span class="n">xlsx_path</span><span class="p">,</span><span class="n">data_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">worksheet</span>         <span class="o">=</span> <span class="n">workbook</span><span class="o">.</span><span class="n">active</span>
+
+            <span class="n">origin</span><span class="p">,</span><span class="n">spacing</span> <span class="o">=</span> <span class="n">find_imOriginSpacing_from_worksheet</span><span class="p">(</span><span class="n">worksheet</span><span class="p">)</span>
+            <span class="c1">#-----------------------------------------------------------------------------------------------------------</span>
+            <span class="c1">#----if there is no spacing or origin information, data point is not useful hence we shouod not store it-</span>
+            <span class="c1">#-----------------------------------------------------------------------------------------------------------</span>
+            <span class="k">if</span> <span class="n">spacing</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">origin</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">missing_file</span><span class="p">,</span><span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">g</span><span class="p">:</span>
+                    <span class="n">g</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">source_study_path</span><span class="o">+</span><span class="s1">&#39; </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;origin or spacing missing&quot;</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="k">else</span><span class="p">:</span>
+
+                <span class="k">if</span> <span class="n">source_study_path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;UCLH - Dysplastics&#39;</span><span class="p">:</span>
+                    <span class="n">spacing</span><span class="p">[:,[</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">spacing</span><span class="p">[:,[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">]]</span>
+                    <span class="n">spacing</span> <span class="o">=</span> <span class="n">spacing</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
+                <span class="n">my_dict</span> <span class="o">=</span> <span class="n">find_structure_coordinate_socket</span><span class="p">(</span><span class="n">worksheet</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;Right Ant Lat&#39;</span><span class="p">,</span><span class="s1">&#39;Right Post Lat&#39;</span><span class="p">,</span><span class="s1">&#39;Left Ant Lat&#39;</span><span class="p">,</span><span class="s1">&#39;Left Post Lat&#39;</span><span class="p">]:</span>
+                    <span class="n">coords</span> <span class="o">=</span> <span class="n">find_coordinates_from_worksheet</span><span class="p">(</span><span class="n">worksheet</span><span class="o">=</span><span class="n">worksheet</span><span class="p">,</span><span class="n">my_dict</span><span class="o">=</span><span class="n">my_dict</span><span class="p">,</span><span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+                    <span class="c1">#print(coords)</span>
+                    <span class="k">if</span> <span class="n">coords</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;spacing&#39;</span><span class="p">)</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="n">spacing</span><span class="o">==</span><span class="kc">None</span><span class="p">)</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;origin&#39;</span><span class="p">)</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="n">origin</span> <span class="o">==</span> <span class="kc">None</span><span class="p">)</span>
+                        <span class="n">coords</span> <span class="o">=</span> <span class="n">coords</span> <span class="o">*</span> <span class="n">spacing</span> <span class="o">+</span> <span class="p">(</span><span class="n">origin</span><span class="p">)</span>
+
+                        <span class="n">landmark_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">coords</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Extracting APP landmarks for &quot;</span> <span class="o">+</span> <span class="n">source_study_path</span><span class="p">)</span>
+                <span class="n">temp_dict</span> <span class="o">=</span> <span class="n">find_app_coordinates</span><span class="p">(</span><span class="n">worksheet</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">key</span><span class="p">,</span><span class="n">val</span> <span class="ow">in</span> <span class="n">temp_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">landmark_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+
+                <span class="c1">#---------------------------------------------------------------------------------------------------------------</span>
+                <span class="c1">#----Extracting landmark data-----------------------------------------------------------------------------------</span>
+
+                <span class="c1">#---------------------------------------------------------------------------------------------------------------</span>
+                <span class="c1">#----Extracting the surface data--------------------------------------------------------------------------------</span>
+                <span class="k">for</span> <span class="n">side</span><span class="p">,</span><span class="n">key</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">([</span><span class="s1">&#39;right&#39;</span><span class="p">,</span><span class="s1">&#39;left&#39;</span><span class="p">],[</span><span class="s1">&#39;RPel&#39;</span><span class="p">,</span><span class="s1">&#39;LPel&#39;</span><span class="p">]):</span>
+                    <span class="n">folders</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">source_study_path</span><span class="p">)</span> <span class="k">if</span>
+                               <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">source_study_path</span><span class="p">,</span><span class="n">f</span><span class="p">))</span> <span class="ow">and</span> <span class="n">side</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">folders</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">study_subpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">source_study_path</span><span class="p">,</span><span class="n">folders</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;--------------------------------------------------------------------------&#39;</span><span class="p">)</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Processing &#39;</span><span class="o">+</span><span class="n">study_subpath</span><span class="p">)</span>
+                        <span class="n">stl_file_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">study_subpath</span><span class="p">)</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;stl&#39;</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">stl_file_list</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="n">stl_file</span> <span class="o">=</span> <span class="n">stl_file_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                            <span class="n">stl_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">study_subpath</span><span class="p">,</span><span class="n">stl_file</span><span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span><span class="c1">#check that the stl file is not outisde of the subpath knstead of being in</span>
+                            <span class="c1"># filepath/right, it is in filepath</span>
+                            <span class="n">stl_file_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">source_study_path</span><span class="p">)</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;stl&#39;</span><span class="p">]</span>
+                            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">stl_file_list</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+                                <span class="n">stl_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">source_study_path</span><span class="p">,</span><span class="n">stl_file_list</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="n">stl_path</span> <span class="o">=</span> <span class="kc">None</span>
+                            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">log_file</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">source_study_path</span><span class="o">+</span><span class="s1">&#39; </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+
+
+                        <span class="k">if</span> <span class="n">stl_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                            <span class="n">m</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">Mesh</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">stl_path</span><span class="p">)</span>
+                            <span class="n">points</span><span class="p">,</span><span class="n">faces</span> <span class="o">=</span> <span class="n">loadSTL</span><span class="p">(</span><span class="n">stl_path</span><span class="p">)</span>
+                            <span class="n">surface_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>       <span class="o">=</span> <span class="p">{}</span>
+                            <span class="n">surface_dict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;points&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">points</span>
+                            <span class="n">surface_dict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;faces&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="n">faces</span>
+                            <span class="n">surface_dict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;mesh_loc&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">stl_path</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                <span class="k">if</span> <span class="n">stl_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">out_dict</span><span class="p">[</span><span class="s1">&#39;surface&#39;</span><span class="p">]</span>     <span class="o">=</span> <span class="n">surface_dict</span>
+                    <span class="n">out_dict</span><span class="p">[</span><span class="s1">&#39;landmarks&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="n">landmark_dict</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Finished &#39;</span> <span class="o">+</span> <span class="n">study_subpath</span><span class="p">)</span>
+                            <span class="c1">#with open(&#39;&#39;)</span>
+                    <span class="n">target_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">target_path</span><span class="p">,</span><span class="n">s</span><span class="o">+</span><span class="s1">&#39;.p&#39;</span><span class="p">)</span>
+                    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">target_file</span><span class="p">,</span><span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fp</span><span class="p">:</span>
+                        <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">out_dict</span><span class="p">,</span><span class="n">fp</span><span class="p">,</span><span class="n">protocol</span><span class="o">=</span><span class="n">pickle</span><span class="o">.</span><span class="n">HIGHEST_PROTOCOL</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">_create_aligned_data_APP</span><span class="p">():</span>
+    <span class="k">pass</span>
+
+
+
+
+
+<span class="k">def</span> <span class="nf">_plot_all</span><span class="p">():</span>
+    <span class="n">target_file</span> <span class="o">=</span> <span class="s2">&quot;/home/adwaye/PycharmProjects/hip_shape/data/Segmentation_and_landmarks_processed/UCLH - Controls/00796671.p&quot;</span>
+    <span class="n">target_file</span> <span class="o">=</span> <span class="s2">&quot;/home/adwaye/PycharmProjects/hip_shape/data/Segmentation_and_landmarks_processed/TOH - DDH/D11.p&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">target_file</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fp</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
+
+    <span class="c1"># x = data[&#39;surface&#39;][&#39;RPel&#39;][&#39;x&#39;]</span>
+    <span class="c1"># y = data[&#39;surface&#39;][&#39;RPel&#39;][&#39;y&#39;]</span>
+    <span class="c1"># z = data[&#39;surface&#39;][&#39;RPel&#39;][&#39;z&#39;]</span>
+    <span class="c1"># #mlab.mesh(x[0,:],x[1,:],x[2,:])</span>
+    <span class="c1"># # mlab.pipeline.surface(mlab.pipeline.grid_source(x,y,z))</span>
+    <span class="c1"># mlab.points3d(x,y,z)#</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;RPel&#39;</span><span class="p">,</span><span class="s1">&#39;LPel&#39;</span><span class="p">]:</span>
+        <span class="n">file_name</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;surface&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;mesh_loc&#39;</span><span class="p">]</span>
+
+        <span class="c1"># x = my_mesh.x</span>
+        <span class="c1"># y = my_mesh.y</span>
+        <span class="c1"># z = my_mesh.z</span>
+        <span class="c1"># mlab.points3d(x, y, z)</span>
+        <span class="c1"># mlab.show()</span>
+        <span class="n">m_data</span> <span class="o">=</span> <span class="n">mlab</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">mlab</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">surface</span><span class="p">(</span><span class="n">m_data</span><span class="p">)</span>
+    <span class="n">color</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">139</span><span class="o">/</span><span class="mi">255</span><span class="p">,</span> <span class="mi">233</span><span class="o">/</span><span class="mi">255</span><span class="p">,</span> <span class="mi">253</span><span class="o">/</span><span class="mi">255</span><span class="p">),(</span><span class="mi">80</span><span class="o">/</span><span class="mi">255</span><span class="p">,</span> <span class="mi">250</span><span class="o">/</span><span class="mi">255</span><span class="p">,</span> <span class="mi">123</span><span class="o">/</span><span class="mi">255</span><span class="p">),(</span><span class="mi">139</span><span class="o">/</span><span class="mi">255</span><span class="p">,</span> <span class="mi">233</span><span class="o">/</span><span class="mi">255</span><span class="p">,</span> <span class="mi">253</span><span class="o">/</span><span class="mi">255</span><span class="p">),(</span><span class="mi">80</span><span class="o">/</span><span class="mi">255</span><span class="p">,</span> <span class="mi">250</span><span class="o">/</span><span class="mi">255</span><span class="p">,</span> <span class="mi">123</span><span class="o">/</span><span class="mi">255</span><span class="p">)]</span>
+    <span class="n">i</span> <span class="o">=</span><span class="mi">0</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;Right Ant Lat&#39;</span><span class="p">,</span><span class="s1">&#39;Right Post Lat&#39;</span><span class="p">,</span><span class="s1">&#39;Left Ant Lat&#39;</span><span class="p">,</span><span class="s1">&#39;Left Post Lat&#39;</span><span class="p">]:</span>
+        <span class="n">coords</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;landmarks&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span>
+        <span class="n">mlab</span><span class="o">.</span><span class="n">plot3d</span><span class="p">(</span><span class="n">coords</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span><span class="n">coords</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span><span class="n">coords</span><span class="p">[:,</span><span class="mi">2</span><span class="p">],</span><span class="n">line_width</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">mlab</span><span class="o">.</span><span class="n">points3d</span><span class="p">(</span><span class="n">coords</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span><span class="n">coords</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span><span class="n">coords</span><span class="p">[:,</span><span class="mi">2</span><span class="p">],</span><span class="n">scale_factor</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">i</span> <span class="o">+=</span><span class="mi">1</span>
+
+    <span class="n">mlab</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="k">if</span> <span class="vm">__name__</span><span class="o">==</span><span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">conf</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s2">&quot;Are you sure you want to process all data(y/n):&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">conf</span> <span class="o">==</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;now pickling the data&#39;</span><span class="p">)</span>
+        <span class="n">to_pickle</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;finished pickling, enjoy your aachaar!&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;user does not like pickles, they prefer raw fruits&#39;</span><span class="p">)</span>
+
+        <span class="c1">#c,R,t = rigid_align(target_points,template_points)</span>
+        <span class="c1"># socket_alignment_dict[side] = {}</span>
+        <span class="c1"># socket_alignment_dict[side][&#39;R&#39;] = R</span>
+        <span class="c1"># socket_alignment_dict[side][&#39;c&#39;] = c</span>
+        <span class="c1"># socket_alignment_dict[side][&#39;t&#39;] = t</span>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2022, Adwaye Rambojun.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

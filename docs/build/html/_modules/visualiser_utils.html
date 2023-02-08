@@ -1,0 +1,550 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="python" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>visualiser_utils &mdash; hip_shape 0.0.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> hip_shape
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">hip_shape</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html">Module code</a> &raquo;</li>
+        
+      <li>visualiser_utils</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for visualiser_utils</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Helper functions for visualising pickle files conataining meshes. &quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">PyQt5</span> <span class="kn">import</span> <span class="n">QtWidgets</span>
+<span class="kn">from</span> <span class="nn">PyQt5.QtWidgets</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">PyQt5.QtGui</span> <span class="kn">import</span> <span class="n">QFont</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+
+<div class="viewcode-block" id="stl2mesh3d"><a class="viewcode-back" href="../visualiser_utils.html#visualiser_utils.stl2mesh3d">[docs]</a><span class="k">def</span> <span class="nf">stl2mesh3d</span><span class="p">(</span><span class="n">stl_mesh</span><span class="p">):</span>
+    <span class="c1"># stl_mesh is read by nympy-stl from a stl file; it is  an array of faces/triangles (i.e. three 3d points)</span>
+    <span class="c1"># this function extracts the unique vertices and the lists I, J, K to define a Plotly mesh3d</span>
+    <span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">stl_mesh</span><span class="o">.</span><span class="n">vectors</span><span class="o">.</span><span class="n">shape</span> <span class="c1">#(p, 3, 3)</span>
+    <span class="c1"># the array stl_mesh.vectors.reshape(p*q, r) can contain multiple copies of the same vertex;</span>
+    <span class="c1"># extract unique vertices from all mesh triangles</span>
+    <span class="n">vertices</span><span class="p">,</span> <span class="n">ixr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">stl_mesh</span><span class="o">.</span><span class="n">vectors</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">p</span><span class="o">*</span><span class="n">q</span><span class="p">,</span> <span class="n">r</span><span class="p">),</span> <span class="n">return_inverse</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">I</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="n">ixr</span><span class="p">,</span> <span class="p">[</span><span class="mi">3</span><span class="o">*</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">p</span><span class="p">)])</span>
+    <span class="n">J</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="n">ixr</span><span class="p">,</span> <span class="p">[</span><span class="mi">3</span><span class="o">*</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">p</span><span class="p">)])</span>
+    <span class="n">K</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="n">ixr</span><span class="p">,</span> <span class="p">[</span><span class="mi">3</span><span class="o">*</span><span class="n">k</span><span class="o">+</span><span class="mi">2</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">p</span><span class="p">)])</span>
+    <span class="k">return</span> <span class="n">vertices</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="n">J</span><span class="p">,</span> <span class="n">K</span></div>
+
+<div class="viewcode-block" id="xray_selection_menu"><a class="viewcode-back" href="../visualiser_utils.html#visualiser_utils.xray_selection_menu">[docs]</a><span class="k">class</span> <span class="nc">xray_selection_menu</span><span class="p">(</span><span class="n">QWidget</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    widget that allows one to select the working directory where to look for pickle files for the visualiser_mayavi</span>
+<span class="sd">    script</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">xray_selection_menu</span><span class="p">,</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">font_header</span> <span class="o">=</span> <span class="n">QFont</span><span class="p">(</span><span class="s1">&#39;Android Roboto&#39;</span><span class="p">,</span> <span class="mi">15</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">font_subheader</span> <span class="o">=</span> <span class="n">QFont</span><span class="p">(</span><span class="s1">&#39;Android Roboto&#39;</span><span class="p">,</span> <span class="mi">13</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">font_text</span> <span class="o">=</span> <span class="n">QFont</span><span class="p">(</span><span class="s1">&#39;Android Roboto&#39;</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">font_button</span> <span class="o">=</span> <span class="n">QFont</span><span class="p">(</span><span class="s1">&#39;Android Roboto&#39;</span><span class="p">,</span> <span class="mi">11</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">temp_name</span>   <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span> <span class="o">=</span> <span class="n">QVBoxLayout</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_xray_creation_options</span><span class="p">()</span>
+
+        <span class="c1">#self.init_damage_selector()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">connect_buttons</span><span class="p">()</span>
+
+<div class="viewcode-block" id="xray_selection_menu.init_xray_creation_options"><a class="viewcode-back" href="../visualiser_utils.html#visualiser_utils.xray_selection_menu.init_xray_creation_options">[docs]</a>    <span class="k">def</span> <span class="nf">init_xray_creation_options</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">layout</span> <span class="o">=</span> <span class="n">QVBoxLayout</span><span class="p">()</span>
+        <span class="n">study_layout</span> <span class="o">=</span> <span class="n">QHBoxLayout</span><span class="p">()</span>
+        <span class="n">study_id_label</span> <span class="o">=</span> <span class="n">QLabel</span><span class="p">(</span><span class="s2">&quot;Study ID&quot;</span><span class="p">)</span>
+        <span class="n">study_id_label</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">font_text</span><span class="p">)</span>
+        <span class="n">study_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">study_id_label</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># Number for relative size compared to other widgets</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">combobox_studyid</span> <span class="o">=</span> <span class="n">QComboBox</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">combobox_studyid</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">font_text</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">combobox_studyid</span><span class="o">.</span><span class="n">setToolTip</span><span class="p">(</span>
+            <span class="s2">&quot;This displays the pickle files containing the surface being viewed.&quot;</span><span class="p">)</span>
+        <span class="n">study_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">combobox_studyid</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>  <span class="c1"># Number for relative size compared to other widgets</span>
+        <span class="n">studyWidget</span> <span class="o">=</span> <span class="n">QWidget</span><span class="p">()</span>
+        <span class="n">studyWidget</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">study_layout</span><span class="p">)</span>
+
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">studyWidget</span><span class="p">)</span>
+
+
+        <span class="n">button_layout</span> <span class="o">=</span> <span class="n">QHBoxLayout</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_wdir_button</span> <span class="o">=</span> <span class="n">QPushButton</span><span class="p">(</span><span class="s2">&quot;Change save location&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_wdir_button</span><span class="o">.</span><span class="n">setToolTip</span><span class="p">(</span><span class="s2">&quot;Changes the location where xrays and annotations are saved. If a location with a supported file structure is found, the app loads all the studies for the user.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_wdir_button</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span>
+            <span class="s2">&quot;QPushButton&quot;</span> <span class="s2">&quot;{&quot;</span> <span class="s2">&quot;background-color: rgb(102,102,102); color: white&quot;</span> <span class="s2">&quot;}&quot;</span> <span class="s2">&quot;QPushButton::pressed&quot;</span> <span class="s2">&quot;{&quot;</span>
+            <span class="s2">&quot;background-color: #362699; color: white&quot;</span> <span class="s2">&quot;}&quot;</span><span class="p">)</span>
+        <span class="n">button_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">set_wdir_button</span><span class="p">)</span>
+
+        <span class="n">layout3</span> <span class="o">=</span> <span class="n">QHBoxLayout</span><span class="p">()</span>
+        <span class="n">wd_label</span>         <span class="o">=</span> <span class="n">QLabel</span><span class="p">(</span><span class="s2">&quot;Working Directory&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">wd_info</span>  <span class="o">=</span> <span class="n">QLineEdit</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wd_info</span><span class="o">.</span><span class="n">setReadOnly</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">layout3</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">wd_label</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">layout3</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wd_info</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+
+        <span class="n">layout4</span> <span class="o">=</span> <span class="n">QHBoxLayout</span><span class="p">()</span>
+        <span class="n">file_label</span>         <span class="o">=</span> <span class="n">QLabel</span><span class="p">(</span><span class="s2">&quot;Current file&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_file_info</span>  <span class="o">=</span> <span class="n">QLineEdit</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_file_info</span><span class="o">.</span><span class="n">setReadOnly</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_study_info</span> <span class="o">=</span> <span class="n">QLineEdit</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_study_info</span><span class="o">.</span><span class="n">setReadOnly</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">layout4</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">file_label</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># layout4.addWidget(self.current_file_info, 2)</span>
+        <span class="c1"># layout4.addWidget(self.c)</span>
+
+
+
+        <span class="n">layout2</span> <span class="o">=</span> <span class="n">QHBoxLayout</span><span class="p">()</span>
+
+
+
+        <span class="n">widget_wd</span> <span class="o">=</span> <span class="n">QWidget</span><span class="p">()</span>
+        <span class="n">widget_wd</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">layout3</span><span class="p">)</span>
+        <span class="n">widget_options</span> <span class="o">=</span> <span class="n">QWidget</span><span class="p">()</span>
+        <span class="n">widget_options</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">layout</span><span class="p">)</span>
+        <span class="n">widget_info</span>    <span class="o">=</span> <span class="n">QWidget</span><span class="p">()</span>
+        <span class="n">widget_buttons</span> <span class="o">=</span> <span class="n">QWidget</span><span class="p">()</span>
+        <span class="n">widget_buttons</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">button_layout</span><span class="p">)</span>
+        <span class="n">widget_file</span> <span class="o">=</span> <span class="n">QWidget</span><span class="p">()</span>
+        <span class="n">widget_file</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">layout4</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">widget_wd</span><span class="p">)</span>
+        <span class="c1"># self.layout.addWidget(widget_file)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">widget_options</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">widget_info</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">widget_buttons</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="xray_selection_menu.init_damage_selector"><a class="viewcode-back" href="../visualiser_utils.html#visualiser_utils.xray_selection_menu.init_damage_selector">[docs]</a>    <span class="k">def</span> <span class="nf">init_damage_selector</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">layout</span> <span class="o">=</span> <span class="n">QHBoxLayout</span><span class="p">()</span>
+        <span class="n">score_id_label</span> <span class="o">=</span> <span class="n">QLabel</span><span class="p">(</span><span class="s2">&quot;Scoring Method&quot;</span><span class="p">)</span>
+        <span class="n">score_id_label</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">font_text</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">score_id_label</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">score_selector</span> <span class="o">=</span> <span class="n">QComboBox</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">score_selector</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">font_text</span><span class="p">)</span>
+        <span class="c1"># self.score_selector.setStyleSheet(</span>
+        <span class="c1">#     &quot;QPushButton&quot; &quot;{&quot; &quot;background-color: rgb(102,102,102); color: white&quot; &quot;}&quot; &quot;QPushButton::pressed&quot; &quot;{&quot;</span>
+        <span class="c1">#     &quot;background-color: #362699; color: white&quot; &quot;}&quot;)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">score_selector</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">widget</span> <span class="o">=</span> <span class="n">QWidget</span><span class="p">()</span>
+        <span class="n">widget</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">layout</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">widget</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="xray_selection_menu.getDirectory"><a class="viewcode-back" href="../visualiser_utils.html#visualiser_utils.xray_selection_menu.getDirectory">[docs]</a>    <span class="k">def</span> <span class="nf">getDirectory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">QFileDialog</span><span class="o">.</span><span class="n">getExistingDirectory</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">caption</span><span class="o">=</span><span class="s1">&#39;Select a folder&#39;</span><span class="p">,</span><span class="n">directory</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">wd_info</span><span class="o">.</span><span class="n">text</span><span class="p">()</span>
+
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">response</span></div>
+
+
+<div class="viewcode-block" id="xray_selection_menu.getFiles"><a class="viewcode-back" href="../visualiser_utils.html#visualiser_utils.xray_selection_menu.getFiles">[docs]</a>    <span class="k">def</span> <span class="nf">getFiles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">QFileDialog</span><span class="o">.</span><span class="n">getOpenFileName</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">caption</span><span class="o">=</span><span class="s1">&#39;Select a file&#39;</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">temp_name</span> <span class="o">=</span> <span class="n">response</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;file fed to xrayselectionmenu is&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">response</span></div>
+
+
+<div class="viewcode-block" id="xray_selection_menu.change_wd"><a class="viewcode-back" href="../visualiser_utils.html#visualiser_utils.xray_selection_menu.change_wd">[docs]</a>    <span class="k">def</span> <span class="nf">change_wd</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getDirectory</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">response</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wd_info</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span><span class="n">response</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="xray_selection_menu.connect_buttons"><a class="viewcode-back" href="../visualiser_utils.html#visualiser_utils.xray_selection_menu.connect_buttons">[docs]</a>    <span class="k">def</span> <span class="nf">connect_buttons</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_wdir_button</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">change_wd</span><span class="p">)</span></div></div>
+        <span class="c1"># self.addXrayToStudy_button.clicked.connect(self.add_xray_to_study)</span>
+        <span class="c1"># self.new_study_button.clicked.connect(self.create_new_study)</span>
+
+
+
+
+<div class="viewcode-block" id="xray_selection_menu_old"><a class="viewcode-back" href="../visualiser_utils.html#visualiser_utils.xray_selection_menu_old">[docs]</a><span class="k">class</span> <span class="nc">xray_selection_menu_old</span><span class="p">(</span><span class="n">QWidget</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    class that handles the xray creation and the damage type selector</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">xray_selection_menu_old</span><span class="p">,</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">font_header</span> <span class="o">=</span> <span class="n">QFont</span><span class="p">(</span><span class="s1">&#39;Android Roboto&#39;</span><span class="p">,</span> <span class="mi">15</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">font_subheader</span> <span class="o">=</span> <span class="n">QFont</span><span class="p">(</span><span class="s1">&#39;Android Roboto&#39;</span><span class="p">,</span> <span class="mi">13</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">font_text</span> <span class="o">=</span> <span class="n">QFont</span><span class="p">(</span><span class="s1">&#39;Android Roboto&#39;</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">font_button</span> <span class="o">=</span> <span class="n">QFont</span><span class="p">(</span><span class="s1">&#39;Android Roboto&#39;</span><span class="p">,</span> <span class="mi">11</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">temp_name</span>   <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span> <span class="o">=</span> <span class="n">QVBoxLayout</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_xray_creation_options</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_damage_selector</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">connect_buttons</span><span class="p">()</span>
+
+<div class="viewcode-block" id="xray_selection_menu_old.init_xray_creation_options"><a class="viewcode-back" href="../visualiser_utils.html#visualiser_utils.xray_selection_menu_old.init_xray_creation_options">[docs]</a>    <span class="k">def</span> <span class="nf">init_xray_creation_options</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">layout</span> <span class="o">=</span> <span class="n">QVBoxLayout</span><span class="p">()</span>
+        <span class="n">study_layout</span> <span class="o">=</span> <span class="n">QHBoxLayout</span><span class="p">()</span>
+        <span class="n">study_id_label</span> <span class="o">=</span> <span class="n">QLabel</span><span class="p">(</span><span class="s2">&quot;Study ID&quot;</span><span class="p">)</span>
+        <span class="n">study_id_label</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">font_text</span><span class="p">)</span>
+        <span class="n">study_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">study_id_label</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># Number for relative size compared to other widgets</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">combobox_studyid</span> <span class="o">=</span> <span class="n">QComboBox</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">combobox_studyid</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">font_text</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">combobox_studyid</span><span class="o">.</span><span class="n">setToolTip</span><span class="p">(</span>
+            <span class="s2">&quot;This displays the file study id to which the xray being viewed belongs. Use the dropdown to select another study from the working directory.&quot;</span><span class="p">)</span>
+        <span class="n">study_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">combobox_studyid</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>  <span class="c1"># Number for relative size compared to other widgets</span>
+        <span class="n">studyWidget</span> <span class="o">=</span> <span class="n">QWidget</span><span class="p">()</span>
+        <span class="n">studyWidget</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">study_layout</span><span class="p">)</span>
+
+        <span class="n">xray_layout</span> <span class="o">=</span> <span class="n">QHBoxLayout</span><span class="p">()</span>
+        <span class="n">xray_id_label</span> <span class="o">=</span> <span class="n">QLabel</span><span class="p">(</span><span class="s2">&quot;Xray ID&quot;</span><span class="p">)</span>
+        <span class="n">xray_id_label</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">font_text</span><span class="p">)</span>
+        <span class="n">xray_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">xray_id_label</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># Number for relative size compared to other widgets</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">combobox_xrayid</span> <span class="o">=</span> <span class="n">QComboBox</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">combobox_xrayid</span><span class="o">.</span><span class="n">setToolTip</span><span class="p">(</span><span class="s2">&quot;This displays the file name of the xray being viewed. Use the dropdown to select another xray from the same study.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">combobox_xrayid</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">font_text</span><span class="p">)</span>
+        <span class="n">xray_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">combobox_xrayid</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>  <span class="c1"># Number for relative size compared to other widgets</span>
+        <span class="n">xray_widget</span> <span class="o">=</span> <span class="n">QWidget</span><span class="p">()</span>
+        <span class="n">xray_widget</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">xray_layout</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">studyWidget</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">xray_widget</span><span class="p">)</span>
+
+        <span class="n">button_layout</span> <span class="o">=</span> <span class="n">QHBoxLayout</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">new_study_button</span> <span class="o">=</span> <span class="n">QPushButton</span><span class="p">(</span><span class="s2">&quot;+ New Study&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">new_study_button</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span>
+            <span class="s2">&quot;QPushButton&quot;</span> <span class="s2">&quot;{&quot;</span> <span class="s2">&quot;background-color: rgb(102,102,102); color: white&quot;</span> <span class="s2">&quot;}&quot;</span> <span class="s2">&quot;QPushButton::pressed&quot;</span> <span class="s2">&quot;{&quot;</span>
+            <span class="s2">&quot;background-color: #362699; color: white&quot;</span> <span class="s2">&quot;}&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">addXrayToStudy_button</span> <span class="o">=</span> <span class="n">QPushButton</span><span class="p">(</span><span class="s2">&quot;Add X-ray to Study&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addXrayToStudy_button</span><span class="o">.</span><span class="n">setToolTip</span><span class="p">(</span><span class="s2">&quot;Opens up the file dialog to allow the the user to select a new xray to add to the current study.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addXrayToStudy_button</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span>
+            <span class="s2">&quot;QPushButton&quot;</span> <span class="s2">&quot;{&quot;</span> <span class="s2">&quot;background-color: rgb(102,102,102); color: white&quot;</span> <span class="s2">&quot;}&quot;</span> <span class="s2">&quot;QPushButton::pressed&quot;</span> <span class="s2">&quot;{&quot;</span>
+            <span class="s2">&quot;background-color: #362699; color: white&quot;</span> <span class="s2">&quot;}&quot;</span><span class="p">)</span>
+        <span class="n">button_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">new_study_button</span><span class="p">)</span>
+        <span class="n">button_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">addXrayToStudy_button</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_wdir_button</span> <span class="o">=</span> <span class="n">QPushButton</span><span class="p">(</span><span class="s2">&quot;Change save location&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_wdir_button</span><span class="o">.</span><span class="n">setToolTip</span><span class="p">(</span><span class="s2">&quot;Changes the location where xrays and annotations are saved. If a location with a supported file structure is found, the app loads all the studies for the user.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_wdir_button</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span>
+            <span class="s2">&quot;QPushButton&quot;</span> <span class="s2">&quot;{&quot;</span> <span class="s2">&quot;background-color: rgb(102,102,102); color: white&quot;</span> <span class="s2">&quot;}&quot;</span> <span class="s2">&quot;QPushButton::pressed&quot;</span> <span class="s2">&quot;{&quot;</span>
+            <span class="s2">&quot;background-color: #362699; color: white&quot;</span> <span class="s2">&quot;}&quot;</span><span class="p">)</span>
+        <span class="n">button_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">set_wdir_button</span><span class="p">)</span>
+
+        <span class="n">layout3</span> <span class="o">=</span> <span class="n">QHBoxLayout</span><span class="p">()</span>
+        <span class="n">wd_label</span>         <span class="o">=</span> <span class="n">QLabel</span><span class="p">(</span><span class="s2">&quot;Working Directory&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">wd_info</span>  <span class="o">=</span> <span class="n">QLineEdit</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wd_info</span><span class="o">.</span><span class="n">setReadOnly</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">layout3</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">wd_label</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">layout3</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wd_info</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+
+        <span class="n">layout4</span> <span class="o">=</span> <span class="n">QHBoxLayout</span><span class="p">()</span>
+        <span class="n">file_label</span>         <span class="o">=</span> <span class="n">QLabel</span><span class="p">(</span><span class="s2">&quot;Current file&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_file_info</span>  <span class="o">=</span> <span class="n">QLineEdit</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_file_info</span><span class="o">.</span><span class="n">setReadOnly</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_study_info</span> <span class="o">=</span> <span class="n">QLineEdit</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_study_info</span><span class="o">.</span><span class="n">setReadOnly</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">layout4</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">file_label</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># layout4.addWidget(self.current_file_info, 2)</span>
+        <span class="c1"># layout4.addWidget(self.c)</span>
+
+
+
+        <span class="n">layout2</span> <span class="o">=</span> <span class="n">QHBoxLayout</span><span class="p">()</span>
+        <span class="n">score_date_label</span>         <span class="o">=</span> <span class="n">QLabel</span><span class="p">(</span><span class="s2">&quot;Date&quot;</span><span class="p">)</span>
+        <span class="n">score_organ_label</span>        <span class="o">=</span> <span class="n">QLabel</span><span class="p">(</span><span class="s2">&quot;Anatomical Structure&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xray_info_box_date</span>  <span class="o">=</span> <span class="n">QLineEdit</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xray_info_box_date</span><span class="o">.</span><span class="n">setReadOnly</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xray_info_box_date</span><span class="o">.</span><span class="n">setToolTip</span><span class="p">(</span><span class="s2">&quot;Shows the date of acquisition of the xray being viewed&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xray_info_box_organ</span> <span class="o">=</span> <span class="n">QLineEdit</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">xray_info_box_organ</span><span class="o">.</span><span class="n">setReadOnly</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xray_info_box_organ</span><span class="o">.</span><span class="n">setToolTip</span><span class="p">(</span><span class="s2">&quot;Shows the name of the organ being displayed&quot;</span><span class="p">)</span>
+        <span class="n">layout2</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">score_date_label</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">layout2</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xray_info_box_date</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">layout2</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">score_organ_label</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">layout2</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xray_info_box_organ</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+
+
+        <span class="n">widget_wd</span> <span class="o">=</span> <span class="n">QWidget</span><span class="p">()</span>
+        <span class="n">widget_wd</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">layout3</span><span class="p">)</span>
+        <span class="n">widget_options</span> <span class="o">=</span> <span class="n">QWidget</span><span class="p">()</span>
+        <span class="n">widget_options</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">layout</span><span class="p">)</span>
+        <span class="n">widget_info</span>    <span class="o">=</span> <span class="n">QWidget</span><span class="p">()</span>
+        <span class="n">widget_info</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">layout2</span><span class="p">)</span>
+        <span class="n">widget_buttons</span> <span class="o">=</span> <span class="n">QWidget</span><span class="p">()</span>
+        <span class="n">widget_buttons</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">button_layout</span><span class="p">)</span>
+        <span class="n">widget_file</span> <span class="o">=</span> <span class="n">QWidget</span><span class="p">()</span>
+        <span class="n">widget_file</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">layout4</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">widget_wd</span><span class="p">)</span>
+        <span class="c1"># self.layout.addWidget(widget_file)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">widget_options</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">widget_info</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">widget_buttons</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="xray_selection_menu_old.init_damage_selector"><a class="viewcode-back" href="../visualiser_utils.html#visualiser_utils.xray_selection_menu_old.init_damage_selector">[docs]</a>    <span class="k">def</span> <span class="nf">init_damage_selector</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">layout</span> <span class="o">=</span> <span class="n">QHBoxLayout</span><span class="p">()</span>
+        <span class="n">score_id_label</span> <span class="o">=</span> <span class="n">QLabel</span><span class="p">(</span><span class="s2">&quot;Scoring Method&quot;</span><span class="p">)</span>
+        <span class="n">score_id_label</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">font_text</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">score_id_label</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">score_selector</span> <span class="o">=</span> <span class="n">QComboBox</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">score_selector</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">font_text</span><span class="p">)</span>
+        <span class="c1"># self.score_selector.setStyleSheet(</span>
+        <span class="c1">#     &quot;QPushButton&quot; &quot;{&quot; &quot;background-color: rgb(102,102,102); color: white&quot; &quot;}&quot; &quot;QPushButton::pressed&quot; &quot;{&quot;</span>
+        <span class="c1">#     &quot;background-color: #362699; color: white&quot; &quot;}&quot;)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">score_selector</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">widget</span> <span class="o">=</span> <span class="n">QWidget</span><span class="p">()</span>
+        <span class="n">widget</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">layout</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">widget</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="xray_selection_menu_old.getDirectory"><a class="viewcode-back" href="../visualiser_utils.html#visualiser_utils.xray_selection_menu_old.getDirectory">[docs]</a>    <span class="k">def</span> <span class="nf">getDirectory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">QFileDialog</span><span class="o">.</span><span class="n">getExistingDirectory</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">caption</span><span class="o">=</span><span class="s1">&#39;Select a folder&#39;</span><span class="p">,</span><span class="n">directory</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">wd_info</span><span class="o">.</span><span class="n">text</span><span class="p">()</span>
+
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">response</span></div>
+
+
+<div class="viewcode-block" id="xray_selection_menu_old.getFiles"><a class="viewcode-back" href="../visualiser_utils.html#visualiser_utils.xray_selection_menu_old.getFiles">[docs]</a>    <span class="k">def</span> <span class="nf">getFiles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">QFileDialog</span><span class="o">.</span><span class="n">getOpenFileName</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">caption</span><span class="o">=</span><span class="s1">&#39;Select a file&#39;</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">temp_name</span> <span class="o">=</span> <span class="n">response</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;file fed to xrayselectionmenu is&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">response</span></div>
+
+
+<div class="viewcode-block" id="xray_selection_menu_old.change_wd"><a class="viewcode-back" href="../visualiser_utils.html#visualiser_utils.xray_selection_menu_old.change_wd">[docs]</a>    <span class="k">def</span> <span class="nf">change_wd</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getDirectory</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">response</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wd_info</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span><span class="n">response</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="xray_selection_menu_old.add_xray_to_study"><a class="viewcode-back" href="../visualiser_utils.html#visualiser_utils.xray_selection_menu_old.add_xray_to_study">[docs]</a>    <span class="k">def</span> <span class="nf">add_xray_to_study</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getFiles</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">file</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">current_file_info</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span><span class="n">file</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span></div>
+
+<div class="viewcode-block" id="xray_selection_menu_old.create_new_study"><a class="viewcode-back" href="../visualiser_utils.html#visualiser_utils.xray_selection_menu_old.create_new_study">[docs]</a>    <span class="k">def</span> <span class="nf">create_new_study</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getFiles</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">file</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">current_study_info</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span><span class="n">file</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span></div>
+
+<div class="viewcode-block" id="xray_selection_menu_old.connect_buttons"><a class="viewcode-back" href="../visualiser_utils.html#visualiser_utils.xray_selection_menu_old.connect_buttons">[docs]</a>    <span class="k">def</span> <span class="nf">connect_buttons</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_wdir_button</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">change_wd</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addXrayToStudy_button</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">add_xray_to_study</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">new_study_button</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">create_new_study</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2022, Adwaye Rambojun.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
