@@ -228,7 +228,13 @@ def _plot_all():
     mlab.show()
 
 if __name__=='__main__':
-    plot_all()
+    conf = input("Are you sure you want to process all data(y/n):")
+    if conf == 'y':
+        print('now pickling the data')
+        to_pickle()
+        print('finished pickling, enjoy your aachaar!')
+    else:
+        print('user does not like pickles, they prefer raw fruits')
 
         #c,R,t = rigid_align(target_points,template_points)
         # socket_alignment_dict[side] = {}

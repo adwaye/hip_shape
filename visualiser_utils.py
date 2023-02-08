@@ -1,3 +1,4 @@
+"""Helper functions for visualising pickle files conataining meshes. """
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QFont
@@ -21,7 +22,8 @@ def stl2mesh3d(stl_mesh):
 
 class xray_selection_menu(QWidget):
     """
-    class that handles the xray creation and the damage type selector
+    widget that allows one to select the working directory where to look for pickle files for the visualiser_mayavi
+    script
     """
     def __init__(self):
         super(xray_selection_menu,self).__init__()

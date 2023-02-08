@@ -1,3 +1,11 @@
+"""contains a UI to view all the pickle files present in the target folder of
+data/Segmentation_and_landmarks_processed. To view the meshes, simply
+.. code-block:: console
+
+   $ python3 visualiser_mayavi.py
+
+and change the directory to the one containing the processed pickle files.
+"""
 from mayavi import mlab
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import *
@@ -33,7 +41,7 @@ class Visualization(HasTraits):
         ## PLot to Show
         with open(self.file_name,'rb') as fp:
             data = pickle.load(fp)
-        for key in ['RPel']:
+        for key in ['RPel','LPel']:
             f_name = data['surface'][key]['mesh_loc']
             m_data = mlab.pipeline.open(f_name) #todo: try to use this in the observer.display_data
             obj = mlab.pipeline.surface(m_data)
@@ -142,7 +150,7 @@ class Ui_MainWindow(object):
         if not os.path.isdir(self.output_loc):
             os.makedirs(self.output_loc)
         # self.xray_selection_menu.wd_info.setText(self.output_loc)
-        self.menu1.combobox_xrayid.clear()
+
         self.menu1.combobox_studyid.clear()
         self.display_studies1()
 
@@ -152,7 +160,7 @@ class Ui_MainWindow(object):
         if not os.path.isdir(self.output_loc):
             os.makedirs(self.output_loc)
         # self.xray_selection_menu.wd_info.setText(self.output_loc)
-        self.menu2.combobox_xrayid.clear()
+
         self.menu2.combobox_studyid.clear()
         self.display_studies2()
 
@@ -185,7 +193,7 @@ class Ui_MainWindow(object):
             study_name = self.menu1.combobox_studyid.currentText()
             meta_loc   = os.path.join(self.output_loc,study_name)
             print(meta_loc)
-            self.menu1.combobox_xrayid.clear()
+            #self.menu1.combobox_studyid.clear()
             self.load_selected_xrays1()
 
     def display_CT2(self):
@@ -193,7 +201,7 @@ class Ui_MainWindow(object):
             study_name = self.menu2.combobox_studyid.currentText()
             meta_loc   = os.path.join(self.output_loc,study_name)
             print(meta_loc)
-            self.menu2.combobox_xrayid.clear()
+            #self.menu2.combobox_studyid.clear()
             self.load_selected_xrays2()
 
 
