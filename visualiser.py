@@ -259,6 +259,7 @@ class MayaviVisualiser(MayaviObserver):
 
 
 class DataSource(object):
+    """dependent class of observer pattern. Currently not being used. Switched to a generator based approach to visualisation"""
 
     def __init__(self,**kwargs):
         self.observers = []
@@ -305,7 +306,18 @@ class DataSource(object):
 
 
 class HipDataSource(HipData,DataSource):
+    """Subclass of data_utils.HipData and visualiser.DataSource.
+
+    :param pickle_path: path to pickle file output of data_cleaning.to_pickle
+    :type pickle_path: str
+    :param decimator: the decimator object to be used
+    :type decimator: data_utils.Decimator
+    :param kwargs:
+    :type kwargs:
+    """
+
     def __init__(self,pickle_path:str,decimator=None,**kwargs):
+
 
         super().__init__(pickle_path=pickle_path,decimator=decimator)
         DataSource.__init__(self,**kwargs)
@@ -445,6 +457,9 @@ def jax_func(data):
 
 
 class SafeTimedThread(threading.Thread):
+    """Testing threding to update mayavi visualiser.
+
+    """
     def __init__(self, thread_condition, scan_time, funct, *funct_args):
         threading.Thread.__init__(self)
 
