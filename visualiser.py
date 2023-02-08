@@ -229,14 +229,17 @@ class MayaviObserver(Observer,HasTraits):
 
 
 class MayaviVisualiser(MayaviObserver):
-    def __init__(self,generator,**kwargs):
-        """Main visualiser to be paired with loops.
+    """Main visualiser to be paired with loops.
 
-        :param generator: python generator object whose output of __next__ is a list of points,faces which represent the array of vertex coordinates and face indices respectively such that points[faces[:,i]] are the coordinates of the i-th triangle.
-        :type generator: generator
-        :param kwargs:
-        :type kwargs:
-        """
+    :param generator: python generator object whose output of __next__ is a list of points,faces which represent the
+    array of vertex coordinates and face indices respectively such that points[faces[:,i]] are the coordinates of the
+    i-th triangle.
+    :type generator: generator
+    :param kwargs:
+    :type kwargs:
+    """
+    def __init__(self,generator,**kwargs):
+
         super().__init__(**kwargs)
         self.generator = generator
 
@@ -256,6 +259,7 @@ class MayaviVisualiser(MayaviObserver):
 
 
 class DataSource(object):
+
     def __init__(self,**kwargs):
         self.observers = []
 
