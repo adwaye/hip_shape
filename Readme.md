@@ -1,5 +1,5 @@
 # Hip_shape manipulation
-This repository contains some code which allows one to manipulate the data for the Hip shape project. Full documentation can be found [here]()
+This repository contains some code which allows one to manipulate the data for the Hip shape project. Full documentation can be found [here](https://adwaye.github.io/hip_shape/index.html)
 
 ## Getting started
 The raw data is stored in the following folders:
