@@ -1,3 +1,4 @@
+"""Contains some methods used to align hips"""
 import numpy as np
 from scipy import ndimage as ndi
 from jax.scipy import ndimage as jndi
@@ -136,9 +137,8 @@ def sample_fourier(t,a,b,c,d):
 
 
 def _make_distance_transform(points,size,ncpus=1):
-    """
-    Generates a distance array of shape size where len(size)=3 where the distance array is calculated from the points
-    takes in a set of points where np.max(points,axis=0) < size
+    """Generates a distance array of shape size where len(size)=3 where the distance array is calculated from the points takes in a set of points where np.max(points,axis=0) < size
+
     :param points: [N,3] np array of points representing the set of points from which the distance transform is being calculated
                    points need to lie within [0,size[0]]\times[0,size[1]]\times[0,size[2]]
     :param size:   tuple, array of length 3
@@ -159,8 +159,7 @@ def _make_distance_transform(points,size,ncpus=1):
 
 
 def _embed_points_in_array(points1,points2,padding=(100,100)):
-    """
-    Translates points1 and points2 so that they live in a square domain [0,size[0]]\times[0,size[1]]\times[0,size[2]]
+    """Translates points1 and points2 so that they live in a square domain [0,size[0]]\times[0,size[1]]\times[0,size[2]]
 
     :param points1: np.array [N1,3]
     :param points2: np.array [N2,3]
@@ -191,9 +190,8 @@ def _embed_points_in_array(points1,points2,padding=(100,100)):
 
 
 def eval_distance(points,dist):
-    """
-    finds the value of the scalar field dist with support [0,dist.shape[0]]\times[0,dist.shape[1]]\times[0,
-    dist.shape[1]]
+    """finds the value of the scalar field dist with support [0,dist.shape[0]]\times[0,dist.shape[1]]\times[0,dist.shape[1]]
+
     :param points: np.array [N,3] list of points wwhere the scalar field given by dist needs to be evaluated
     :param dist:   scalar array with support [0,dist.shape[0]]\times[0,dist.shape[1]]\times[0,
                    dist.shape[1]] np.array size [Nx,Ny,Nz]
@@ -211,9 +209,8 @@ def eval_distance(points,dist):
 
 
 def jax_eval_distance(points,dist):
-    """
-    finds the value of the scalar field dist with support [0,dist.shape[0]]\times[0,dist.shape[1]]\times[0,
-    dist.shape[1]]
+    """finds the value of the scalar field dist with support [0,dist.shape[0]]\times[0,dist.shape[1]]\times[0,dist.shape[1]]
+
     :param points: np.array [N,3] list of points wwhere the scalar field given by dist needs to be evaluated
     :param dist:   scalar array with support [0,dist.shape[0]]\times[0,dist.shape[1]]\times[0,
                    dist.shape[1]] np.array size [Nx,Ny,Nz]
@@ -231,8 +228,8 @@ def jax_eval_distance(points,dist):
 
 
 def jax_yaw_matrix(angle=np.pi/2):
-    """
-    Returns the yaw matrix with angle (rotation around z-axis)
+    """Returns the yaw matrix with angle (rotation around z-axis) see https://en.wikipedia.org/wiki /Rotation_matrix in_three_dimensions
+
     :param angle:
     :return:
     #https: // en.wikipedia.org / wiki / Rotation_matrix  #In_three_dimensions
@@ -245,8 +242,8 @@ def jax_yaw_matrix(angle=np.pi/2):
 
 
 def jax_pitch_matrix(angle):
-    """
-    Returns the pitch matrix with angle (rotation around y-axis)
+    """Returns the pitch matrix with angle (rotation around y-axis) see https://en.wikipedia.org/wiki /Rotation_matrix in_three_dimensions
+
     :param angle:
     :return:
     #https: // en.wikipedia.org / wiki / Rotation_matrix  #In_three_dimensions
@@ -258,12 +255,11 @@ def jax_pitch_matrix(angle):
     return out
 
 def jax_roll_matrix(angle):
-    """
-    Returns the roll matrix with angle (rotation around x-axis)
+    """Returns the roll matrix with angle (rotation around x-axis) see https://en.wikipedia.org/wiki /Rotation_matrix in_three_dimensions
 
     :param angle:
     :return:
-    #https: // en.wikipedia.org / wiki / Rotation_matrix  #In_three_dimensions
+
     """
     out = jnp.array([[1,             0 ,               0],
                      [0,jnp.cos(angle) , -jnp.sin(angle)],
@@ -273,7 +269,7 @@ def jax_roll_matrix(angle):
 
 
 def jax_rotation_matrix3d(yaw_angle,pitch_angle,roll_angle):
-    """Build a 3d rotation matrix
+    """Build a 3d rotation matrix see https://en.wikipedia.org/wiki /Rotation_matrix in_three_dimensions
 
     :param yaw_angle: z-axis rotation angle:param yaw_angle:
     :type yaw_angle: float scalar
@@ -323,9 +319,9 @@ def affine_cost(affine_params,points,dist):
     return _affine_cost(yaw_angle,pitch_angle,roll_angle,translation,points,dist)
 
 def _affine_cost(yaw_angle,pitch_angle,roll_angle,translation,points,dist):
-    """
-    returns the sum of the distance transform evaluated at the affine transformed points with rotation amtrix given by
-    yaw_angle,pitch_angle,roll_angle and translation given by translation
+    """returns the sum of the distance transform evaluated at the affine transformed points with rotation matrix
+    given by yaw_angle,pitch_angle,roll_angle and translation given by translation
+
     :param yaw_angle: scalar  float
     :param pitch_angle: scalar float
     :param roll_angle:  scalar float
@@ -346,8 +342,7 @@ def _affine_cost(yaw_angle,pitch_angle,roll_angle,translation,points,dist):
 
 
 def align_Planes_bfgs(plane1, plane2):
-    """rotates two planes so that they are parallel to each other. Uses bfgs to find optimal yaw,
-    pitch and roll angle that minimizes the distance between the normal of plane1 and the rotated normal of plane2
+    """rotates two planes so that they are parallel to each other. Uses bfgs to find optimal yaw, pitch and roll angle that minimizes the distance between the normal of plane1 and the rotated normal of plane2
 
 
     :param plane1: reference plane

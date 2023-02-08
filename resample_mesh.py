@@ -1,3 +1,7 @@
+"""
+Contains some test methods on mesh resamplig with meshlab
+"""
+
 import pymeshlab as ml
 import numpy
 from data_utils import HipData,points2mesh3d,stl2mesh3d
@@ -15,6 +19,11 @@ def resample_mesh(hip: HipData)->HipData:
 
 
 def resample_mesh_meshlab():
+    """Test method to resample meshes.
+
+    :return:
+    :rtype:
+    """
     fpath = '/home/adwaye/PycharmProjects/hip_shape/data/Segmentation_and_landmarks_processed/TOH - Controls/C18.p'
 
     hip_data = HipData(fpath)

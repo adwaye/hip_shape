@@ -1,3 +1,5 @@
+"""initial data analysis on the meshes. Does not contain any useful methods for the project, except the ability to
+view point clouds in a tensorboard session. """
 from stl import mesh
 from mpl_toolkits import mplot3d
 from matplotlib import pyplot
@@ -16,6 +18,11 @@ from read_landmarks import *
 
 
 def mesh_tf_demo():
+    """demo script on how to use tensorboard to visualise point clouds.
+
+    :return:
+    :rtype:
+    """
     sample_mesh = 'https://storage.googleapis.com/tensorflow-graphics/tensorboard/test_data/ShortDance07_a175_00001.ply'
 
     # Read all sample PLY files.
@@ -52,6 +59,11 @@ def mesh_tf_demo():
 
 
 def show_3d_slicing():
+    """simple demo on viewing 3d slices
+
+    :return:
+    :rtype:
+    """
     data_loc = './data/Andrew_Richie_pelvis_shape/'
 
     # image_data, image_header = load(os.path.join(data_loc,'Labels_segments.mha'))
@@ -72,8 +84,7 @@ def show_3d_slicing():
 
 # point_cloud = tf.constant([[[0.19, 0.78, 0.02], ...]], shape=[1, 1064, 3])
 def tf_make_tb_mesh(data_loc = './data/Andrew_Richie_pelvis_shape'):
-    """
-    reads all stl files in a folder and concatantes them into a point cloud that is then saved as a tensorboard object
+    """reads all stl files in a folder and concatantes them into a point cloud that is then saved as a tensorboard object
 
     :param data_loc: location of the .stl files
     :type data_loc:  string
@@ -142,8 +153,7 @@ def tf_make_tb_mesh(data_loc = './data/Andrew_Richie_pelvis_shape'):
         print('no stl files found in '+ data_loc)
 
 def tf_make_tb_mesh_with_landmarks(data_loc = './data/Segmentation_and_landmarks_raw/UCLH - Controls/68567126'):
-    """
-    reads all stl files in a folder and concatantes them into a point cloud that is then saved as a tensorboard object
+    """reads all stl files in a folder and concatantes them into a point cloud that is then saved as a tensorboard object
 
     :param data_loc: location of the .stl files
     :type data_loc:  string
@@ -243,8 +253,8 @@ def tf_make_tb_mesh_with_landmarks(data_loc = './data/Segmentation_and_landmarks
 
 
 def tf_make_tb_mesh_left_right(data_loc = './data/Andrew_Richie_pelvis_shape',show_faces=True):
-    """
-    reads the study folders containng the right and left pelvis and stores them as a tensorboard mesh obejct
+    """reads the study folders containng the right and left pelvis and stores them as a tensorboard mesh obejct
+
     :param data_loc: location of the right and left stl files: should contain folders with names Right and Left
     contaning one stl file for the right and left pelvis respectively
     :type data_loc: string

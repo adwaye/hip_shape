@@ -1,3 +1,6 @@
+"""Conatins methods used to make a mayavi visualiser along with a data source. Most of the classes are unused.
+
+"""
 import jax.numpy as jnp
 import jax
 from tvtk.api import tvtk
@@ -29,6 +32,7 @@ from mayavi import mlab
 from mayavi.api import Engine
 import time
 class Observer(object):
+    """Base Observer class"""
     def __init__(self):
         pass
 
@@ -65,6 +69,9 @@ class Observer(object):
 
 
 class GlObserver(Observer,gl.GLViewWidget):
+    """OPen Gl observer class to display data
+
+    """
     def __init__(self,**kwargs):
         super().__init__(**kwargs)
         gl.GLViewWidget.__init__(self,**kwargs)
@@ -240,22 +247,6 @@ class MayaviVisualiser(MayaviObserver):
 
 
 
-class MayaviVisualiser(MayaviObserver):
-    def __init__(self,generator,**kwargs):
-        super().__init__(**kwargs)
-        self.generator = generator
-
-    @mlab.animate(delay=500)
-    def update_visualisation(self):
-        while True:
-            try:
-                points,faces = next(self.generator)
-            except StopIteration:
-                break
-            self.polydata.points = points
-            self.polydata.polys = faces
-            self.mesh.parent.parent.update()
-            yield
 
 class DataSource(object):
     def __init__(self,**kwargs):
@@ -291,7 +282,7 @@ class DataSource(object):
             obs.set_data(data)
             obs.display_data()
 
-    def get_data(self)->list[np.array]:
+    def get_data(self)->list:
         """This needs to be ovewritten for each new class
 
         :return:
@@ -319,7 +310,7 @@ class HipDataSource(HipData,DataSource):
         super().__init__(pickle_path=pickle_path,decimator=self.decimator)
         self.notifyObservers()
 
-    def get_data(self) ->list[np.array]:
+    def get_data(self) ->list:
         """returns the surface of the Left and right pelvis as list [vertice,connectivity_matrix]
 
         :return:

@@ -21,7 +21,8 @@ import numpy.linalg
 from skspatial.objects import Plane, Points
 from skspatial.plotting import plot_3d
 from mpl_toolkits.mplot3d import Axes3D
-from utils import FourierFitter
+from utils import _embed_points_in_array,jax_rotation_matrix3d,_make_distance_transform,eval_distance,\
+    jax_eval_distance,jax_pitch_matrix,jax_roll_matrix,jax_yaw_matrix,affine_cost
 from scipy import ndimage as ndi
 from jax.scipy import ndimage as jndi
 import jax.scipy.optimize as optimize
@@ -31,11 +32,11 @@ import time
 import threading as t
 
 
-source_loc = '/home/adwaye/PycharmProjects/hip_shape/data/Segmentation_and_landmarks_raw/'
-target_loc = '/home/adwaye/PycharmProjects/hip_shape/data/Segmentation_and_landmarks_processed/'
-APP_aligned_loc = '/home/adwaye/PycharmProjects/FlowGPLVM/data/Segmentation_and_landmarks_APP_aligned/'
-RSocket_aligned_trans = '/home/adwaye/PycharmProjects/FlowGPLVM/data/Segmentation_and_landmarks_Rsocket_aligned/'
-LSocket_aligned_trans = '/home/adwaye/PycharmProjects/FlowGPLVM/data/Segmentation_and_landmarks_Lsocket_aligned/'
+source_loc = 'data/Segmentation_and_landmarks_raw/'
+target_loc = 'data/Segmentation_and_landmarks_processed/'
+APP_aligned_loc = 'data/Segmentation_and_landmarks_APP_aligned/'
+RSocket_aligned_trans = 'data/Segmentation_and_landmarks_Rsocket_aligned/'
+LSocket_aligned_trans = 'data/Segmentation_and_landmarks_Lsocket_aligned/'
 dtype = jnp.float32
 
 
@@ -49,6 +50,10 @@ class HipData(object):
     :param decimator: object that provided an interface to downsample the number of faces in self.data['surface]['RPEL']
                       and self.data['surface]['LPEL']
     :type decimator: MeshDecimator or None
+
+    >>> decimator = MeshLibDecimator()
+    >>> path = os.path.join('data/Segmentation_and_landmarks_processed/TOH - Controls/C10.p')
+    >>> hip_data = HipData(pickle_path=path,decimator=decimator)
     """
     def __init__(self,pickle_path:str,decimator=None):
 
@@ -139,8 +144,11 @@ class HipData(object):
         """returns the right pelvis point cloud. if self.rot_mat is not None, the points are rotated.
         Similarly if self.trans_vect is not None, the points are translated
 
-        :return: points->reshaped vertices shape [n_vertice*3,3] faces corresponding to the mesh cloud attributes
-        :rtype: list
+        :return: list if points,faces where
+                     **points**: np.array shape [N1,3] of vertices.
+                     **faces** : np.array shape [N2,3] of simplices where vertices[faces[:,i]] would be the coordinates of the i-th vertex in each triangle.
+        :rtype: np.array
+        :rtype: list(np.array)
         """
         try:
             points = self.data['surface']['RPel']['points']
@@ -157,8 +165,10 @@ class HipData(object):
         """returns the left pelvis point cloud. if self.rot_mat is not None, the points are rotated.
         Similarly if self.trans_vect is not None, the points are translated
 
-        :return:
-        :rtype:
+        :return: list if points,faces where
+                 **points**: np.array shape [N1,3] of vertices.
+                 **faces** : np.array shape [N2,3] of simplices where vertices[faces[:,i]] would be the coordinates of the i-th vertex in each triangle.
+        :rtype: list(np.array)
         """
         try:
             points = self.data['surface']['LPel']['points']
@@ -175,7 +185,7 @@ class HipData(object):
         """returns the right socket plane crest points. if self.rot_mat is not None, the points are rotated.
         Similarly if self.trans_vect is not None, the points are translated
 
-        :return: points correponding to the socket opening plane
+        :return: points correponding to the socket opening plane shape (N,3)
         :rtype: np.array
         """
 
@@ -202,7 +212,7 @@ class HipData(object):
         """returns the left socket plane crest points. if self.rot_mat is not None, the points are rotated.
         Similarly if self.trans_vect is not None, the points are translated
 
-        :return: points correponding to the socket opening plane
+        :return: points correponding to the socket opening plane shape (N,3)
         :rtype: np.array
         """
         for side in ['Left']:  #['Right','Left']:
@@ -224,6 +234,11 @@ class HipData(object):
 
     @property
     def rot_mat(self):
+        """Return the rotation matrix that makes the data rotation invariant. Will usually align to a pre decided template. Returns None if not present
+
+        :return: rotation matrix np.array shape (3,3) or None is no rotation invariance has been imposed
+        :rtype: np.array or None
+        """
         try:
             rot_mat = self.data['rotmat']
         except KeyError:
@@ -233,12 +248,24 @@ class HipData(object):
 
     @rot_mat.setter
     def rot_mat(self,val):
+        """sets the rotation matrix to impose rotation invariance
+
+        :param val: rotation matrix shape (3,3)
+        :type val: np.array
+        :return: None
+        :rtype: None
+        """
         assert val.shape==(3,3)
         self.data['rotmat'] = val
 #        self.rot_mat = val
 
     @property
     def trans_vect(self):
+        """Returns the translation vector required to make the data translation invariant
+
+        :return: vector shape (1,3) or None if no translation invariance has been imposed
+        :rtype: np.array or None
+        """
         try:
             trans_vect = self.data['translation']
         except KeyError:
@@ -247,14 +274,20 @@ class HipData(object):
 
     @trans_vect.setter
     def trans_vect(self,val:numpy.array):
+        """Sets the translation vector required to make the data translation invariant
+
+        :param val: shape (1,3)
+        :type val: np.array
+        :return: None
+        :rtype: None
+        """
         assert val.shape == (1,3)
         self.data['translation'] = val
         #self.rot_mat = val
 
 
     def save_data(self,location:str)->None:
-        """Saves self.data as a pickle file. The saved file name is the same as the original filename. The pickle
-        file is saved in location/self.pickle_path
+        """Saves self.data as a pickle file. The saved file name is the same as the original filename. The pickle file is saved in location/self.pickle_path
 
         :param location: path pointing to a folder where the pickle file should saved
         :type location: str
@@ -268,7 +301,7 @@ class HipData(object):
         self.pickle_path = file_path
 
 
-    def get_plotly_graph(self,color: str='lightpink')->list[plotly.graph_objects.mesh3d]:
+    def get_plotly_graph(self,color: str='lightpink')->list:
         """Returns the plotly 3d graph associated with each of the left and right pelvis
 
         :return: [left_mesh_plot,right_mesh_plot] left and right pelvis pot objects
@@ -319,6 +352,8 @@ class HipData(object):
                                     max_it=max_it)
 
 class MeshDecimator(object):
+    """Base Decimator class that reduces the number of vertices in a triangulated surface. Used in conjunction with HipData.
+    """
 
 
     @staticmethod
@@ -337,6 +372,7 @@ class MeshDecimator(object):
 
 
 class MeshLibDecimator(MeshDecimator):
+    """Decimator class that uses meshlib as a backend."""
     @staticmethod
     def decimate(hipdata:HipData,max_num_faces: int,save_path: str=None,step_size: float=0.25,max_it: int=20):
         """Calls meshlib to reduce the number of faces in the RPel and LPel surfaces. Increases the edge size
@@ -533,12 +569,13 @@ def umeyama(P,Q):
       SUM over point i ( | P_i*cR + t - Q_i |^2 )
     is minimised if they don't align perfectly.
 
-    :param P:
-    :type P:
-    :param Q:
-    :type Q:
-    :return:
-    :rtype:
+    :param P: point cloud shape (N1,3)
+    :type P: np.array
+    :param Q: point cloud shape (N2,3)
+    :type Q: np.array
+    :return: list c,R,t where c is the scale transformation shape (1), R is the (3,3) rotation matrix and t is the (
+    1,3) translation vector.
+    :rtype: list(np.array)
     """
     assert P.shape == Q.shape
     n,dim = P.shape
@@ -603,18 +640,17 @@ def rotation_between_vectors(normal1,normal2):
 
     return rot_mat
 
-def ralign_2_hips(hip1: HipData,hip2: HipData,by: str='RPel')->list[HipData]:
-    """Performs rigid alignment of two hips.
+def ralign_2_hips(hip1: HipData,hip2: HipData,by: str='RPel')->list:
+    """Performs rigid alignment of two hips (no scale) by aligning the APP of the 2 hips
 
     :param hip1: template Hip, this one is kept in inplace
     :type hip1: HipData
     :param hip2: hip to be transformed
     :type hip2: HipData
-    :param by: options are
-
+    :param by: options are 'RPel' or 'LPel' depending on whether the right or left APP are alligned
     :type by: str
-    :return:
-    :rtype:
+    :return: list hip1,hip2 of aligned HipData
+    :rtype: list(HipData)
     """
 
     if by.lower()=='rpel':
@@ -664,6 +700,13 @@ def ralign_2_hips(hip1: HipData,hip2: HipData,by: str='RPel')->list[HipData]:
 
 
 def loadSTL(filename):
+    """loads the vetices and faces from an stl file
+
+    :param filename: path to stl file
+    :type filename: str
+    :return: points, faces where points[faces[:,i]] are the i-th coordinate of the triangles.
+    :rtype: list(np.array)
+    """
     m = mesh.Mesh.from_file(filename)
     shape = m.points.shape
     points = m.points.reshape(-1,3)
@@ -673,15 +716,14 @@ def loadSTL(filename):
 
 
 def stl2mesh3d(stl_mesh):
-    """
+    """ stl_mesh is read by nympy-stl from a stl file; it is  an array of faces/triangles (i.e. three 3d points) this function extracts the unique vertices and the lists I, J, K to define a Plotly mesh3d
 
     :param stl_mesh:
     :type stl_mesh:
     :return:
     :rtype:
     """
-    # stl_mesh is read by nympy-stl from a stl file; it is  an array of faces/triangles (i.e. three 3d points)
-    # this function extracts the unique vertices and the lists I, J, K to define a Plotly mesh3d
+
     p, q, r = stl_mesh.vectors.shape #(p, 3, 3)
     # the array stl_mesh.vectors.reshape(p*q, r) can contain multiple copies of the same vertex;
     # extract unique vertices from all mesh triangles
@@ -888,9 +930,9 @@ def _test_rotation():
 
 
 
-def downsample_data(folders:list[str],
+def downsample_data(folders:list,
                     reduction_factor:int=10):
-    """Decimates hip meshes stored in pickle files stored in paths given by elements of folders.
+    """Decimates hip meshes stored in pickle files stored in paths given by elements of folders. The downsampled meshes are stored in new folders whose name are just the original folder appended with the reduction factor
 
     :param folders: list of folders where each element should contain a pickle file of the type output by
                     data_cleaning._to_pickle
@@ -988,7 +1030,12 @@ def _test_downsampled_data(f_path:str='data/Segmentation_and_landmarks_downsampl
 #calculating size of the array to allocate for the distance transform
 if __name__=='__main__':
     #_test_downsampling()
-    downsample_data(folders = [os.path.join(target_loc,f) for f in os.listdir(target_loc)][1:],reduction_factor=20)
+    #_test_modules()
+    path = 'data/Segmentation_and_landmarks_processed/TOH - Controls/C30.p'
+    hip_data = HipData(path)
+
+    # downsample_data(folders = [os.path.join(target_loc,f) for f in os.listdir(target_loc)][1:],reduction_factor=20)
+
 
 
 

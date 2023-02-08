@@ -1,3 +1,7 @@
+"""
+Script to turn the raw data into pickle files for easier loading
+"""
+
 import os.path
 
 from read_landmarks import *
@@ -41,7 +45,25 @@ paths     = ['UCLH - Controls','TOH - Controls','TOH - FAI','TOH - DDH']
 
 
 
-def _to_pickle():
+def to_pickle():
+    """Reads the raw files from ottawa and puts all the relevant data into a dictionary before saving said dictionary to a pickle file. The locations of the raw data to be converted as well as the target destination are global variables in the script. The dictionary out_dict for each data point has the following keys:
+     #. **out_dict['surface']**: is a dictionary that saves the Pelvis surfaces and has keys 'RPel' and 'LPel' for the right pelvis and left pelvis respectively. out_dict['surface']['RPel']  and out_dict['surface']['RPel'] are a dictionaries with keys.
+          * 'points' : np.array shape [N1,3] of vertices.
+          * 'faces'  : np.array shape [N2,3] of simplices where vertices[faces[:,i]] would be the coordinates of the i-th vertex in each triangle.
+          * 'mesh_loc': the location of the raw mesh .stl file
+     #. **out_dict['landmarks']**: is a dictionary containing the ladnmarks placed on the hips with keys
+            * 'RASIS' : np.array shape (,3) location of the right anterior illiac spine on the triangular mesh definining the anterior pelvic plane
+            * 'LASIS' : np.array shape (,3) location of the left anterior illiac spine on the triangular mesh definining the anterior pelvic plane
+            * 'RTUB'  : np.array shape (,3) location of the right acetabulum on the triangular mesh definining the anterior pelvic plane
+            * 'LTUB'  : np.array shape (,3) location of the left acetabulum on the triangular mesh definining the anterior
+            * 'Right Ant Lat' : np.array shape (n1,3) right anterior socket crest
+            * 'Right Post Lat': np.array shape (n2,3) right posterior socket crest
+            * 'Left Ant Lat'  : np.array shape (n3,3) left anterior socket crest
+            * 'Left Post Lat' : np.array shape (n4,3) left posterior socket crest
+
+    :return:
+    :rtype:
+    """
     log_loc  = './log'
     if not os.path.isdir(log_loc):os.makedirs(log_loc)
     log_file = os.path.join(log_loc,'stl_file_outside_sub_'+dt_string+'.txt')
@@ -173,7 +195,7 @@ def _create_aligned_data_APP():
 
 
 
-def plot_all():
+def _plot_all():
     target_file = "/home/adwaye/PycharmProjects/hip_shape/data/Segmentation_and_landmarks_processed/UCLH - Controls/00796671.p"
     target_file = "/home/adwaye/PycharmProjects/hip_shape/data/Segmentation_and_landmarks_processed/TOH - DDH/D11.p"
     with open(target_file, 'rb') as fp:
@@ -206,84 +228,8 @@ def plot_all():
     mlab.show()
 
 if __name__=='__main__':
-    #_to_pickle()
-    location       = os.path.join(target_loc,paths[0])
-    files          = [os.path.join(location,f) for f in os.listdir(location)]
-    template_file  = files[0]
-    target_file    = files[2]
+    plot_all()
 
-    with open(template_file,'rb') as fp:
-        template_data = pickle.load(fp)
-
-    with open(target_file,'rb') as fp:
-        target_data = pickle.load(fp)
-
-
-    k = 0
-    for key in ['RASIS','LASIS','RTUB','LTUB']:
-
-        try:
-            if k ==0:
-                template_points = np.expand_dims(template_data['landmarks'][key],axis=0)
-                target_points   = np.expand_dims(target_data['landmarks'][key],axis=0)
-            else:
-                template_points_ = np.expand_dims(template_data['landmarks'][key],axis=0)
-                template_points  = np.concatenate((template_points_,template_points),axis=0)
-                target_points_   = np.expand_dims(target_data['landmarks'][key],axis=0)
-                target_points    = np.concatenate((target_points_,target_points),axis=0)
-
-            k+=1
-        except KeyError:
-            print('cannot find key '+key)
-
-    c,R,t = umeyama(target_points,template_points)
-
-    err = ((template_points.dot(c * R) + t - target_points) ** 2).sum()
-    transformed_points = target_points.dot(c * R) + t
-    print('error is {:}',format(err))
-
-    fig = plt.figure(figsize=(4,4))
-
-    ax = fig.add_subplot(111, projection='3d')
-
-    ax.scatter(template_points[:,0],template_points[:,1],template_points[:,2],color='green')
-    ax.scatter(transformed_points[:,0],transformed_points[:,1],transformed_points[:,2],'.',color='red')
-    ax.scatter(target_points[:,0],target_points[:,1],target_points[:,2],color='blue')
-    ax.set_box_aspect(aspect=(1,1,1))
-
-
-    app_alignment_dict = {}
-    app_alignment_dict['R'] = R
-    app_alignment_dict['c'] = c
-    app_alignment_dict['t'] = t
-    #todo: once I find a way to sample the socket lines to the same number of points, I can rigid align the socket
-    # points as well
-    socket_alignment_dict = {}
-    for side in ['Right','Left']:
-        k = 0
-        for key in ['Ant Lat','Post Lat']:
-            try:
-                if k == 0:
-                    template_points = template_data['landmarks'][side+' '+key]
-                    target_points   = target_data['landmarks'][side+' '+key]
-                else:
-                    template_points_ = template_data['landmarks'][side+' '+key]
-                    template_points  = np.concatenate((template_points_,template_points),axis=0)
-                    target_points_   = target_data['landmarks'][side+' '+key]
-                    target_points    = np.concatenate((target_points_,target_points),axis=0)
-
-                k += 1
-            except KeyError:
-                print('cannot find key ' + key)
-        fig = plt.figure(figsize=(4,4))
-
-        ax = fig.add_subplot(111,projection='3d')
-        fig.suptitle('haha')
-
-        ax.scatter(template_points[:,0],template_points[:,1],template_points[:,2],color='green')
-        #ax.scatter(transformed_points[:,0],transformed_points[:,1],transformed_points[:,2],'.',color='red')
-        ax.scatter(target_points[:,0],target_points[:,1],target_points[:,2],color='blue')
-        ax.set_box_aspect(aspect=(1,1,1))
         #c,R,t = rigid_align(target_points,template_points)
         # socket_alignment_dict[side] = {}
         # socket_alignment_dict[side]['R'] = R

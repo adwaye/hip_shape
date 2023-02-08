@@ -1,3 +1,4 @@
+"""Scipt that contains some demo on how to use mayavi for visualising the 3d triangulated hips. """
 import numpy as np
 from mayavi import mlab
 from stl import mesh

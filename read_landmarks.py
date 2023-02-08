@@ -35,9 +35,8 @@ from mpl_toolkits.mplot3d import Axes3D
 
 
 def find_structure_coordinate_socket(worksheet):
-    """
-    Finds the coordinates of landmarks from an excel file. this assumes that the excel file does not follow any specific
-    format and is arranged in a disorderly manner
+    """Finds the coordinates of landmarks from an excel file. this assumes that the excel file does not follow any specific format and is arranged in a disorderly manner.
+
     :param worksheet: object returned by openpyxl.load_workbook().active
     :return: dictionary of landmarks column and row where these coordinates point to where one should iterate to get
     the landmarks
@@ -83,6 +82,18 @@ def find_structure_coordinate_socket(worksheet):
 
 
 def find_app_coordinates(worksheet):
+    """Finds the app coordinate from the worksheet. The output is a dictionary of APP landmarks with keys:
+
+    * 'RASIS' : np.array shape (,3) location of the right anterior illiac spine on the triangular mesh definining the anterior pelvic plane
+    * 'LASIS' : np.array shape (,3) location of the left anterior illiac spine on the triangular mesh definining the anterior pelvic plane
+    * 'RTUB'  : np.array shape (,3) location of the right acetabulum on the triangular mesh definining the anterior pelvic plane
+    * 'LTUB'  : np.array shape (,3) location of the left acetabulum on the triangular mesh definining the anterior
+
+    :param worksheet: object returned by openpyxl.load_workbook().active
+    :type worksheet:
+    :return: dictionary of app landmarks.
+    :rtype: dict
+    """
     my_dict = {}
     for i in range(0,worksheet.max_row):
         for col in worksheet.iter_cols(1,worksheet.max_column):
@@ -127,6 +138,13 @@ def find_app_coordinates(worksheet):
 
 
 def axisEqual3D(ax):
+    """Transforms an ax object into one with equal scales.
+
+    :param ax:
+    :type ax:
+    :return:
+    :rtype:
+    """
     extents = np.array([getattr(ax, 'get_{}lim'.format(dim))() for dim in 'xyz'])
     sz = extents[:,1] - extents[:,0]
     centers = np.mean(extents, axis=1)
@@ -137,14 +155,14 @@ def axisEqual3D(ax):
 
 
 def find_coordinates_from_worksheet(worksheet,my_dict,key="Right Ant Lat"):
-    """
-    extracts the socket coordinates from an excelt sheet by using the coordinates where the search should start
+    """extracts the socket coordinates from an excelt sheet by using the coordinates where the search should start
+
     :param worksheet: loaded excel file by pyopenxl
     :param my_dict:   dictionary containing column and row indices for where the information can be found
     :param key: Which side and part of the socket to look for
                 choices : "Right Ant Lat", "Right Post Lat", "Left Ant Lat", "Left Post Lat"
                 these are keys of the dictionary output by find_structure_coordinate_socket
-    :return:
+    :return: np.array shape (N,3) or None if nothing is found
     """
     try:
         row_val = my_dict[key+' Row']
@@ -172,10 +190,11 @@ def find_coordinates_from_worksheet(worksheet,my_dict,key="Right Ant Lat"):
 
 
 def find_imOriginSpacing_from_worksheet(worksheet):
-    """
-    Reads the image origin and spacing from the worksheet corresponding to a landmark xlsx file from the landmark data
+    """Reads the image origin and spacing from the worksheet corresponding to a landmark xlsx file from the landmark data
+
     :param worksheet: worksheet loaded from openpyxl.load_workbook().active
-    :return: list of np array of shape [1,3] showing the location of the image origin and the spacing of the origin
+    :return: list of origin,spacing which are both np array of shape [1,3] showing the location of the image origin and
+    the spacing of the origin
     """
     my_dict = {}
     origin  = []
@@ -213,11 +232,30 @@ def find_imOriginSpacing_from_worksheet(worksheet):
 
 
 def plot_landmark_uclh_controls(path = './data/Segmentation_and_landmarks_raw/UCLH - Controls', k = 10):
-    """
-    plots the landmark on top of the stl file representing the pelvis surface for the folder UCLH - Controls
-    :param k:
+    """plots the landmark on top of the stl file representing the pelvis surface for the folder UCLH - Controls. The folder structure for path is as follows:
+    ::
+        | path
+        | ├── C4
+        | │   ├── Left
+        | │   │   ├── C4_LPEL.mha
+        | │   │   ├── C4_LPEL.vtk
+        | │   │   ├── C4_LPEL.stl
+        | │   └── Right
+        | │   │   ├── C4_RPEL.mha
+        | │   │   ├── C4_RPEL.vtk
+        | │   │   ├── C4_RPEL.stl
+        | │   └── landmarks.xlsx
+
+    The ladmakrs are saved in landmarks.xlsx.
+
+    :param path: path to folder containing the raw data.
+    :type path: str
+    :param k: index showing which folder to select from path
+    :type k: int
     :return:
+    :rtype:
     """
+
     #path = './data/Segmentation_and_landmarks_raw/UCLH - Controls' #transformation works
     #path = './data/Segmentation_and_landmarks_raw/TOH - DDH' #transformation works
     #path = './data/Segmentation_and_landmarks_raw/TOH - FAI'#tranformation works
@@ -309,11 +347,26 @@ def plot_landmark_uclh_controls(path = './data/Segmentation_and_landmarks_raw/UC
 
 
 def plot_landmark(path = './data/Segmentation_and_landmarks_raw/UCLH - Controls', k = 10):
-    """
-    plots the landmark on top of the stl file representing the pelvis surface
-    the difference with the plot_landmark_uclh_controls is that we operate in the mm space as opposed to the voxel scale
-    :param k:
-    :return:
+    """plots the landmark on top of the stl file representing the pelvis surface for the folder UCLH - Controls. The folder structure for path is as follows:
+    ::
+        | path
+        | ├── C4
+        | │   ├── Left
+        | │   │   ├── C4_LPEL.mha
+        | │   │   ├── C4_LPEL.vtk
+        | │   │   ├── C4_LPEL.stl
+        | │   └── Right
+        | │   │   ├── C4_RPEL.mha
+        | │   │   ├── C4_RPEL.vtk
+        | │   │   ├── C4_RPEL.stl
+        | │   └── landmarks.xlsx
+
+    The ladmakrs are saved in landmarks.xlsx.
+
+    :param path: path to folder containing the raw data.
+    :type path: str
+    :param k: index showing which folder to select from path
+    :type k: int
     """
     #path = './data/Segmentation_and_landmarks_raw/UCLH - Controls' #transformation works
     #path = './data/Segmentation_and_landmarks_raw/TOH - DDH' #transformation works

@@ -1,3 +1,4 @@
+
 from pyqtgraph.Qt import QtCore,QtGui
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
@@ -13,6 +14,9 @@ from pathlib import Path
 
 
 class MyWindow(QMainWindow):
+    """QMainWindow class that allows one to load and view an stl file. The displayed stl is centered before showing.
+
+    """
     def __init__(self):
         super(MyWindow,self).__init__()
         self.setGeometry(0,0,700,900)
@@ -26,6 +30,11 @@ class MyWindow(QMainWindow):
         self.droppedFilename = None
 
     def initUI(self):
+        """initialises the widgets in the UI
+
+        :return:
+        :rtype:
+        """
         centerWidget = QWidget()
         self.setCentralWidget(centerWidget)
 
@@ -49,6 +58,11 @@ class MyWindow(QMainWindow):
         layout.addWidget(btn)
 
     def showDialog(self):
+        """Shows the file selection dialog to choose the stl file from.
+
+        :return:
+        :rtype:
+        """
         directory = Path("./data")
         if self.lastDir:
             directory = self.lastDir
@@ -58,6 +72,13 @@ class MyWindow(QMainWindow):
             self.lastDir = Path(fname[0]).parent
 
     def showSTL(self,filename):
+        """Loads the stl file from the filename. Gets called by clicking ok on the file dialog
+
+        :param filename: path to stl file
+        :type filename:  str
+        :return:
+        :rtype:
+        """
         if self.currentSTL:
             self.viewer.removeItem(self.currentSTL)
 
@@ -104,7 +125,7 @@ class MyWindow(QMainWindow):
 
 
 if __name__ == '__main__':
-    app = QtGui.QApplication([])
+    app = QApplication([])
     window = MyWindow()
     window.show()
     app.exec_()
