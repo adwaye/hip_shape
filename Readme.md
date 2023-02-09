@@ -48,16 +48,16 @@ This creates pickle files for each study under <tt>data/Segmentation_and_landmar
 2. **data_utils.MeshLibDecimator**: Together with the previous class, the user can reduce the size of the meshes. 
    
     
-    from data_utils import *
-    path1 = 'data/Segmentation_and_landmarks_processed/c4.p'
-    path2 = 'data/Segmentation_and_landmarks_processed/c4.p'
-    decimator = MeshLibDecimator()
-    hip1 = HipData(path1,decimator)
-    hip2 = HipData(path2,decimator)
-    #aligning the hips by the righ pelvis:
-    hip1,hip2 = ralign_2_hips(hip1,hip2,by='RPel')
-    #reduce number of vertices and save the result
-    hip1.decimate(max_num_faces=1000,save_path = 'data/Segmentation_and_landmarks_processed_10')
+        from data_utils import *
+        path1 = 'data/Segmentation_and_landmarks_processed/c4.p'
+        path2 = 'data/Segmentation_and_landmarks_processed/c4.p'
+        decimator = MeshLibDecimator()
+        hip1 = HipData(path1,decimator)
+        hip2 = HipData(path2,decimator)
+        #aligning the hips by the righ pelvis:
+        hip1,hip2 = ralign_2_hips(hip1,hip2,by='RPel')
+        #reduce number of vertices and save the result
+        hip1.decimate(max_num_faces=1000,save_path = 'data/Segmentation_and_landmarks_processed_10')
 
 
 ## Visualisation
