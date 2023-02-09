@@ -62,6 +62,7 @@ This creates pickle files for each study under <tt>data/Segmentation_and_landmar
 
 ## Visualisation
 One can visualise the data by running the following:
+    
     foo@bar$ python3 visualiser_mayavi.py
 
 There are also classes in visualiser.py that would allow one to view the data when running loops on them, which might be useful when training shape models with pytorch. The backend uses mayavi, for which a generator is required to animate the data. 
