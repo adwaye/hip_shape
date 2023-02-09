@@ -33,15 +33,15 @@ This creates pickle files for each study under <tt>data/Segmentation_and_landmar
       * 'points' : np.array shape [N1,3] of vertices.
       * 'faces'  : np.array shape [N2,3] of simplices where vertices[faces[:,i]] would be the coordinates of the i-th vertex in each triangle.
       * 'mesh_loc': the location of the raw mesh .stl file
- 2. **out_dict['landmarks']**: is a dictionary containing the ladnmarks placed on the hips with keys
-        * 'RASIS' : np.array shape (,3) location of the right anterior illiac spine on the triangular mesh definining the anterior pelvic plane
-        * 'LASIS' : np.array shape (,3) location of the left anterior illiac spine on the triangular mesh definining the anterior pelvic plane
-        * 'RTUB'  : np.array shape (,3) location of the right acetabulum on the triangular mesh definining the anterior pelvic plane
-        * 'LTUB'  : np.array shape (,3) location of the left acetabulum on the triangular mesh definining the anterior
-        * 'Right Ant Lat' : np.array shape (n1,3) right anterior socket crest
-        * 'Right Post Lat': np.array shape (n2,3) right posterior socket crest
-        * 'Left Ant Lat'  : np.array shape (n3,3) left anterior socket crest
-        * 'Left Post Lat' : np.array shape (n4,3) left posterior socket crest
+2. **out_dict['landmarks']**: is a dictionary containing the ladnmarks placed on the hips with keys
+   * 'RASIS' : np.array shape (,3) location of the right anterior illiac spine on the triangular mesh definining the anterior pelvic plane
+   * 'LASIS' : np.array shape (,3) location of the left anterior illiac spine on the triangular mesh definining the anterior pelvic plane
+   * 'RTUB'  : np.array shape (,3) location of the right acetabulum on the triangular mesh definining the anterior pelvic plane
+   * 'LTUB'  : np.array shape (,3) location of the left acetabulum on the triangular mesh definining the anterior
+   * 'Right Ant Lat' : np.array shape (n1,3) right anterior socket crest
+   * 'Right Post Lat': np.array shape (n2,3) right posterior socket crest
+   * 'Left Ant Lat'  : np.array shape (n3,3) left anterior socket crest
+   * 'Left Post Lat' : np.array shape (n4,3) left posterior socket crest
 
 ## Some helpful classes
 1. **data_utils.HipShape**: allows the user to load the pickle files and extract the data by calling class attributes
